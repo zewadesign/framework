@@ -11,33 +11,38 @@ Class App
     private $module;
     private $controller;
     private $method;
+    private $hooks;
 
     public function __construct() {
-        //@TODO: go unset unnececessary vars
+        //@TODO: unset unnececessary vars/profile/unit testing..? how?
+        //@TODO: better try/catch usage
+        //@TODO: validation needs a second look, the required is screwing up on empty (the ol' isset/empty nonsense.. need to validate intent
+        //@TODO: setup custom routing based on regex // (can't we get away without using regex tho?)!!!!!!! routesssssss!!!!!!!!
+        //@TODO: system vars (_) need to be moved to an array called "system" in the registry, and write protected, _ is lame.
         try {
 
             Registry::add('_loader', new Load());
-            $this->loader = Registry::get('_loader'); //@TODO these need to be moved to an array called "system" in the registry, and write protected, _ is lame.
+            $this->loader = Registry::get('_loader');
             $this->configuration = (object) array(
                 'database' => $this->loader->config('core', 'database'),
                 'session' => $this->loader->config('core', 'session'),
                 'cache' => $this->loader->config('core','cache'),
                 'acl' => $this->loader->config('core','acl'),
-                'modules' => $this->loader->config('core','modules')
+                'modules' => $this->loader->config('core','modules'),
+                'hooks' => $this->loader->config('core','hooks')
             );
 
             Registry::add('_configuration',$this->configuration);
+
+            $this->hook = new Hook();
+
+            $this->hook->dispatch('preApplication');
+
             $this->prepareApplication();
-
-            //@TODO: select addons here too
-
-
-            $this->class = 'app\\modules\\'.Registry::get('_module').'\\controllers\\'.ucfirst($this->controller);
 
             $this->autoload();
 
-            //@TODO granular access parameter scopes for module, controller and method, so I can check which individual
-            //props are accessible, to handle 404ing, etc
+            $this->class = 'app\\modules\\'.Registry::get('_module').'\\controllers\\'.ucfirst($this->controller);
 
             if($this->configuration->acl) {
 
@@ -87,24 +92,31 @@ Class App
 
     private function prepareApplication() {
 
+        $this->hook->dispatch('preRegistry');
         $this->prepareRegistry();
+        $this->hook->dispatch('postRegistry');
 
         Registry::add('lang', $this->loader->lang($this->loader->config('core','language')));
 
         if($this->configuration->database) {
+            $this->hook->dispatch('preDatabase');
             $this->prepare('database');
+            $this->hook->dispatch('postDatabase');
         }
-
         if($this->configuration->cache) {
+            $this->hook->dispatch('preCache');
             $this->prepare('cache');
+            $this->hook->dispatch('postCache');
         }
-
         if($this->configuration->session) {
+            $this->hook->dispatch('preSession');
             $this->prepare('session');
+            $this->hook->dispatch('postSession');
         }
-
         if($this->configuration->acl) {
+            $this->hook->dispatch('preACL');
             $this->prepare('acl');
+            $this->hook->dispatch('postACL');
         }
 
     }
@@ -120,13 +132,12 @@ Class App
         $this->module = Registry::get('_module');
         $this->controller = Registry::get('_controller');
         $this->method = Registry::get('_method');
-        $this->params = Registry::get('_params'); //array_slice(Registry::get('_router')->url['segments'], 3);
+        $this->params = Registry::get('_params');
 
         Registry::add('_module', $this->module);
         Registry::add('_controller', $this->controller);
         Registry::add('_method', $this->method);
         Registry::add('_params', $this->params);
-
 
     }
 
@@ -213,7 +224,9 @@ Class App
         if(!$this->verifyAppProcess())
             return false;
 
+        $this->hook->dispatch('preController');
         $this->instantiatedClass = new $this->class();
+        $this->hook->dispatch('postController');
 
         $this->output = call_user_func_array(
             array(&$this->instantiatedClass, $this->method),
@@ -273,7 +286,12 @@ Class App
     /* Output rendering */
 
     public function __toString() {
-        if(!$this->output) return '';
+
+        $this->hook->dispatch('postApplication');
+
+        if(!$this->output)
+            return '';
+
         return $this->output;
     }
 

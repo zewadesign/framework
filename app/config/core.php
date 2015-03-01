@@ -24,7 +24,7 @@ $core = array(
 
         ),
     ),
-    'webhooks' => false,
+    'hooks' => true,
     'acl' => false,
     /*array( // if acl is enabled from core, we can use acl
         'guestId' => 1,
