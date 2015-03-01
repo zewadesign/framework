@@ -14,11 +14,15 @@ Class App
     private $hooks;
 
     public function __construct() {
-        //@TODO: go unset unnececessary vars
+        //@TODO: unset unnececessary vars/profile/unit testing..? how?
+        //@TODO: better try/catch usage
+        //@TODO: validation needs a second look, the required is screwing up on empty (the ol' isset/empty nonsense.. need to validate intent
+        //@TODO: setup custom routing based on regex !!!!!!! routesssssss!!!!!!!!
+        //@TODO: system vars (_) need to be moved to an array called "system" in the registry, and write protected, _ is lame.
         try {
 
             Registry::add('_loader', new Load());
-            $this->loader = Registry::get('_loader'); //@TODO these need to be moved to an array called "system" in the registry, and write protected, _ is lame.
+            $this->loader = Registry::get('_loader');
             $this->configuration = (object) array(
                 'database' => $this->loader->config('core', 'database'),
                 'session' => $this->loader->config('core', 'session'),
