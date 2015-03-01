@@ -65,9 +65,18 @@ Class Router
 
         }
 
-        $this->url['base_url'] = self::baseURL();
-
         $this->url['uri'] = implode('/', $this->url['segments']);
+
+        /*
+         * @TODO: move anything that sets private vars via registry to the class setting (e.g. the below
+         * methods would be called from the __construct of router.
+         */
+        Registry::add('rootPath', ROOT_PATH);
+        Registry::add('baseURL', self::baseURL());
+        Registry::add('uri', $this->uri());
+        Registry::add('currentURL', $this->url());
+        Registry::add('_params', array_slice($this->url['segments'], 3));
+
 
         if (!preg_match("/^[a-z0-9:_\/\.\[\]-]+$/i", $this->url['uri'])) {
             exit('Disallowed key characters.');
@@ -78,15 +87,15 @@ Class Router
 
     public static function uri() {
 
-	if(!empty($_SERVER['PATH_INFO'])) {
-		$path = $_SERVER['PATH_INFO'];
-	} else if(!empty($_SERVER['REQUEST_URI'])) {
-		$path = $_SERVER['REQUEST_URI'];
-	} else {
-		$path = false;
-	}
-	if($path === '/')
-		$path = false;
+        if(!empty($_SERVER['PATH_INFO'])) {
+            $path = $_SERVER['PATH_INFO'];
+        } else if(!empty($_SERVER['REQUEST_URI'])) {
+            $path = $_SERVER['REQUEST_URI'];
+        } else {
+            $path = false;
+        }
+        if($path === '/')
+            $path = false;
 
         if($path) { //@TODO: fix global access
             $path = preg_replace('/\?.*/', '', $path);
@@ -105,6 +114,10 @@ Class Router
 
         }
 
+        Registry::add('_module',$uri[0]);
+        Registry::add('_controller', $uri[1]);
+        Registry::add('_method',$uri[2]);
+
         $uri = ltrim(implode('/', $uri),'/');
 
         return $uri;
@@ -112,6 +125,7 @@ Class Router
     }
 
     public static function url() {
+
         return self::baseURL().'/'.self::uri().(!empty($_SERVER['QUERY_STRING']) ? '?'.$_SERVER['QUERY_STRING'] : '');
 
     }

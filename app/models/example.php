@@ -3,7 +3,7 @@
 namespace app\models;
 use \core as core;
 
-Class User extends core\Model
+Class Example extends core\Model
 {
 
     public function processLoginByToken($token) {

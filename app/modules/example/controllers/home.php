@@ -1,25 +1,21 @@
 <?php
 
-namespace app\modules\user\controllers;
+namespace app\modules\example\controllers;
 use \core as core;
 
-Class Account extends core\Controller {
+Class Home extends core\Controller {
 
-    private $user;
-    private $role;
     public $data;
 
     public function __construct() {
 
         parent::__construct();
 
-        $this->user = $this->load->model('user');
-        $this->role = $this->load->model('role');
         $this->data = array();
 
     }
 
-    public function home() {
+    public function index() {
 
         $layout = $this->load->view(
             'layout',

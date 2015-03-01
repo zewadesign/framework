@@ -1,7 +1,8 @@
-<!-- Footer -->
-<footer id="footer">
-    Footer
-</footer>
+
+<div class="container">
+    <div class="row">
+    </div>
+</div>
 
 <script src="<?=baseURL('resources/shared/js/jquery/jquery-1.8.2.min.js');?>"></script>
 <script src="<?=baseURL('resources/shared/js/jquery/jquery.validate.min.js');?>"></script>

@@ -118,26 +118,16 @@ Class App
         Registry::add('_validate', new Validate());
         Registry::add('_autoload', Registry::get('_loader')->config('core','autoload'));
 
-        $this->module = (Registry::get('_module') ? Registry::get('_module') : false);
-        $this->controller = (Registry::get('_controller') ? Registry::get('_controller') : false);
-        $this->method = (Registry::get('_method') ? Registry::get('_method') : false);
-        $this->params = array_slice(Registry::get('_router')->url['segments'], 3);
+        $this->module = Registry::get('_module');
+        $this->controller = Registry::get('_controller');
+        $this->method = Registry::get('_method');
+        $this->params = Registry::get('_params'); //array_slice(Registry::get('_router')->url['segments'], 3);
 
         Registry::add('_module', $this->module);
         Registry::add('_controller', $this->controller);
         Registry::add('_method', $this->method);
         Registry::add('_params', $this->params);
 
-
-
-        /*
-         * @TODO: move anything that sets private vars via registry to the class setting (e.g. the below
-         * methods would be called from the __construct of router.
-         */
-        Registry::add('rootPath', ROOT_PATH);
-        Registry::add('baseURL', Registry::get('_router')->baseURL());
-        Registry::add('uri', Registry::get('_router')->uri());
-        Registry::add('currentURL', Registry::get('_router')->url());
 
     }
 
@@ -203,16 +193,15 @@ Class App
 
     private function start() {
 
-        print_r($this->class);die();
         $classExist = class_exists($this->class);
         $methodExist = method_exists($this->class, Registry::get('_method'));
 
 
         if (!$classExist) { //@TODO if module is present, but class doesn't exist....
-
-            die('test');
+            //@TODO: check this logic it's fubared?
             if (!$this->controller) {
 
+                die('test');
                 $baseRedirect = $this->loader->config('core','modules')[$this->module]['baseRedirect'];
                 Router::redirect(Registry::baseURL($baseRedirect));
 

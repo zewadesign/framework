@@ -17,8 +17,8 @@ $core = array(
 
             'loginRedirect' => 'user/account/login', // redirect to a different module for verification or whatever.
             'baseRedirect' => 'user/account/settings',
-            'defaultController' => 'example',
-            'defaultMethod' => 'home',
+            'defaultController' => 'home',
+            'defaultMethod' => 'index',
 //            '404' => 'admin/404',
 //            'noAccess' => 'admin/noaccess'
 

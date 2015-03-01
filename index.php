@@ -58,9 +58,6 @@ try {
 $finish = microtime(true);
 $debug = 'Total time spent: '.sprintf('%.6f',($finish-$start)).' seconds<br/>';
 $debug .= 'Memory usage: '.number_format(((memory_get_usage()/1024)/1024),4,'.',',').'MB<br/>';
-if($_SERVER['REMOTE_ADDR'] == MYIP) {
-//$out .= $debug;
-}
 echo $out;
 
 while (ob_get_level() > 0) {
