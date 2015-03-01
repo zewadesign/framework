@@ -1,8 +1,6 @@
 <?php
 
 namespace core;
-    //@TODO: handle var setting based on loaded configs.. e.g. if no session, no referral redirect info
-    //or, no database, no acl.
 //@TODO: should router class be completely static.. ?
 Class App
 {
@@ -275,6 +273,7 @@ Class App
     /* Output rendering */
 
     public function __toString() {
+        if(!$this->output) return '';
         return $this->output;
     }
 
