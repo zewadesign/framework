@@ -62,6 +62,7 @@ Class Load
 
             }
         }
+
         if($layout != false) {
             $file = APP_PATH . DS . 'layouts' . DS . strtolower($layout) . '.php';
 
@@ -165,7 +166,7 @@ Class Load
             extract($data); // yuck. could produce undeclared errors. hmm..
         }
 
-        $app = (object) array('request' => Registry::get('_request'), 'load' => Registry::get('_loader'));
+        $app = (object) array('request' => Registry::get('_request'), 'loader' => Registry::get('_loader'));
 
         //should i set $this->data in abstract controller, and provide all access vars ? seems bad practice..
         $_render = Registry::get('_output');

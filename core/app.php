@@ -24,7 +24,8 @@ Class App
                 'database' => $this->loader->config('core', 'database'),
                 'session' => $this->loader->config('core', 'session'),
                 'cache' => $this->loader->config('core','cache'),
-                'acl' => $this->loader->config('core','acl')
+                'acl' => $this->loader->config('core','acl'),
+                'modules' => $this->loader->config('core','modules')
             );
 
             Registry::add('_configuration',$this->configuration);
@@ -152,7 +153,6 @@ Class App
 
     }
 
-
     private function registerDatabase() {
 
         Registry::add('_database', new Database(
@@ -161,7 +161,6 @@ Class App
         ));
 
     }
-
 
     private function registerCache() {
 
@@ -190,43 +189,38 @@ Class App
 
     }
 
+    private function verifyAppProcess() {
 
-    private function start() {
-
+        $moduleExist = file_exists(APP_PATH.'/modules/'.$this->module);
         $classExist = class_exists($this->class);
         $methodExist = method_exists($this->class, Registry::get('_method'));
 
-
-        if (!$classExist) { //@TODO if module is present, but class doesn't exist....
-            //@TODO: check this logic it's fubared?
-            if (!$this->controller) {
-
-                die('test');
-                $baseRedirect = $this->loader->config('core','modules')[$this->module]['baseRedirect'];
-                Router::redirect(Registry::baseURL($baseRedirect));
-
-            } else {
-
-                $this->output = Router::show404($this->module.'/404');
-
-            }
-
-        } elseif ($classExist && !$methodExist) {
-
+        if(!$moduleExist) {
+            $this->output = Router::show404($this->configuration->modules['defaultModule'].'/404');
+            return false;
+        } else if(!$classExist) {
             $this->output = Router::show404($this->module.'/404');
-
-
-        } else {
-
-
-            $this->instantiatedClass = new $this->class();
-
-            $this->output = call_user_func_array(
-                array(&$this->instantiatedClass, $this->method),
-                $this->params
-            );
-
+            return false;
+        } else if(!$methodExist) {
+            $this->output = Router::show404($this->module.'/404');
+            return false;
         }
+
+        return true;
+
+    }
+
+    private function start() {
+
+        if(!$this->verifyAppProcess())
+            return false;
+
+        $this->instantiatedClass = new $this->class();
+
+        $this->output = call_user_func_array(
+            array(&$this->instantiatedClass, $this->method),
+            $this->params
+        );
 
 
     }

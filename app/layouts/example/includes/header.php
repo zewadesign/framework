@@ -21,7 +21,7 @@
 <body>
 <div class="navbar navbar-static-top">
     <div class="container">
-        <a href="#" class="navbar-brand">Bootstrap 3 RC1</a>
+        <a href="#" class="navbar-brand">MMVC</a>
         <ul class="nav navbar-nav">
             <li class="dropdown">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">CSS <span class="caret"></span></a>
@@ -61,6 +61,6 @@
                 </ul>
             </li>
         </ul>
-        <p class="navbar-text pull-right">Bootstrap 3 example <a href="http://www.bootstraptor.com/bootstrap3" target="_blank">Bootstraptor.com</a></p>
+        <p class="navbar-text pull-right">MMVC <a href="#" target="_blank">Examples</a></p>
     </div>
 </div>

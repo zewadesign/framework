@@ -7,6 +7,15 @@
     <p><a class="btn btn-danger btn-large" href="http://www.bootstraptor.com/">GET Bootstrap 3.0. NOW!</a></p>
 </div>
 <div class="row">
+    <div class="col-xs-12">
+        <PRE>
+            <code>
+        <?php print_r($app);?>
+            </code>
+        </PRE>
+    </div>
+</div>
+<div class="row">
     <div class="col-lg-6">
         <div class="panel panel-default" id="headings">
             <div class="panel-heading">Headings

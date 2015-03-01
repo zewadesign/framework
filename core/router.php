@@ -16,109 +16,99 @@ Class Router
     function __construct() {
 
         $uri = self::uri();
-
         $this->loader = Registry::get('_loader');
 
         /*
          * @TODO: implemnet routing
          *
-         * if ($routes = $this->load->config('routes')) {
-         *    $params = array();
-         *    foreach ($routes as $k=>$v) {
-         *        $params[] = preg_replace('#^'.$k.'$#', $v, $uri);
-         *    }
-         *    if ($params) {
-         *        $uri = trim(implode('/', array_filter($params)), '/');
-         *        unset($params);
-         *    }
-         * }
-         *
-         *
-         * unset($routes);
          */
         $uriFragments = explode('/', $uri);
 
-        $this->url['segments'] = array();
+        $uriChunks = array();
 
         foreach($uriFragments as $location => $fragment) {
 
-            if (strpos($fragment, '__') !== false) {
-                //strip those nasty magic methods.. nice try XD
-                $fragment = preg_replace("/^_+[^a-z]/", "", $fragment);
-            }
-
-            switch($location) {
-
-                case 0:
-                    $this->module = $fragment;
-                break;
-                case 1:
-                    $this->controller = $fragment;
-                break;
-                case 2:
-                    $this->method = $fragment;
-                break;
-
-            }
-
-            $this->url['segments'][] = $fragment;
+            $uriChunks[] = $fragment;
 
         }
 
-        $this->url['uri'] = implode('/', $this->url['segments']);
-
-        /*
-         * @TODO: move anything that sets private vars via registry to the class setting (e.g. the below
-         * methods would be called from the __construct of router.
-         */
         Registry::add('rootPath', ROOT_PATH);
         Registry::add('baseURL', self::baseURL());
         Registry::add('uri', $this->uri());
         Registry::add('currentURL', $this->url());
-        Registry::add('_params', array_slice($this->url['segments'], 3));
+        Registry::add('_params', array_slice($uriChunks, 3));
 
+        if( !preg_match("/^[a-z0-9:_\/\.\[\]-]+$/i", $uri) ||
+            array_filter($uriChunks, function($uriChunk) {
+                    if(strpos($uriChunk, '__') !== false) {
+                        return true;
+                    }
+                }
+            )
+        ){
 
-        if (!preg_match("/^[a-z0-9:_\/\.\[\]-]+$/i", $this->url['uri'])) {
-            exit('Disallowed key characters.');
+            throw new \Exception('Disallowed key characters.');
         }
 
     }
 
+    private static function normalizeURI() {
+
+        if(!empty($_SERVER['PATH_INFO'])) {
+
+            $normalizedURI = $_SERVER['PATH_INFO'];
+
+        } else if(!empty($_SERVER['REQUEST_URI'])) {
+
+            $normalizedURI = $_SERVER['REQUEST_URI'];
+
+        } else {
+
+            $normalizedURI = false;
+
+        }
+
+        if($normalizedURI === '/')
+            $normalizedURI = false;
+
+
+        $normalizedURI = ltrim(preg_replace('/\?.*/', '', $normalizedURI),'/');
+
+        return $normalizedURI;
+    }
 
     public static function uri() {
 
-        if(!empty($_SERVER['PATH_INFO'])) {
-            $path = $_SERVER['PATH_INFO'];
-        } else if(!empty($_SERVER['REQUEST_URI'])) {
-            $path = $_SERVER['REQUEST_URI'];
-        } else {
-            $path = false;
-        }
-        if($path === '/')
-            $path = false;
+        $uri = self::normalizeURI();
+        $defaultModule = Registry::get('_loader')->config('core','modules')['defaultModule'];
+        $defaultController = Registry::get('_loader')->config('core','modules')[$defaultModule]['defaultController'];
+        $defaultMethod = Registry::get('_loader')->config('core','modules')[$defaultModule]['defaultMethod'];
 
-        if($path) { //@TODO: fix global access
-            $path = preg_replace('/\?.*/', '', $path);
-            $uri = explode('/',filter_var(trim(strtolower($path)), FILTER_SANITIZE_URL));
+        if($uri) {
 
-            if(!empty($uri[1]) && !empty($uri[2]) && empty($uri[3])) {
-                $uri[3] = 'index';
+            $uriChunks = explode('/',filter_var(trim(strtolower($uri)), FILTER_SANITIZE_URL));
+
+
+            if(!empty($uriChunks[0]) && !empty($uriChunks[1]) && empty($uriChunks[2])) {
+                $uriChunks[2] = $defaultMethod;
             }
 
+            if(!empty($uriChunks[0]) && empty($uriChunks[1])) {
+                $uriChunks[1] = $defaultController;
+                $uriChunks[2] = $defaultMethod;
+            }
+
+
         } else {
 
-            $defaultModule = Registry::get('_loader')->config('core','modules')['defaultModule'];
-            $defaultController = Registry::get('_loader')->config('core','modules')[$defaultModule]['defaultController'];
-            $defaultMethod = Registry::get('_loader')->config('core','modules')[$defaultModule]['defaultMethod'];
-            $uri = array($defaultModule, $defaultController, $defaultMethod);
+            $uriChunks = array($defaultModule, $defaultController, $defaultMethod);
 
         }
 
-        Registry::add('_module',$uri[0]);
-        Registry::add('_controller', $uri[1]);
-        Registry::add('_method',$uri[2]);
-
-        $uri = ltrim(implode('/', $uri),'/');
+        Registry::add('_module',$uriChunks[0]);
+        Registry::add('_controller', $uriChunks[1]);
+        Registry::add('_method',$uriChunks[2]);
+        $uri = ltrim(implode('/', $uriChunks),'/');
 
         return $uri;
 

@@ -18,7 +18,7 @@ Class Home extends core\Controller {
     public function index() {
 
         $layout = $this->load->view(
-            'layout',
+            'example/layout',
             'example/home',
             $this->data
         );
