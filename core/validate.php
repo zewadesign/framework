@@ -3,7 +3,7 @@
 namespace core;
 
 /**
- * An instance of this class represents a counting machine
+ * Validation to compare data sets against rules
  *
  * <code>
  *
@@ -24,7 +24,6 @@ namespace core;
 class Validate
 {
 
-    //@TODO put all validation into filter_vars with a callback on special needs
 
     /**
      * System configuration
