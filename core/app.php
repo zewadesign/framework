@@ -11,6 +11,7 @@ Class App
     private $module;
     private $controller;
     private $method;
+    private $hooks;
 
     public function __construct() {
         //@TODO: go unset unnececessary vars
@@ -29,7 +30,12 @@ Class App
 
             Registry::add('_configuration',$this->configuration);
 
+            $this->hook = new Hook();
+
+            $this->hook->dispatch('preApplication');
+
             $this->prepareApplication();
+
             $this->autoload();
 
             $this->class = 'app\\modules\\'.Registry::get('_module').'\\controllers\\'.ucfirst($this->controller);
@@ -82,24 +88,31 @@ Class App
 
     private function prepareApplication() {
 
+        $this->hook->dispatch('preRegistry');
         $this->prepareRegistry();
+        $this->hook->dispatch('postRegistry');
 
         Registry::add('lang', $this->loader->lang($this->loader->config('core','language')));
 
         if($this->configuration->database) {
+            $this->hook->dispatch('preDatabase');
             $this->prepare('database');
+            $this->hook->dispatch('postDatabase');
         }
-
         if($this->configuration->cache) {
+            $this->hook->dispatch('preCache');
             $this->prepare('cache');
+            $this->hook->dispatch('postCache');
         }
-
         if($this->configuration->session) {
+            $this->hook->dispatch('preSession');
             $this->prepare('session');
+            $this->hook->dispatch('postSession');
         }
-
         if($this->configuration->acl) {
+            $this->hook->dispatch('preACL');
             $this->prepare('acl');
+            $this->hook->dispatch('postACL');
         }
 
     }
@@ -121,7 +134,6 @@ Class App
         Registry::add('_controller', $this->controller);
         Registry::add('_method', $this->method);
         Registry::add('_params', $this->params);
-
 
     }
 
@@ -208,7 +220,9 @@ Class App
         if(!$this->verifyAppProcess())
             return false;
 
+        $this->hook->dispatch('preController');
         $this->instantiatedClass = new $this->class();
+        $this->hook->dispatch('postController');
 
         $this->output = call_user_func_array(
             array(&$this->instantiatedClass, $this->method),
@@ -268,7 +282,12 @@ Class App
     /* Output rendering */
 
     public function __toString() {
-        if(!$this->output) return '';
+
+        $this->hook->dispatch('postApplication');
+
+        if(!$this->output)
+            return '';
+
         return $this->output;
     }
 
