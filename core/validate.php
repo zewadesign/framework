@@ -24,6 +24,8 @@ namespace core;
 class Validate
 {
 
+    //@TODO put all validation into filter_vars with a callback on special needs
+
     /**
      * System configuration
      *
@@ -34,6 +36,7 @@ class Validate
     /**
      * Instance of output class. //handles sanitization/formatting of system generated strings
      *
+     * @access private
      * @var object
      */
 
@@ -42,18 +45,24 @@ class Validate
     /**
      * Collects all errors on validation.
      *
+     * @access private
      * @var array
      */
 
-    private $errors = array();
+    private $errors = [];
 
     /**
      * Reference to instantiated validation object.
      *
+     * @access public
      * @var object
      */
 
     public static $instance;
+
+    /**
+     * Load up some basic configuration settings.
+     */
 
     public function __construct() {
 
@@ -65,13 +74,15 @@ class Validate
     /**
      * Validate data against validators.
      *
+     * @access public
      * @param array $data The data to be validated
      * @param array $validators The validators
      * @return boolean
      */
+
     public function run(array $data, array $validators) {
 
-        if($this->_checkValidation($data, $validators) === FALSE) {
+        if($this->_processValidation($data, $validators) === FALSE) {
             return false;
         }
 
@@ -80,698 +91,539 @@ class Validate
     }
 
     /**
-     * Run the filtering and validation after each other
+     * Process the errors and return proper language for error
      *
-     * @param array $data
-     * @return array
-     * @return boolean
+     * @param bool $clear false persist errors
+     * @return mixed bool(false) for no errors, array for errors
      */
 
-    private function _checkValidation(array $data, array $validators) {
+    public function errors($clear = TRUE) {
 
-        $validated = $this->_processValidation(
-            $data, $validators
-        );
-
-        if($validated !== TRUE) {
+        if(empty($this->errors))
             return FALSE;
+
+        $result = [];
+
+        foreach($this->errors as $error) {
+            $fieldName = $error['fieldName'];
+
+            $result[$fieldName] = [];
+
+            //Convert camelcase to underscore & remove leading underscore.
+            $rule = preg_replace('/(?<=\\w)(?=[A-Z])/',"_$1", str_replace('_','',$error['rule']));
+            $rule = strtoupper($rule);
+
+            $replace = $error['replace'];//[$field, $params];
+
+            $result[$fieldName][] = $this->_output->lang($rule, $replace);
+
         }
 
-        return $data;
+        if($clear)
+            $this->errors = [];
+
+        return $result;
     }
+
 
     /**
      * Perform data validation against the provided ruleset
      *
-     * @access public
-     * @param  mixed $input
-     * @param  array $ruleset
-     * @return mixed
+     * @access private
+     * @param  array $input
+     * @param  array $validators
+     * @return bool
+     * @throws \Exception When validation methods do not exist.
      */
+
     private function _processValidation(array $input, array $validators) {
 
-        $this->errors = array();
+        $validation = TRUE;
 
-        foreach($validators as $field => $config) {
+        foreach($validators as $fieldName => $config) {
 
-            $formDisplayName = $config['name'];
+            $field = $config['name'];
 
             $ruleset = explode('|', $config['rules']);
 
-
             foreach($ruleset as $rule) {
-                $method = NULL;
-                $param  = NULL;
+                $param = false;
+                $method = false;
 
-                if(strstr($rule, ',') !== FALSE) // has params
-                {
-                    $rule   = explode(',', $rule);
-                    $method = '_validate' . $rule[0];
-                    $param  = $rule[1];
-                    $rule   = $rule[0];
+                if(strstr($rule, ',') !== FALSE) { // has params
+                    $split   = explode(',', $rule);
+                    $method = '_validate' . $split[0];
+                    $params  = $split[1];
                 } else {
                     $method = '_validate' . $rule;
                 }
 
                 if(is_callable(array($this, $method))) {
 
-                    $result = $this->$method($formDisplayName, $field, $input, $param);
+                    $result = $this->$method($field, $fieldName, $input, $param);
 
-                    if(is_array($result)) // Validation Failed
-                    {
+                    if($result) { // Validation Failed
+                        $validation = FALSE;
                         $this->errors[] = $result;
                     }
 
                 } else {
-                    throw new \Exception("Validator method '$method' does not exist.");
+                    throw new \Exception("Validate method '$method' does not exist.");
                 }
             }
         }
 
-        return (count($this->errors) > 0) ? $this->errors : TRUE;
+        return $validation;
     }
 
     /**
-     * Process the errors and return proper language for error
+     * Check if the specified value is present in database
      *
-     * @param bool $convert_to_string = false
-     * @param string $field_class
-     * @param string $error_class
-     * @return array
-     * @return string
-     */
-    public function errors() {
-
-        $formattedErrors = array();
-
-        foreach($this->errors as $error) {
-            $field = $error['field'];
-            $stringReplacement = $error['friendlyName'];
-            $param = $error['param'];
-
-            $formattedErrors[$field] = array();
-
-            switch($error['rule']) {
-                case '_validateRequired':
-                    $formattedErrors[$field][] = $this->_output->lang('VALIDATE_REQUIRED',$stringReplacement);
-                    break;
-                case '_validateValidEmail':
-                    $formattedErrors[$field][] = $this->_output->lang('VALIDATE_VALID_EMAIL', $stringReplacement);
-                    break;
-                case '_validateMaxLen':
-                    if($param == 1) {
-                        $formattedErrors[$field][] = $this->_output->lang('VALIDATE_MAX_LEN', array($stringReplacement, $param));
-                    } else {
-                        $formattedErrors[$field][] = $this->_output->lang('VALIDATE_mAX_LEN2', array($stringReplacement, $param));
-                    }
-                    break;
-                case '_validateMinLen':
-                    if($param == 1) {
-                        $formattedErrors[$field][] = $this->_output->lang('VALIDATE_MIN_LEN', array($stringReplacement, $param));
-                    } else {
-                        $formattedErrors[$field][] = $this->_output->lang('VALIDATE_MIN_LEN2', array($stringReplacement, $param));
-                    }
-                    break;
-                case '_validateExactLen':
-                    if($param == 1) {
-                        $formattedErrors[$field][] = $this->_output->lang('VALIDATE_EXACT_LEN', array($stringReplacement, $param));
-                    } else {
-                        $formattedErrors[$field][] = $this->_output->lang('VALIDATE_EXACT_LEN2', array($stringReplacement, $param));
-                    }
-                    break;
-                case '_validateAlpha':
-                    $formattedErrors[$field][] = $this->_output->lang('VALIDATE_ALPHA', $stringReplacement);
-                    break;
-                case '_validateAlphaNumeric':
-                    $formattedErrors[$field][] = $this->_output->lang('VALIDATE_ALPHA_NUMERIC', $stringReplacement);
-                    break;
-                case '_validateAlphaDash':
-                    $formattedErrors[$field][] = $this->_output->lang('VALIDATE_ALPHA_DASH', $stringReplacement);
-                    break;
-                case '_validateNumeric':
-                    $formattedErrors[$field][] = $this->_output->lang('VALIDATE_NUMERIC', $stringReplacement);
-                    break;
-                case '_validateInteger':
-                    $formattedErrors[$field][] = $this->_output->lang('VALIDATE_INTEGER', $stringReplacement);
-                    break;
-                case '_validateBoolean':
-                    $formattedErrors[$field][] = $this->_output->lang('VALIDATE_BOOLEAN', $stringReplacement);
-                    break;
-                case '_validateFloat':
-                    $formattedErrors[$field][] = $this->_output->lang('VALIDATE_FLOAT', $stringReplacement);
-                    break;
-                case '_validateValidURL':
-                    $formattedErrors[$field][] = $this->_output->lang('VALIDATE_VALID_URL', $stringReplacement);
-                    break;
-                case '_validateURLExists':
-                    $formattedErrors[$field][] = $this->_output->lang('VALIDATE_URL_EXISTS', $stringReplacement);
-                    break;
-                case '_validateValidIp':
-                    $formattedErrors[$field][] = $this->_output->lang('VALIDATE_VALID_IP', $stringReplacement);
-                    break;
-                case '_validateValidCc':
-                    $formattedErrors[$field][] = $this->_output->lang('VALIDATE_VALID_CC', $stringReplacement);
-                    break;
-                case '_validateDate':
-                    $formattedErrors[$field][] = $this->_output->lang('VALIDATE_VALID_DATE', $stringReplacement);
-                    break;
-                case '_validateMinNumeric':
-                    $formattedErrors[$field][] = $this->_output->lang('VALIDATE_MIN_NUMERIC', array($stringReplacement, $param));
-                    break;
-                case '_validateMaxNumeric':
-                    $formattedErrors[$field][] = $this->_output->lang('VALIDATE_MAX_NUMERIC', array($stringReplacement, $param));
-                    break;
-                case '_validateIsUnique':
-                    $formattedErrors[$field][] = $this->_output->lang('VALIDATE_IS_UNIQUE', $error['value']);
-                    break;
-                case '_validateMatches':
-                    $formattedErrors[$field][] = $this->_output->lang('VALIDATE_MATCH', $stringReplacement);
-                    break;
-                case '_validateCommonString':
-                    $formattedErrors[$field][] = $this->_output->lang('VALIDATE_COMMON_STRING',$stringReplacement);
-            }
-        }
-
-        return $formattedErrors;
-    }
-
-
-    // ** ------------------------- Validators ------------------------------------ ** //
-
-
-    /**
-     * Check if the specified key is present and not empty
-     *
-     * Usage: '<index>' => 'required'
+     * Usage: 'rules' => 'isunique,table.column'
      *
      * @access private
-     * @param  string $field
-     * @param  array $input
+     * @param  string $field friendly display name
+     * @param  string $fieldName post field name
+     * @param  array $input data
+     * @param  mixed $param
      * @return mixed
+     * @throws \Exception If a database connection isn't present.
      */
-    private function _validateIsUnique($fieldName, $field, $input, $param = NULL) {
 
-        if(empty($input[$field])) return;
+    private function _validateIsUnique($field, $fieldName, $input, $param = false) {
 
+        if(empty($input[$fieldName])) return TRUE;
 
+        if(!$this->_configuration->database)
+            throw new \Exception("The is unique validation rule required a valid database connection.");
 
         $database = Registry::get('_database');
 
-        $sqlFragments = explode('.',$param);
+        list($table, $column) = explode('.', $param);
 
-        $unique = $database->select($sqlFragments[1])
-            ->table($sqlFragments[0]) // table
-            ->where($sqlFragments[1], $input[$field])
+        $unique = $database->select($column)
+            ->table($table) // table
+            ->where($column, $input[$fieldName])
             ->fetch();
 
         if(!$unique) {
-            return;
+            return TRUE;
         }
 
-        return array(
-            'name' => $fieldName,
-            'field' => $field,
-            'value' => $input[$field],
-            'rule'  => __FUNCTION__,
-            'param' => $param
-        );
+        return ['fieldName' => $fieldName, 'replace' => [$input[$fieldName]]];
+
     }
+
     /**
      * Check if the specified key is present and not empty
      *
-     * Usage: '<index>' => 'required'
+     * Usage: 'rules' => 'required'
      *
      * @access private
-     * @param  string $field
-     * @param  array $input
+     * @param  string $field friendly display name
+     * @param  string $fieldName post field name
+     * @param  array $input data
+     * @param  mixed $param
      * @return mixed
      */
-    private function _validateRequired($displayName, $field, $input, $param = NULL) {
+
+    private function _validateRequired($field, $fieldName, $input, $param = false) {
 
 
-        if(isset($input[$field]) && !empty($input[$field])) {
-            return;
+        if(isset($input[$fieldName]) && !empty($input[$fieldName])) {
+            return TRUE;
         }
 
-        return array(
-            'field' => $field,
-            'value' => NULL,
-            'rule'  => __FUNCTION__,
-            'param' => $param,
-            'formDisplayName' => $displayName
-        );
+        return ['fieldName' => $fieldName, 'replace' => [$field]];
+
     }
 
     /**
      * Determine if the provided email is valid
      *
-     * Usage: '<index>' => 'valid_email'
+     * Usage: 'rules' => 'validemail'
      *
      * @access private
-     * @param  string $field
-     * @param  array $input
+     * @param  string $field friendly display name
+     * @param  string $fieldName post field name
+     * @param  array $input data
+     * @param  mixed $param
      * @return mixed
      */
-    private function _validateValidEmail($displayName, $field, $input, $param = NULL) {
+
+    private function _validateValidEmail($field, $fieldName, $input, $param = false) {
 
         if(!isset($input[$field]) || empty($input[$field])) {
-            return;
+            return TRUE;
         }
 
         if(!filter_var($input[$field], FILTER_VALIDATE_EMAIL)) {
-            return array(
-                'field' => $field,
-                'value' => $input[$field],
-                'rule'  => __FUNCTION__,
-                'param' => $param,
-                'formDisplayName' => $displayName
-            );
+
+            return ['fieldName' => $fieldName, 'replace' => [$field]];
+
         }
     }
 
     /**
      * Determine if the provided value length is less or equal to a specific value
      *
-     * Usage: '<index>' => 'max_len,240'
+     * Usage: 'rules' => 'maxlen,240'
      *
      * @access private
-     * @param  string $field
-     * @param  array $input
+     * @param  string $field friendly display name
+     * @param  string $fieldName post field name
+     * @param  array $input data
+     * @param  mixed $param
      * @return mixed
      */
 
-    //@TODO put all validation into filter_vars with a callback on special needs
-
-    private function _validateMatches($displayName, $field, $input, $param = NULL) {
+    private function _validateMatches($field, $fieldName, $input, $param = false) {
 
         if(!isset($input[$field])) {
-            return;
+            return TRUE;
         }
         if($input[$field] == $input[$param]) {
-
-            return;
+            return TRUE;
         }
 
-        return array(
-            'field' => $field,
-            'value' => $input[$field],
-            'rule'  => __FUNCTION__,
-            'param' => $param,
-            'formDisplayName' => $displayName
-        );
+        return ['fieldName' => $fieldName, 'replace' => [$field, $param]];
     }
 
     /**
      * Determine if the provided value length is less or equal to a specific value
      *
-     * Usage: '<index>' => 'max_len,240'
+     * Usage: 'rules' => 'maxlen,240'
      *
      * @access private
-     * @param  string $field
-     * @param  array $input
+     * @param  string $field friendly display name
+     * @param  string $fieldName post field name
+     * @param  array $input data
+     * @param  mixed $param
      * @return mixed
      */
 
-    //@TODO put all validation into filter_vars with a callback on special needs
-
-    private function _validateMaxLen($displayName, $field, $input, $param = NULL) {
+    private function _validateMaxLen($field, $fieldName, $input, $param = false) {
 
         if(!isset($input[$field])) {
-            return;
+            return TRUE;
         }
 
         if(function_exists('mb_strlen')) {
             if(mb_strlen($input[$field]) <= (int)$param) {
-                return;
+                return TRUE;
             }
         } else {
             if(strlen($input[$field]) <= (int)$param) {
-                return;
+                return TRUE;
             }
         }
 
-        return array(
-            'field' => $field,
-            'value' => $input[$field],
-            'rule'  => __FUNCTION__,
-            'param' => $param,
-            'formDisplayName' => $displayName
-        );
+        return ['fieldName' => $fieldName, 'replace' => [$field, $param]];
     }
 
     /**
      * Determine if the provided value length is more or equal to a specific value
      *
-     * Usage: '<index>' => 'min_len,4'
+     * Usage: 'rules' => 'minlen,4'
      *
      * @access private
-     * @param  string $field
-     * @param  array $input
+     * @param  string $field friendly display name
+     * @param  string $fieldName post field name
+     * @param  array $input data
+     * @param  mixed $param
      * @return mixed
      */
-    private function _validateMinLen($displayName, $field, $input, $param = NULL) {
+
+    private function _validateMinLen($field, $fieldName, $input, $param = false) {
 
         if(!isset($input[$field])) {
-            return;
+            return TRUE;
         }
 
         if(function_exists('mb_strlen')) {
             if(mb_strlen($input[$field]) >= (int)$param) {
-                return;
+                return TRUE;
             }
         } else {
             if(strlen($input[$field]) >= (int)$param) {
-                return;
+                return TRUE;
             }
         }
-        return array(
-            'field' => $field,
-            'value' => $input[$field],
-            'rule'  => __FUNCTION__,
-            'param' => $param,
-            'formDisplayName' => $displayName
-        );
+        return ['fieldName' => $fieldName, 'replace' => [$field, $param]];
     }
 
     /**
      * Determine if the provided value length matches a specific value
      *
-     * Usage: '<index>' => 'exact_len,5'
+     * Usage: 'rules' => 'exactlen,5'
      *
      * @access private
-     * @param  string $field
-     * @param  array $input
+     * @param  string $field friendly display name
+     * @param  string $fieldName post field name
+     * @param  array $input data
+     * @param  mixed $param
      * @return mixed
      */
-    private function _validateExactLen($displayName, $field, $input, $param = NULL) {
+
+    private function _validateExactLen($field, $fieldName, $input, $param = false) {
 
         if(!isset($input[$field])) {
-            return;
+            return TRUE;
         }
 
         if(function_exists('mb_strlen')) {
             if(mb_strlen($input[$field]) == (int)$param) {
-                return;
+                return TRUE;
             }
         } else {
             if(strlen($input[$field]) == (int)$param) {
-                return;
+                return TRUE;
             }
         }
 
-        return array(
-            'field' => $field,
-            'value' => $input[$field],
-            'rule'  => __FUNCTION__,
-            'param' => $param,
-            'formDisplayName' => $displayName
-        );
+        return ['fieldName' => $fieldName, 'replace' => [$field, $param]];
     }
 
     /**
      * Determine if the provided value contains only alpha characters
      *
-     * Usage: '<index>' => 'alpha'
+     * Usage: 'rules' => 'alpha'
      *
      * @access private
-     * @param  string $field
-     * @param  array $input
+     * @param  string $field friendly display name
+     * @param  string $fieldName post field name
+     * @param  array $input data
+     * @param  mixed $param
      * @return mixed
      */
-    private function _validateAlpha($displayName, $field, $input, $param = NULL) {
+
+    private function _validateAlpha($field, $fieldName, $input, $param = false) {
 
         if(!isset($input[$field]) || empty($input[$field])) {
-            return;
+            return TRUE;
         }
 
         if(!preg_match("/^([a-zÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÒÓÔÕÖÙÚÛÜÝàáâãäåçèéêëìíîïðòóôõöùúûüýÿ])+$/i", $input[$field]) !== FALSE) {
-            return array(
-                'field' => $field,
-                'value' => $input[$field],
-                'rule'  => __FUNCTION__,
-                'param' => $param,
-                'formDisplayName' => $displayName
-            );
+            return ['fieldName' => $fieldName, 'replace' => [$field]];
         }
     }
 
     /**
      * Determine if the provided value contains only alpha-numeric characters
      *
-     * Usage: '<index>' => 'alpha_numeric'
+     * Usage: 'rules' => 'commonstring'
      *
      * @access private
-     * @param  string $field
-     * @param  array $input
+     * @param  string $field friendly display name
+     * @param  string $fieldName post field name
+     * @param  array $input data
+     * @param  mixed $param
      * @return mixed
      */
-    private function _validateCommonString($displayName, $field, $input, $param = NULL) {
+    private function _validateCommonString($field, $fieldName, $input, $param = false) {
 
-        if(!isset($input[$field]) || empty($input[$field])) {
-            return;
+        if(!isset($input[$fieldName]) || empty($input[$fieldName])) {
+            return TRUE;
         }
 
-        if(!preg_match("/^([\sa-z0-9ÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÒÓÔÕÖÙÚÛÜÝàáâãäåçèéêëìíîïðòóôõöùúûüýÿ?!.+-])+$/i", $input[$field]) !== FALSE) {
-            return array(
-                'field' => $field,
-                'value' => $input[$field],
-                'rule'  => __FUNCTION__,
-                'param' => $param,
-                'formDisplayName' => $displayName
-            );
+        if(!preg_match("/^([\sa-z0-9ÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÒÓÔÕÖÙÚÛÜÝàáâãäåçèéêëìíîïðòóôõöùúûüýÿ?!.+-])+$/i", $input[$fieldName]) !== FALSE) {
+            return ['fieldName' => $fieldName, 'replace' => [$field]];
         }
     }
 
     /**
      * Determine if the provided value contains only alpha-numeric characters
      *
-     * Usage: '<index>' => 'alpha_numeric'
+     * Usage: 'rules' => 'alphanumeric'
      *
      * @access private
-     * @param  string $field
-     * @param  array $input
+     * @param  string $field friendly display name
+     * @param  string $fieldName post field name
+     * @param  array $input data
+     * @param  mixed $param
      * @return mixed
      */
-    private function _validateAlphaNumeric($displayName, $field, $input, $param = NULL) {
+    private function _validateAlphaNumeric($field, $fieldName, $input, $param = false) {
 
-        if(!isset($input[$field]) || empty($input[$field])) {
-            return;
+        if(!isset($input[$fieldName]) || empty($input[$fieldName])) {
+            return TRUE;
         }
 
-        if(!preg_match("/^([a-z0-9ÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÒÓÔÕÖÙÚÛÜÝàáâãäåçèéêëìíîïðòóôõöùúûüýÿ])+$/i", $input[$field]) !== FALSE) {
-            return array(
-                'field' => $field,
-                'value' => $input[$field],
-                'rule'  => __FUNCTION__,
-                'param' => $param,
-                'formDisplayName' => $displayName
-            );
+        if(!preg_match("/^([a-z0-9ÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÒÓÔÕÖÙÚÛÜÝàáâãäåçèéêëìíîïðòóôõöùúûüýÿ])+$/i", $input[$fieldName]) !== FALSE) {
+            return ['fieldName' => $fieldName, 'replace' => [$field]];
         }
     }
 
     /**
      * Determine if the provided value contains only alpha characters with dashed and underscores
      *
-     * Usage: '<index>' => 'alpha_dash'
+     * Usage: 'rules' => 'alphadash'
      *
      * @access private
-     * @param  string $field
-     * @param  array $input
+     * @param  string $field friendly display name
+     * @param  string $fieldName post field name
+     * @param  array $input data
+     * @param  mixed $param
      * @return mixed
      */
-    private function _validateAlphaDash($displayName, $field, $input, $param = NULL) {
+    private function _validateAlphaDash($field, $fieldName, $input, $param = false) {
 
-        if(!isset($input[$field]) || empty($input[$field])) {
-            return;
+        if(!isset($input[$fieldName]) || empty($input[$fieldName])) {
+            return TRUE;
         }
 
-        if(!preg_match("/^([a-z0-9ÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÒÓÔÕÖÙÚÛÜÝàáâãäåçèéêëìíîïðòóôõöùúûüýÿ_-])+$/i", $input[$field]) !== FALSE) {
-            return array(
-                'field' => $field,
-                'value' => $input[$field],
-                'rule'  => __FUNCTION__,
-                'param' => $param,
-                'formDisplayName' => $displayName
-            );
+        if(!preg_match("/^([a-z0-9ÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÒÓÔÕÖÙÚÛÜÝàáâãäåçèéêëìíîïðòóôõöùúûüýÿ_-])+$/i", $input[$fieldName]) !== FALSE) {
+            return ['fieldName' => $fieldName, 'replace' => [$field]];
         }
     }
 
     /**
      * Determine if the provided value is a valid number or numeric string
      *
-     * Usage: '<index>' => 'numeric'
+     * Usage: 'rules' => 'numeric'
      *
      * @access private
-     * @param  string $field
-     * @param  array $input
+     * @param  string $field friendly display name
+     * @param  string $fieldName post field name
+     * @param  array $input data
+     * @param  mixed $param
      * @return mixed
      */
-    private function _validateNumeric($displayName, $field, $input, $param = NULL) {
+    private function _validateNumeric($field, $fieldName, $input, $param = false) {
 
-        if(!isset($input[$field]) || empty($input[$field])) {
-            return;
+        if(!isset($input[$fieldName]) || empty($input[$fieldName])) {
+            return TRUE;
         }
 
-        if(!is_numeric($input[$field])) {
-            return array(
-                'field' => $field,
-                'value' => $input[$field],
-                'rule'  => __FUNCTION__,
-                'param' => $param,
-                'formDisplayName' => $displayName
-            );
+        if(!is_numeric($input[$fieldName])) {
+            return ['fieldName' => $fieldName, 'replace' => [$field]];
         }
     }
 
     /**
      * Determine if the provided value is a valid integer
      *
-     * Usage: '<index>' => 'integer'
+     * Usage: 'rules' => 'integer'
      *
      * @access private
-     * @param  string $field
-     * @param  array $input
+     * @param  string $field friendly display name
+     * @param  string $fieldName post field name
+     * @param  array $input data
+     * @param  mixed $param
      * @return mixed
      */
-    private function _validateInteger($displayName, $field, $input, $param = NULL) {
+    private function _validateInteger($field, $fieldName, $input, $param = false) {
 
-        if(!isset($input[$field]) || empty($input[$field])) {
-            return;
+        if(!isset($input[$fieldName]) || empty($input[$fieldName])) {
+            return TRUE;
         }
 
-        if(!filter_var($input[$field], FILTER_VALIDATE_INT)) {
-            return array(
-                'field' => $field,
-                'value' => $input[$field],
-                'rule'  => __FUNCTION__,
-                'param' => $param,
-                'formDisplayName' => $displayName
-            );
+        if(!filter_var($input[$fieldName], FILTER_VALIDATE_INT)) {
+            return ['fieldName' => $fieldName, 'replace' => [$field]];
         }
     }
 
     /**
      * Determine if the provided value is a PHP accepted boolean
      *
-     * Usage: '<index>' => 'boolean'
+     * Usage: 'rules' => 'boolean'
      *
      * @access private
-     * @param  string $field
-     * @param  array $input
+     * @param  string $field friendly display name
+     * @param  string $fieldName post field name
+     * @param  array $input data
+     * @param  mixed $param
      * @return mixed
      */
-    private function _validateBoolean($displayName, $field, $input, $param = NULL) {
+    private function _validateBoolean($field, $fieldName, $input, $param = false) {
 
-        if(!isset($input[$field]) || empty($input[$field])) {
-            return;
+        if(!isset($input[$fieldName]) || empty($input[$fieldName])) {
+            return TRUE;
         }
 
-        $bool = filter_var($input[$field], FILTER_VALIDATE_BOOLEAN);
+        $bool = filter_var($input[$fieldName], FILTER_VALIDATE_BOOLEAN);
 
         if(!is_bool($bool)) {
-            return array(
-                'field' => $field,
-                'value' => $input[$field],
-                'rule'  => __FUNCTION__,
-                'param' => $param,
-                'formDisplayName' => $displayName
-            );
+            return ['fieldName' => $fieldName, 'replace' => [$field]];
         }
     }
 
     /**
      * Determine if the provided value is a valid float
      *
-     * Usage: '<index>' => 'float'
+     * Usage: 'rules' => 'float'
      *
      * @access private
-     * @param  string $field
-     * @param  array $input
+     * @param  string $field friendly display name
+     * @param  string $fieldName post field name
+     * @param  array $input data
+     * @param  mixed $param
      * @return mixed
      */
-    private function _validateFloat($displayName, $field, $input, $param = NULL) {
+    private function _validateFloat($field, $fieldName, $input, $param = false) {
 
-        if(!isset($input[$field]) || empty($input[$field])) {
-            return;
+        if(!isset($input[$fieldName]) || empty($input[$fieldName])) {
+            return TRUE;
         }
 
-        if(!filter_var($input[$field], FILTER_VALIDATE_FLOAT)) {
-            return array(
-                'field' => $field,
-                'value' => $input[$field],
-                'rule'  => __FUNCTION__,
-                'param' => $param,
-                'formDisplayName' => $displayName
-            );
+        if(!filter_var($input[$fieldName], FILTER_VALIDATE_FLOAT)) {
+            return ['fieldName' => $fieldName, 'replace' => [$field]];
         }
     }
 
     /**
      * Determine if the provided value is a valid URL
      *
-     * Usage: '<index>' => 'valid_url'
+     * Usage: 'rules' => 'validurl'
      *
      * @access private
-     * @param  string $field
-     * @param  array $input
+     * @param  string $field friendly display name
+     * @param  string $fieldName post field name
+     * @param  array $input data
+     * @param  mixed $param
      * @return mixed
      */
-    private function _validateValidURL($displayName, $field, $input, $param = NULL) {
+    private function _validateValidURL($field, $fieldName, $input, $param = false) {
 
-        if(!isset($input[$field]) || empty($input[$field])) {
-            return;
+        if(!isset($input[$fieldName]) || empty($input[$fieldName])) {
+            return TRUE;
         }
 
-        if(!filter_var($input[$field], FILTER_VALIDATE_URL)) {
-            return array(
-                'field' => $field,
-                'value' => $input[$field],
-                'rule'  => __FUNCTION__,
-                'param' => $param,
-                'formDisplayName' => $displayName
-            );
+        if(!filter_var($input[$fieldName], FILTER_VALIDATE_URL)) {
+            return ['fieldName' => $fieldName, 'replace' => [$field]];
         }
     }
 
     /**
      * Determine if a URL exists & is accessible
      *
-     * Usage: '<index>' => 'url_exists'
+     * Usage: 'rules' => 'urlexists'
      *
      * @access private
-     * @param  string $field
-     * @param  array $input
+     * @param  string $field friendly display name
+     * @param  string $fieldName post field name
+     * @param  array $input data
+     * @param  mixed $param
      * @return mixed
      */
-    private function _validateURLExists($displayName, $field, $input, $param = NULL) {
 
-        if(!isset($input[$field]) || empty($input[$field])) {
-            return;
+    private function _validateURLExists($field, $fieldName, $input, $param = false) {
+
+        if(!isset($input[$fieldName]) || empty($input[$fieldName])) {
+            return TRUE;
         }
 
         $url = str_replace(
-            array('http://', 'https://', 'ftp://'), '', strtolower($input[$field])
+            array('http://', 'https://', 'ftp://'), '', strtolower($input[$fieldName])
         );
 
         if(function_exists('checkdnsrr')) {
             if(!checkdnsrr($url)) {
-                return array(
-                    'field' => $field,
-                    'value' => $input[$field],
-                    'rule'  => __FUNCTION__,
-                    'param' => $param,
-                    'formDisplayName' => $displayName
-                );
+                return ['fieldName' => $fieldName, 'replace' => [$field]];
             }
         } else {
             if(gethostbyname($url) == $url) {
-                return array(
-                    'field' => $field,
-                    'value' => $input[$field],
-                    'rule'  => __FUNCTION__,
-                    'param' => $param,
-                    'formDisplayName' => $displayName
-                );
+                return ['fieldName' => $fieldName, 'replace' => [$field]];
             }
         }
     }
@@ -779,38 +631,37 @@ class Validate
     /**
      * Determine if the provided value is a valid IP address
      *
-     * Usage: '<index>' => 'valid_ip'
+     * Usage: 'rules' => 'validip'
      *
      * @access private
-     * @param  string $field
-     * @param  array $input
+     * @param  string $field friendly display name
+     * @param  string $fieldName post field name
+     * @param  array $input data
+     * @param  mixed $param
      * @return mixed
      */
-    private function _validateValidIp($displayName, $field, $input, $param = NULL) {
 
-        if(!isset($input[$field]) || empty($input[$field])) {
-            return;
+    private function _validateValidIp($field, $fieldName, $input, $param = false) {
+
+        if(!isset($input[$fieldName]) || empty($input[$fieldName])) {
+            return TRUE;
         }
 
-        if(!filter_var($input[$field], FILTER_VALIDATE_IP) !== FALSE) {
-            return array(
-                'field' => $field,
-                'value' => $input[$field],
-                'rule'  => __FUNCTION__,
-                'param' => $param,
-                'formDisplayName' => $displayName
-            );
+        if(!filter_var($input[$fieldName], FILTER_VALIDATE_IP) !== FALSE) {
+            return ['fieldName' => $fieldName, 'replace' => [$field]];
         }
     }
 
     /**
      * Determine if the provided value is a valid IPv4 address
      *
-     * Usage: '<index>' => 'valid_ipv4'
+     * Usage: 'rules' => 'validipv4'
      *
      * @access private
-     * @param  string $field
-     * @param  array $input
+     * @param  string $field friendly display name
+     * @param  string $fieldName post field name
+     * @param  array $input data
+     * @param  mixed $param
      * @return mixed
      * @see http://pastebin.com/UvUPPYK0
      */
@@ -819,48 +670,39 @@ class Validate
      * What about private networks? http://en.wikipedia.org/wiki/Private_network
      * What about loop-back address? 127.0.0.1
      */
-    private function _validateValidIpv4($displayName, $field, $input, $param = NULL) {
+    private function _validateValidIpv4($field, $fieldName, $input, $param = false) {
 
-        if(!isset($input[$field]) || empty($input[$field])) {
-            return;
+        if(!isset($input[$fieldName]) || empty($input[$fieldName])) {
+            return TRUE;
         }
 
-        if(!filter_var($input[$field], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) // removed !== FALSE
+        if(!filter_var($input[$fieldName], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) // removed !== FALSE
         { // it passes
-            return array(
-                'field' => $field,
-                'value' => $input[$field],
-                'rule'  => __FUNCTION__,
-                'param' => $param,
-                'formDisplayName' => $displayName
-            );
+            return ['fieldName' => $fieldName, 'replace' => [$field]];
         }
     }
 
     /**
      * Determine if the provided value is a valid IPv6 address
      *
-     * Usage: '<index>' => 'valid_ipv6'
+     * Usage: 'rules' => 'validipv6'
      *
      * @access private
-     * @param  string $field
-     * @param  array $input
+     * @param  string $field friendly display name
+     * @param  string $fieldName post field name
+     * @param  array $input data
+     * @param  mixed $param
      * @return mixed
      */
-    private function _validateValidIpv6($displayName, $field, $input, $param = NULL) {
 
-        if(!isset($input[$field]) || empty($input[$field])) {
-            return;
+    private function _validateValidIpv6($field, $fieldName, $input, $param = false) {
+
+        if(!isset($input[$fieldName]) || empty($input[$fieldName])) {
+            return TRUE;
         }
 
-        if(!filter_var($input[$field], FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
-            return array(
-                'field' => $field,
-                'value' => $input[$field],
-                'rule'  => __FUNCTION__,
-                'param' => $param,
-                'formDisplayName' => $displayName
-            );
+        if(!filter_var($input[$fieldName], FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+            return ['fieldName' => $fieldName, 'replace' => [$field]];
         }
     }
 
@@ -868,20 +710,23 @@ class Validate
      * Determine if the input is a valid credit card number
      *
      * See: http://stackoverflow.com/questions/174730/what-is-the-best-way-to-validate-a-credit-card-in-php
-     * Usage: '<index>' => 'valid_cc'
+     * Usage: 'rules' => 'validcc'
      *
      * @access private
-     * @param  string $field
-     * @param  array $input
+     * @param  string $field friendly display name
+     * @param  string $fieldName post field name
+     * @param  array $input data
+     * @param  mixed $param
      * @return mixed
      */
-    private function _validateValidCc($displayName, $field, $input, $param = NULL) {
 
-        if(!isset($input[$field]) || empty($input[$field])) {
-            return;
+    private function _validateValidCc($field, $fieldName, $input, $param = false) {
+
+        if(!isset($input[$fieldName]) || empty($input[$fieldName])) {
+            return TRUE;
         }
 
-        $number = preg_replace('/\D/', '', $input[$field]);
+        $number = preg_replace('/\D/', '', $input[$fieldName]);
 
         if(function_exists('mb_strlen')) {
             $number_length = mb_strlen($number);
@@ -911,109 +756,86 @@ class Validate
             return; // Valid
         }
 
-        return array(
-            'field' => $field,
-            'value' => $input[$field],
-            'rule'  => __FUNCTION__,
-            'param' => $param,
-            'formDisplayName' => $displayName
-        );
+        return ['fieldName' => $fieldName, 'replace' => [$field]];
     }
 
     /**
      * Determine if the provided input is a valid date (ISO 8601)
      *
-     * Usage: '<index>' => 'date'
+     * Usage: 'rules' => 'date'
      *
      * @access private
-     * @param string $field
-     * @param string $input date ('Y-m-d') or datetime ('Y-m-d H:i:s')
-     * @param null $param
-     *
+     * @param  string $field friendly display name
+     * @param  string $fieldName post field name
+     * @param  array $input data ('Y-m-d') or datetime ('Y-m-d H:i:s')
+     * @param  mixed $param
      * @return mixed
      */
-    private function _validateDate($displayName, $field, $input, $param = NULL) {
 
-        if(!isset($input[$field]) || empty($input[$field])) {
-            return;
+    private function _validateDate($field, $fieldName, $input, $param = false) {
+
+        if(!isset($input[$fieldName]) || empty($input[$fieldName])) {
+            return TRUE;
         }
 
-        $cdate1 = date('m/d/Y', strtotime($input[$field]));
-        $cdate2 = date('m/d/Y H:i:s', strtotime($input[$field]));
+        $cdate1 = date('m/d/Y', strtotime($input[$fieldName]));
+        $cdate2 = date('m/d/Y H:i:s', strtotime($input[$fieldName]));
 
-        if($cdate1 != $input[$field] && $cdate2 != $input[$field]) {
-            return array(
-                'field' => $field,
-                'value' => $input[$field],
-                'rule'  => __FUNCTION__,
-                'param' => $param,
-                'formDisplayName' => $displayName
-            );
+        if($cdate1 != $input[$fieldName] && $cdate2 != $input[$fieldName]) {
+            return ['fieldName' => $fieldName, 'replace' => [$field]];
         }
     }
 
     /**
      * Determine if the provided numeric value is lower or equal to a specific value
      *
-     * Usage: '<index>' => 'max_numeric,50'
+     * Usage: 'rules' => 'maxnumeric,50'
      *
      * @access private
-     *
-     * @param  string $field
-     * @param  array $input
-     * @param null $param
-     *
+     * @param  string $field friendly display name
+     * @param  string $fieldName post field name
+     * @param  array $input data
+     * @param  mixed $param
      * @return mixed
      */
-    private function _validateMaxNumeric($displayName, $field, $input, $param = NULL) {
 
-        if(!isset($input[$field]) || empty($input[$field])) {
-            return;
+    private function _validateMaxNumeric($field, $fieldName, $input, $param = false) {
+
+        if(!isset($input[$fieldName]) || empty($input[$fieldName])) {
+            return TRUE;
         }
 
-        if(is_numeric($input[$field]) && is_numeric($param) && ($input[$field] <= $param)) {
-            return;
+        if(is_numeric($input[$fieldName]) && is_numeric($param) && ($input[$fieldName] <= $param)) {
+            return TRUE;
         }
 
-        return array(
-            'field' => $field,
-            'value' => $input[$field],
-            'rule'  => __FUNCTION__,
-            'param' => $param,
-            'formDisplayName' => $displayName
-        );
+        return ['fieldName' => $fieldName, 'replace' => [$field, $param]];
     }
 
     /**
      * Determine if the provided numeric value is higher or equal to a specific value
      *
-     * Usage: '<index>' => 'min_numeric,1'
+     * Usage: 'rules' => 'minnumeric,1'
      *
      * @access private
-     *
-     * @param  string $field
-     * @param  array $input
-     * @param null $param
-     *
+     * @param  string $field friendly display name
+     * @param  string $fieldName post field name
+     * @param  array $input data
+     * @param  mixed $param
      * @return mixed
      */
-    private function _validateMinNumeric($displayName, $field, $input, $param = NULL) {
 
-        if(!isset($input[$field]) || empty($input[$field])) {
-            return;
+    private function _validateMinNumeric($field, $fieldName, $input, $param = false) {
+
+        if(!isset($input[$fieldName]) || empty($input[$fieldName])) {
+            return TRUE;
         }
 
-        if(is_numeric($input[$field]) && is_numeric($param) && ($input[$field] >= $param)) {
-            return;
+        if(is_numeric($input[$fieldName]) && is_numeric($param) && ($input[$fieldName] >= $param)) {
+            return TRUE;
         }
 
-        return array(
-            'field' => $field,
-            'value' => $input[$field],
-            'rule'  => __FUNCTION__,
-            'param' => $param,
-            'formDisplayName' => $displayName
-        );
+        return ['fieldName' => $fieldName, 'replace' => [$field, $param]];
     }
-} // EOC
+}
 

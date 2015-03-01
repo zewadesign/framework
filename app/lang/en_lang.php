@@ -3,15 +3,12 @@
 $en_lang = array(
 
 /* Validation messages */
-'VALIDATE_MATCH' => 'The %s field must match', // fix lol
+'VALIDATE_MATCH' => 'The %s must match %s', // fix lol
 'VALIDATE_REQUIRED' => 'The %s field is required',
 'VALIDATE_VALID_EMAIL' => 'The %s field is required to be a valid email address',
-'VALIDATE_MAX_LEN' => 'The %s field needs to be shorter than %s character',
-'VALIDATE_mAX_LEN2' => 'The %s field needs to be shorter than %s characters',
-'VALIDATE_MIN_LEN' => 'The %s field needs to be longer than %s character',
-'VALIDATE_MIN_LEN2' => 'The %s field needs to be longer than %s characters',
-'VALIDATE_EXACT_LEN' => 'The %s field needs to be exactly %s character in length',
-'VALIDATE_EXACT_LEN2' => 'The %s field needs to be exactly %s characters in length',
+'VALIDATE_MAX_LEN' => 'The %s field needs to be shorter than %s character(s)',
+'VALIDATE_MIN_LEN' => 'The %s field needs to be longer than %s character(s)',
+'VALIDATE_EXACT_LEN' => 'The %s field needs to be exactly %s character(s) in length',
 'VALIDATE_ALPHA' => 'The %s field may only contain alpha characters(a-z)',
 'VALIDATE_ALPHA_NUMERIC' => 'The %s field may only contain alpha-numeric characters',
 'VALIDATE_ALPHA_DASH' => 'The %s field may only contain alpha characters &amp; dashes',
