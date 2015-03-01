@@ -2,34 +2,113 @@
 
 namespace core;
 
+/**
+ * This class handles the access control list for requests
+ *
+ * @author Zechariah Walden<zech @ zewadesign.com>
+ */
+
 class Acl
 {
 
-    private $userId = false;
-    private $roleId = false;
-    private $module;
-    private $controller;
-    private $method;
+    /**
+     * System configuration
+     *
+     * @var object
+     */
+    private $_configuration;
+
+    /**
+     * Database object reference
+     *
+     * @access private
+     * @var object
+     */
+
     private $database;
-    private $cache;
+
+    /**
+     * Cache object reference
+     *
+     * @access private
+     * @var mixed
+     */
+
+    private $cache = false;
+
+    /**
+     * Requesting user id
+     *
+     * @var int
+     */
+
+    private $userId = false;
+
+    /**
+     * Requesting role id
+     *
+     * @var int
+     */
+
+    private $roleId = false;
+
+    /**
+     * Module being requested
+     *
+     * @var string
+     */
+
+    private $module;
+
+    /**
+     * Controller being requested
+     *
+     * @var string
+     */
+
+    private $controller;
+
+    /**
+     * Method being requested
+     *
+     * @var string
+     */
+
+    private $method;
+
+    /**
+     * Load up some basic configuration settings.
+     */
 
     public function __construct($userId = false, $roleId = false) {
+
+        $this->_configuration = Registry::get('_configuration');
         $this->database = Registry::get('_database');
-        $this->cache = Registry::get('_memcached');
 
-        if(!$userId) {
+        if($this->_configuration->cache) {
 
-            $this->roleId = Registry::get('_loader')->config('core','acl')['guestId'];
-
-        } else {
-
-            $this->roleId = $roleId;
-            $this->userId = $userId;
+            $this->cache = Registry::get('_memcached');
 
         }
 
+        if(!$userId) {
+            $this->roleId = $this->_configuration->acl->roles->guest;
+        } else {
+            $this->roleId = $roleId;
+            $this->userId = $userId;
+        }
 
     }
+
+    /**
+     * Check if client has permission for request
+     *
+     * @access public
+     * @param string $module
+     * @param string $controller
+     * @param string $method
+     * @return int 1 = permitted, 2 = please authenticate, 3 = no access
+     */
 
     public function hasAccessRights($module, $controller, $method) {
 
@@ -43,7 +122,7 @@ class Acl
 
         $_cacheKey = 'hasAccessRights::'.$module.'::'.$controller.'::'.$method.'::'.$this->userId;
 
-        if($result = $this->cache->get($_cacheKey)) {
+        if($this->cache && $result = $this->cache->get($_cacheKey)) {
 
             $access = $result;
 
@@ -54,23 +133,23 @@ class Acl
             $where .= ' AND ( RoleAccess.role_controller = ? OR RoleAccess.role_controller = ? ) ';
             $where .= ' AND ( RoleAccess.role_method = ? OR RoleAccess.role_method = ? ) ';
 
-            $access = $this->database->select('UserRole.user_id, UserRole.role_id')
-                ->table('UserRole')
+            $access = $this->database->select('UserRole.user_id, UserRole.role_id')->table('UserRole')
                 ->join('RoleAccess','UserRole.role_id = RoleAccess.role_id')
-                ->where($where, array(
-                    'userid' => $this->userId,
-                    'roleid' => $this->roleId,
-                    'module' => $module,
-                    'ormodule' => '%',
-                    'controller' => $controller,
-                    'orcontroller' => '%',
-                    'method' => $method,
-                    'ormethod' => '%',
-                ))
-                ->limit(1)
-                ->fetch();
+                ->where($where,
+                    [
+                        'userid' => $this->userId, 'roleid' => $this->roleId,
+                        'module' => $module, 'ormodule' => '%',
+                        'controller' => $controller, 'orcontroller' => '%',
+                        'method' => $method, 'ormethod' => '%'
+                    ]
+                )->limit(1)->fetch();
 
-            $this->cache->set($_cacheKey, $access, time() + 300);
+            if($this->cache) {
+
+                $this->cache->set($_cacheKey, $access, time() + 300);
+
+            }
+
         }
 
 
@@ -80,6 +159,14 @@ class Acl
         return 1;
 
     }
+
+
+    /**
+     * Check if unauthenticated client is permitted for request
+     *
+     * @access private
+     * @return int 1 = permitted, 2 = please authenticate
+     */
 
     private function hasGuestAccessRights() {
 

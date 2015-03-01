@@ -19,6 +19,13 @@ Class App
 {
 
     /**
+     * System configuration
+     *
+     * @var object
+     */
+    private $_configuration;
+
+    /**
      * Return value from application
      *
      * @var string
@@ -91,7 +98,7 @@ Class App
 
             Registry::add('_loader', new Load());
             $this->loader = Registry::get('_loader');
-            $this->configuration = (object) array(
+            $this->_configuration = (object) array(
                 'database' => $this->loader->config('core', 'database'),
                 'session' => $this->loader->config('core', 'session'),
                 'cache' => $this->loader->config('core','cache'),
@@ -100,7 +107,7 @@ Class App
                 'hooks' => $this->loader->config('core','hooks')
             );
 
-            Registry::add('_configuration',$this->configuration);
+            Registry::add('_configuration',$this->_configuration);
 
             $this->hook = new Hook();
 
@@ -112,7 +119,7 @@ Class App
 
             $this->class = 'app\\modules\\'.Registry::get('_module').'\\controllers\\'.ucfirst($this->controller);
 
-            if($this->configuration->acl) {
+            if($this->_configuration->acl) {
 
                 $this->secureStart();
 
@@ -205,22 +212,22 @@ Class App
 
         Registry::add('lang', $this->loader->lang($this->loader->config('core','language')));
 
-        if($this->configuration->database) {
+        if($this->_configuration->database) {
             $this->hook->dispatch('preDatabase');
             $this->prepare('database');
             $this->hook->dispatch('postDatabase');
         }
-        if($this->configuration->cache) {
+        if($this->_configuration->cache) {
             $this->hook->dispatch('preCache');
             $this->prepare('cache');
             $this->hook->dispatch('postCache');
         }
-        if($this->configuration->session) {
+        if($this->_configuration->session) {
             $this->hook->dispatch('preSession');
             $this->prepare('session');
             $this->hook->dispatch('postSession');
         }
-        if($this->configuration->acl) {
+        if($this->_configuration->acl) {
             $this->hook->dispatch('preACL');
             $this->prepare('acl');
             $this->hook->dispatch('postACL');
@@ -265,7 +272,7 @@ Class App
 
         Registry::add('_database', new Database(
             'default', // you can name your db, for switching between..
-            $this->configuration->database['default']
+            $this->_configuration->database['default']
         ));
 
     }
@@ -279,7 +286,7 @@ Class App
     private function registerCache() {
 
         $memcached = new \Memcached();
-        $memcached->addServer($this->configuration->cache->host,$this->configuration->cache->port);
+        $memcached->addServer($this->_configuration->cache->host,$this->_configuration->cache->port);
 
         Registry::add('_memcached', $memcached);
 
@@ -294,7 +301,7 @@ Class App
 
     private function registerSession() {
 
-        if(!$this->configuration->session['database']) {
+        if(!$this->_configuration->session['database']) {
             throw new \Exception('Not supported yet..');
         } else {
 
@@ -311,7 +318,7 @@ Class App
 
     private function registerACL() {
 
-        Registry::add('_acl', $this->configuration->acl);
+        Registry::add('_acl', $this->_configuration->acl);
 
     }
 
@@ -328,7 +335,7 @@ Class App
         $methodExist = method_exists($this->class, Registry::get('_method'));
 
         if(!$moduleExist) {
-            $this->output = Router::show404($this->configuration->modules['defaultModule'].'/404');
+            $this->output = Router::show404($this->_configuration->modules['defaultModule'].'/404');
             return false;
         } else if(!$classExist) {
             $this->output = Router::show404($this->module.'/404');
@@ -370,7 +377,7 @@ Class App
     */
 
     /**
-     * Handles client request within RBAL / ACL
+     * Handles client request within  ACL
      *
      * @access private
      */
@@ -378,12 +385,9 @@ Class App
 
     public function secureStart() {
 
-        //enable hooks ?
+        $ACL = new Acl(Registry::get('_request')->session('uid'), Registry::get('_request')->session('role_id'));
 
-        $rbal = new Acl(Registry::get('_request')->session('uid'), Registry::get('_request')->session('role_id'));
-
-
-        $authorizationCode = $rbal->hasAccessRights($this->module, $this->controller, $this->method);
+        $authorizationCode = $ACL->hasAccessRights($this->module, $this->controller, $this->method);
 
         //@TODO:store access rights in registry for dynamic menu display
         switch($authorizationCode) {
@@ -423,7 +427,9 @@ Class App
     }
 
     /**
-     * Redirect if authenticated and access is insufficient / protected
+     * Set 401 header, provide no access view if authenticated
+     * and access is insufficient / protected
+     *
      * @access private
      */
 

@@ -24,7 +24,6 @@ namespace core;
 class Validate
 {
 
-
     /**
      * System configuration
      *
