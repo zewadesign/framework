@@ -17,7 +17,7 @@ Class App
         //@TODO: unset unnececessary vars/profile/unit testing..? how?
         //@TODO: better try/catch usage
         //@TODO: validation needs a second look, the required is screwing up on empty (the ol' isset/empty nonsense.. need to validate intent
-        //@TODO: setup custom routing based on regex !!!!!!! routesssssss!!!!!!!!
+        //@TODO: setup custom routing based on regex // (can't we get away without using regex tho?)!!!!!!! routesssssss!!!!!!!!
         //@TODO: system vars (_) need to be moved to an array called "system" in the registry, and write protected, _ is lame.
         try {
 
