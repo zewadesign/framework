@@ -23,57 +23,62 @@ class Request
 //        }
 //
 //    }
-
+    //@TODO: move flashdata to sessionhandler, make available here with other request vars still
     public function __construct() {
 
-        // assume no flashdata
-        $this->flashdata = array();
+        if(Registry::get('_configuration')->session) {
 
-        $this->flashdataIdentifier = '_session_flashdata_12971';
-        // if there are any flashdata variables that need to be handled
+            // assume no flashdata
+            $this->flashdata = array();
 
-        if (isset($_SESSION[$this->flashdataIdentifier])) {
-            // store them
+            $this->flashdataIdentifier = '_session_flashdata_12971';
+            // if there are any flashdata variables that need to be handled
 
-            $this->flashdata = unserialize($_SESSION[$this->flashdataIdentifier]);
-            // and destroy the temporary session variable
-            unset($_SESSION[$this->flashdataIdentifier]);
+            if (isset($_SESSION[$this->flashdataIdentifier])) {
+                // store them
+
+                $this->flashdata = unserialize($_SESSION[$this->flashdataIdentifier]);
+                // and destroy the temporary session variable
+                unset($_SESSION[$this->flashdataIdentifier]);
 
 
-            if (!empty($this->flashdata)) {
+                if (!empty($this->flashdata)) {
 
-                // iterate through all the entries
-                foreach ($this->flashdata as $variable => $data) {
+                    // iterate through all the entries
+                    foreach ($this->flashdata as $variable => $data) {
 
-                    // increment counter representing server requests
-                    $this->flashdata[$variable]['inc']++;
+                        // increment counter representing server requests
+                        $this->flashdata[$variable]['inc']++;
 
-                    // if we're past the first server request
-                    if ($this->flashdata[$variable]['inc'] > 1) {
+                        // if we're past the first server request
+                        if ($this->flashdata[$variable]['inc'] > 1) {
 
-                        // unset the session variable
-                        unset($_SESSION[$variable]); //@TODO: add flashkey identifier?
+                            // unset the session variable
+                            unset($_SESSION[$variable]); //@TODO: add flashkey identifier?
 
-                        // stop tracking
-                        unset($this->flashdata[$variable]);
+                            // stop tracking
+                            unset($this->flashdata[$variable]);
+
+                        }
 
                     }
 
+                    // if there is any flashdata left to be handled
+                    if (!empty($this->flashdata))
+
+                        // store data in a temporary session variable
+                        $_SESSION[$this->flashdataIdentifier] = serialize($this->flashdata);
                 }
 
-                // if there is any flashdata left to be handled
-                if (!empty($this->flashdata))
 
-                    // store data in a temporary session variable
-                    $_SESSION[$this->flashdataIdentifier] = serialize($this->flashdata);
             }
 
+            $this->session = $this->_normalize($_SESSION);
 
         }
-        
-	$this->get = $this->_normalize($_GET);
+
+	    $this->get = $this->_normalize($_GET);
         $this->post = $this->_normalize($_POST);
-        $this->session = $this->_normalize($_SESSION);
         $this->cookie = $this->_normalize($_COOKIE);
         $this->files = $this->_normalize($_FILES);
         $this->server = $this->_normalize($_SERVER);

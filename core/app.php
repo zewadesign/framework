@@ -10,7 +10,6 @@ Class App
     private $output = null;
     private $class;
     private $instantiatedClass;
-    private $activeModule;
     private $module;
     private $controller;
     private $method;
@@ -28,15 +27,15 @@ Class App
                 'acl' => $this->loader->config('core','acl')
             );
 
+            Registry::add('_configuration',$this->configuration);
             $this->prepareApplication();
 
             //@TODO: select addons here too
 
 
-            $this->class = 'app\\modules\\'.Registry::get('_module').'\\controllers\\'.ucfirst(Registry::get('_controller'));
+            $this->class = 'app\\modules\\'.Registry::get('_module').'\\controllers\\'.ucfirst($this->controller);
 
             $this->autoload();
-
 
             //@TODO granular access parameter scopes for module, controller and method, so I can check which individual
             //props are accessible, to handle 404ing, etc
@@ -89,11 +88,7 @@ Class App
 
     private function prepareApplication() {
 
-        $this->module = (Registry::get('_module') ? Registry::get('_module') : false);
-        $this->controller = (Registry::get('_controller') ? Registry::get('_controller') : false);
-        $this->method = (Registry::get('_method') ? Registry::get('_method') : false);
-        $this->params = array_slice(Registry::get('_router')->url['segments'], 3);
-
+        $this->prepareRegistry();
 
         Registry::add('lang', $this->loader->lang($this->loader->config('core','language')));
 
@@ -113,7 +108,6 @@ Class App
             $this->prepare('acl');
         }
 
-        $this->prepareRegistry();
     }
 
     private function prepareRegistry() {
@@ -123,10 +117,18 @@ Class App
         Registry::add('_output', new Output());
         Registry::add('_validate', new Validate());
         Registry::add('_autoload', Registry::get('_loader')->config('core','autoload'));
+
+        $this->module = (Registry::get('_module') ? Registry::get('_module') : false);
+        $this->controller = (Registry::get('_controller') ? Registry::get('_controller') : false);
+        $this->method = (Registry::get('_method') ? Registry::get('_method') : false);
+        $this->params = array_slice(Registry::get('_router')->url['segments'], 3);
+
         Registry::add('_module', $this->module);
         Registry::add('_controller', $this->controller);
         Registry::add('_method', $this->method);
         Registry::add('_params', $this->params);
+
+
 
         /*
          * @TODO: move anything that sets private vars via registry to the class setting (e.g. the below
@@ -199,15 +201,16 @@ Class App
     }
 
 
-    private function start($secured = false) {
+    private function start() {
 
-
+        print_r($this->class);die();
         $classExist = class_exists($this->class);
         $methodExist = method_exists($this->class, Registry::get('_method'));
 
 
         if (!$classExist) { //@TODO if module is present, but class doesn't exist....
 
+            die('test');
             if (!$this->controller) {
 
                 $baseRedirect = $this->loader->config('core','modules')[$this->module]['baseRedirect'];
@@ -254,7 +257,7 @@ Class App
         switch($authorizationCode) {
 
             case '1':
-                $this->start(true);
+                $this->start();
                 break;
             case '2':
                 $this->loginRedirect();

@@ -6,7 +6,7 @@ Class Router
 {
     //@TODO: fix these to load from config.. and do some other stuff, no sure yet.
 
-    private $load;
+    private $loader;
     public $module;
     public $controller;
     public $method;
@@ -17,7 +17,7 @@ Class Router
 
         $uri = self::uri();
 
-        $this->load = Registry::get('_loader');
+        $this->loader = Registry::get('_loader');
 
         /*
          * @TODO: implemnet routing
@@ -85,7 +85,6 @@ Class Router
 	} else {
 		$path = false;
 	}
-
 	if($path === '/')
 		$path = false;
 

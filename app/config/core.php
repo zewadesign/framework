@@ -13,7 +13,7 @@ $core = array(
     'language' => 'en_lang',
     'modules' => array(
         'defaultModule' => 'example',
-        'user' => array(
+        'example' => array(
 
             'loginRedirect' => 'user/account/login', // redirect to a different module for verification or whatever.
             'baseRedirect' => 'user/account/settings',
