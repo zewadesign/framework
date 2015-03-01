@@ -42,23 +42,14 @@ $start = microtime(true);
 
 if (!ob_start("ob_gzhandler")) ob_start();
 
-$out = '';
+$out = new core\App();
 
-try {
-
-    $out = new core\App();
-
-} catch(Exception $e){
-
-    trigger_error($e->getMessage(), E_USER_ERROR);
-
-}
 
 // internal nonsense.. could be built into a debug class and sent with output.
 $finish = microtime(true);
 $debug = 'Total time spent: '.sprintf('%.6f',($finish-$start)).' seconds<br/>';
 $debug .= 'Memory usage: '.number_format(((memory_get_usage()/1024)/1024),4,'.',',').'MB<br/>';
-echo $out;
+print $out;
 
 while (ob_get_level() > 0) {
     ob_end_flush();

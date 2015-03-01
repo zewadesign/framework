@@ -42,8 +42,6 @@ class Output
             if(is_array($replace)) {
                 $lang = vsprintf($this->loadedLanguage[$language], $replace);
             } else {
-//                print_r($this->loadedLanguage[$language]);
-//                print_r($replace);
                 $lang = sprintf($this->loadedLanguage[$language], $replace);
             }
 

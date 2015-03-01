@@ -1,17 +1,85 @@
 <?php
 
 namespace core;
-//@TODO: should router class be completely static.. ?
+
+/**
+ * This class is the starting point for application
+ *
+ * <code>
+ *
+ * $out = new core\App();
+ * print $out;
+ *
+ * </code>
+ *
+ * @author Zechariah Walden<zech @ zewadesign.com>
+ */
+
 Class App
 {
 
-    private $output = null;
+    /**
+     * Return value from application
+     *
+     * @var string
+     */
+
+    private $output = false;
+
+    /**
+     * Namespaced controller path
+     *
+     * @var string
+     */
+
     private $class;
+
+    /**
+     * Instantiated class object
+     *
+     * @var string
+     */
+
     private $instantiatedClass;
+
+    /**
+     * Module being accessed
+     *
+     * @var string
+     */
+
     private $module;
+
+    /**
+     * Controller being accessed
+     *
+     * @var string
+     */
+
     private $controller;
+
+    /**
+     * Method being accessed
+     *
+     * @var string
+     */
+
     private $method;
+
+    /**
+     * Instiated hook class
+     *
+     * @var object
+     */
+
     private $hooks;
+
+    /**
+     * Application bootstrap process
+     *
+     * The application registers the configuration in the app/config/core.php
+     * and then processes, and makes available the configured resources
+     */
 
     public function __construct() {
         //@TODO: unset unnececessary vars/profile/unit testing..? how?
@@ -56,12 +124,19 @@ Class App
 
         } catch(\Exception $e) {
 
-            die($e->getMessage());
+
+            trigger_error($e->getMessage(), E_USER_ERROR);
+
 
         }
 
     }
 
+    /**
+     * Autoloads configured resources
+     *
+     * @access private
+     */
 
     private function autoload() {
 
@@ -74,13 +149,13 @@ Class App
                     switch ($type) {
                         case 'helpers':
 
-                            Registry::get('_loader')->helper($comp);
+                            $this->loader->helper($comp);
 
                             break;
                         case 'libraries':
 
                             foreach($comp as $lib => $args){
-                                Registry::get('_loader')->library($lib, $args);
+                                $this->loader->library($lib, $args);
                             }
 
                             break;
@@ -89,6 +164,38 @@ Class App
             }
         }
     }
+
+    /**
+     * Prepares the application registry, provides injection dependency.
+     *
+     * @access private
+     */
+
+    private function prepareRegistry() {
+
+        Registry::add('_request', new Request());
+        Registry::add('_router', new Router());
+        Registry::add('_output', new Output());
+        Registry::add('_validate', new Validate());
+        Registry::add('_autoload', Registry::get('_loader')->config('core','autoload'));
+
+        $this->module = Registry::get('_module');
+        $this->controller = Registry::get('_controller');
+        $this->method = Registry::get('_method');
+        $this->params = Registry::get('_params');
+
+        Registry::add('_module', $this->module);
+        Registry::add('_controller', $this->controller);
+        Registry::add('_method', $this->method);
+        Registry::add('_params', $this->params);
+
+    }
+
+    /**
+     * Prepares the application core classes and dependencies
+     *
+     * @access private
+     */
 
     private function prepareApplication() {
 
@@ -121,27 +228,13 @@ Class App
 
     }
 
-    private function prepareRegistry() {
+    /**
+     * Registers core classes
+     *
+     * @access private
+     */
 
-        Registry::add('_request', new Request());
-        Registry::add('_router', new Router());
-        Registry::add('_output', new Output());
-        Registry::add('_validate', new Validate());
-        Registry::add('_autoload', Registry::get('_loader')->config('core','autoload'));
-
-        $this->module = Registry::get('_module');
-        $this->controller = Registry::get('_controller');
-        $this->method = Registry::get('_method');
-        $this->params = Registry::get('_params');
-
-        Registry::add('_module', $this->module);
-        Registry::add('_controller', $this->controller);
-        Registry::add('_method', $this->method);
-        Registry::add('_params', $this->params);
-
-    }
-
-    private function prepare($resource, $callback = false) {
+    private function register($resource, $callback = false) {
 
         switch($resource) {
             case 'database':
@@ -162,6 +255,12 @@ Class App
 
     }
 
+    /**
+     * Registers the database object
+     *
+     * @access private
+     */
+
     private function registerDatabase() {
 
         Registry::add('_database', new Database(
@@ -170,6 +269,12 @@ Class App
         ));
 
     }
+
+    /**
+     * Registers the cache object
+     *
+     * @access private
+     */
 
     private function registerCache() {
 
@@ -180,6 +285,12 @@ Class App
 
 
     }
+
+    /**
+     * Registers the session object
+     *
+     * @access private
+     */
 
     private function registerSession() {
 
@@ -192,13 +303,25 @@ Class App
 
     }
 
+    /**
+     * Registers the ACL object
+     *
+     * @access private
+     */
+
     private function registerACL() {
 
         Registry::add('_acl', $this->configuration->acl);
 
     }
 
-    private function verifyAppProcess() {
+    /**
+     * Verifies the provided application request is a valid request
+     *
+     * @access private
+     */
+
+    private function verifyApplicationRequest() {
 
         $moduleExist = file_exists(APP_PATH.'/modules/'.$this->module);
         $classExist = class_exists($this->class);
@@ -219,9 +342,15 @@ Class App
 
     }
 
+    /**
+     * Processes the application request
+     *
+     * @access private
+     */
+
     private function start() {
 
-        if(!$this->verifyAppProcess())
+        if(!$this->verifyApplicationRequest())
             return false;
 
         $this->hook->dispatch('preController');
@@ -236,7 +365,16 @@ Class App
 
     }
 
-    /* ACL & USER STUFF */
+    /* ACL & USER STUFF
+    * @TODO: I think perhaps, this can be handled somewhere else?..
+    */
+
+    /**
+     * Handles client request within RBAL / ACL
+     *
+     * @access private
+     */
+
 
     public function secureStart() {
 
@@ -254,7 +392,7 @@ Class App
                 $this->start();
                 break;
             case '2':
-                $this->loginRedirect();
+                $this->secureRedirect();
                 break;
 
             case '3': //@TODO: setup module 404's.
@@ -263,7 +401,14 @@ Class App
         }
     }
 
-    private function loginRedirect() {
+
+    /**
+     * Redirect if guest and access is insufficient / protected
+     *
+     * @access private
+     */
+
+    private function secureRedirect() {
 
         Registry::get('_request')->setFlashdata('alert', (object) array('info' => 'Please login to continue!'));
 
@@ -271,11 +416,16 @@ Class App
         $currentURL = str_replace(baseURL(),'',$currentURL);
         $currentURL = base64_encode($currentURL);
 
-        $loginRedirect = $this->loader->config('core','modules')[$this->module]['loginRedirect'];
+        $redirect = $this->loader->config('core','modules')[$this->module]['aclRedirect'];
 
-        Router::redirect(baseURL($loginRedirect.'?r='.$currentURL));
+        Router::redirect(baseURL($redirect.'?r='.$currentURL));
 
     }
+
+    /**
+     * Redirect if authenticated and access is insufficient / protected
+     * @access private
+     */
 
     private function noAccessRedirect() {
 
@@ -283,14 +433,19 @@ Class App
 
     }
 
-    /* Output rendering */
+    /**
+     * Prepare application return value into a string
+     *
+     * @access public
+     * @return string
+     */
 
     public function __toString() {
 
-        $this->hook->dispatch('postApplication');
-
         if(!$this->output)
-            return '';
+            $this->output = '';
+
+        $this->hook->dispatch('postApplication');
 
         return $this->output;
     }

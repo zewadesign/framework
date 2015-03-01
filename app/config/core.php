@@ -15,8 +15,7 @@ $core = array(
         'defaultModule' => 'example',
         'example' => array(
 
-            'loginRedirect' => 'user/account/login', // redirect to a different module for verification or whatever.
-            'baseRedirect' => 'user/account/settings',
+            'aclRedirect' => 'user/account/login', // redirect to a different module for verification or whatever.
             'defaultController' => 'home',
             'defaultMethod' => 'index',
 //            '404' => 'admin/404',
