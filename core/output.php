@@ -29,7 +29,7 @@ class Output
 //@TODO: load evertyhign through the registry for forward facing stuff
     public function __construct() {
 
-        $this->load = Registry::get('_loader');
+        $this->load = Registry::get('_load');
         $this->loadedLanguage = $this->load->lang($this->load->config('core','language'));
     }
 

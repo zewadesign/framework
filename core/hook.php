@@ -5,7 +5,7 @@ namespace core;
 class Hook
 {
     private $enabled;
-    private $loader;
+    private $load;
     private $hooks = array();
     private $processed = array();
     public static $instance;
@@ -13,9 +13,9 @@ class Hook
     public function __construct() {
 
 
-        $this->loader = Registry::get('_loader');
+        $this->load = Registry::get('_load');
 
-        $this->enabled = $this->loader->config('core','hooks');
+        $this->enabled = $this->load->config('core','hooks');
 
         if($this->enabled) {
             $this->registerHooks();
@@ -25,7 +25,7 @@ class Hook
 
     private function registerHooks() {
 
-        $registeredHooks = $this->loader->config('hooks','register');
+        $registeredHooks = $this->load->config('hooks','register');
 
         foreach($registeredHooks as $hook => $config) {
             $this->hooks[$hook]= ($config->enabled) ? $config->call : false;

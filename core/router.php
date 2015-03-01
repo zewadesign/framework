@@ -6,7 +6,7 @@ Class Router
 {
     //@TODO: fix these to load from config.. and do some other stuff, no sure yet.
 
-    private $loader;
+    private $load;
     public $module;
     public $controller;
     public $method;
@@ -16,7 +16,7 @@ Class Router
     function __construct() {
 
         $uri = self::uri();
-        $this->loader = Registry::get('_loader');
+        $this->load = Registry::get('_load');
 
         /*
          * @TODO: implemnet routing
@@ -80,9 +80,9 @@ Class Router
     public static function uri() {
 
         $uri = self::normalizeURI();
-        $defaultModule = Registry::get('_loader')->config('core','modules')['defaultModule'];
-        $defaultController = Registry::get('_loader')->config('core','modules')[$defaultModule]['defaultController'];
-        $defaultMethod = Registry::get('_loader')->config('core','modules')[$defaultModule]['defaultMethod'];
+        $defaultModule = Registry::get('_load')->config('core','modules')['defaultModule'];
+        $defaultController = Registry::get('_load')->config('core','modules')[$defaultModule]['defaultController'];
+        $defaultMethod = Registry::get('_load')->config('core','modules')[$defaultModule]['defaultMethod'];
 
         if($uri) {
 
@@ -142,7 +142,7 @@ Class Router
 
         header('HTTP/1.1 401 Access Denied');
 
-        $layout = Registry::get('_loader')->view(
+        $layout = Registry::get('_load')->view(
             $layout
         );
 
@@ -155,7 +155,7 @@ Class Router
 
         header('HTTP/1.1 404 Not Found');
 
-        $layout = Registry::get('_loader')->view(
+        $layout = Registry::get('_load')->view(
             $layout
         );
 
@@ -201,5 +201,6 @@ Class Router
         $url = preg_replace('!^/*!', '', $url);
         header("Location: ".self::baseURL().'/'.$url);
         exit;
+
     }
 }

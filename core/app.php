@@ -96,15 +96,15 @@ Class App
         //@TODO: system vars (_) need to be moved to an array called "system" in the registry, and write protected, _ is lame.
         try {
 
-            Registry::add('_loader', new Load());
-            $this->loader = Registry::get('_loader');
+            Registry::add('_load', new Load());
+            $this->load = Registry::get('_load');
             $this->_configuration = (object) array(
-                'database' => $this->loader->config('core', 'database'),
-                'session' => $this->loader->config('core', 'session'),
-                'cache' => $this->loader->config('core','cache'),
-                'acl' => $this->loader->config('core','acl'),
-                'modules' => $this->loader->config('core','modules'),
-                'hooks' => $this->loader->config('core','hooks')
+                'database' => $this->load->config('core', 'database'),
+                'session' => $this->load->config('core', 'session'),
+                'cache' => $this->load->config('core','cache'),
+                'acl' => $this->load->config('core','acl'),
+                'modules' => $this->load->config('core','modules'),
+                'hooks' => $this->load->config('core','hooks')
             );
 
             Registry::add('_configuration',$this->_configuration);
@@ -156,13 +156,13 @@ Class App
                     switch ($type) {
                         case 'helpers':
 
-                            $this->loader->helper($comp);
+                            $this->load->helper($comp);
 
                             break;
                         case 'libraries':
 
                             foreach($comp as $lib => $args){
-                                $this->loader->library($lib, $args);
+                                $this->load->library($lib, $args);
                             }
 
                             break;
@@ -184,7 +184,7 @@ Class App
         Registry::add('_router', new Router());
         Registry::add('_output', new Output());
         Registry::add('_validate', new Validate());
-        Registry::add('_autoload', Registry::get('_loader')->config('core','autoload'));
+        Registry::add('_autoload', Registry::get('_load')->config('core','autoload'));
 
         $this->module = Registry::get('_module');
         $this->controller = Registry::get('_controller');
@@ -210,7 +210,7 @@ Class App
         $this->prepareRegistry();
         $this->hook->dispatch('postRegistry');
 
-        Registry::add('lang', $this->loader->lang($this->loader->config('core','language')));
+        Registry::add('lang', $this->load->lang($this->load->config('core','language')));
 
         if($this->_configuration->database) {
             $this->hook->dispatch('preDatabase');
@@ -385,7 +385,12 @@ Class App
 
     public function secureStart() {
 
-        $ACL = new Acl(Registry::get('_request')->session('uid'), Registry::get('_request')->session('role_id'));
+        $request = Registry::get('_request');
+
+        $userId = $request['uid'];
+        $roleId = $request['roleId'];
+
+        $ACL = new Acl($userId, $roleId);
 
         $authorizationCode = $ACL->hasAccessRights($this->module, $this->controller, $this->method);
 
@@ -420,7 +425,7 @@ Class App
         $currentURL = str_replace(baseURL(),'',$currentURL);
         $currentURL = base64_encode($currentURL);
 
-        $redirect = $this->loader->config('core','modules')[$this->module]['aclRedirect'];
+        $redirect = $this->load->config('core','modules')[$this->module]['aclRedirect'];
 
         Router::redirect(baseURL($redirect.'?r='.$currentURL));
 

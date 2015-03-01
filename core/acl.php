@@ -5,6 +5,15 @@ namespace core;
 /**
  * This class handles the access control list for requests
  *
+ * <code>
+ *
+ * $userId = $request['uid'];
+ * $roleId = $request['roleId'];
+ * $ACL = new Acl($userId, $roleId);
+ * $authorizationCode = $ACL->hasAccessRights($this->module, $this->controller, $this->method);
+ *
+ * </code>
+ *
  * @author Zechariah Walden<zech @ zewadesign.com>
  */
 
@@ -78,6 +87,10 @@ class Acl
 
     /**
      * Load up some basic configuration settings.
+     *
+     * @access public
+     * @param int $userId
+     * @param int $roleId
      */
 
     public function __construct($userId = false, $roleId = false) {

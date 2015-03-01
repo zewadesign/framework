@@ -49,14 +49,6 @@ class Validate
 
     private $errors = [];
 
-    /**
-     * Reference to instantiated validation object.
-     *
-     * @access public
-     * @var object
-     */
-
-    public static $instance;
 
     /**
      * Load up some basic configuration settings.
