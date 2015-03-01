@@ -23,21 +23,16 @@ Class App
                 'session' => $this->loader->config('core', 'session'),
                 'cache' => $this->loader->config('core','cache'),
                 'acl' => $this->loader->config('core','acl'),
-                'modules' => $this->loader->config('core','modules')
+                'modules' => $this->loader->config('core','modules'),
+                'hooks' => $this->loader->config('core','hooks')
             );
 
             Registry::add('_configuration',$this->configuration);
+
             $this->prepareApplication();
-
-            //@TODO: select addons here too
-
-
-            $this->class = 'app\\modules\\'.Registry::get('_module').'\\controllers\\'.ucfirst($this->controller);
-
             $this->autoload();
 
-            //@TODO granular access parameter scopes for module, controller and method, so I can check which individual
-            //props are accessible, to handle 404ing, etc
+            $this->class = 'app\\modules\\'.Registry::get('_module').'\\controllers\\'.ucfirst($this->controller);
 
             if($this->configuration->acl) {
 
@@ -120,7 +115,7 @@ Class App
         $this->module = Registry::get('_module');
         $this->controller = Registry::get('_controller');
         $this->method = Registry::get('_method');
-        $this->params = Registry::get('_params'); //array_slice(Registry::get('_router')->url['segments'], 3);
+        $this->params = Registry::get('_params');
 
         Registry::add('_module', $this->module);
         Registry::add('_controller', $this->controller);
