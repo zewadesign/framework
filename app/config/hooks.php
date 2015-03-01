@@ -2,39 +2,87 @@
 
 $hooks = array('register' => (object)array());
 
-$hooks['register']['preApplication'] = function(object $arguments){
+$hooks['register']->preApplication = (object) array(
+    'enabled' => true,
+    'call' => function(){
 
-};
-$hooks['register']['postApplication'] = function(object $arguments){
+    }
+);
+$hooks['register']->postApplication = (object) array(
+    'enabled' => true,
+    'call' => function(){
 
-};
-$hooks['register']['preDatabase'] = function(object $arguments){
+    }
+);
+$hooks['register']->preRegistry = (object) array(
+    'enabled' => true,
+    'call' => function(){
 
-};
-$hooks['register']['postDatabase'] = function(object $arguments){
+    }
+);
+$hooks['register']->postRegistry = (object) array(
+    'enabled' => true,
+    'call' => function(){
 
-};
-$hooks['register']['preCache'] = function(object $arguments){
+    }
+);
+$hooks['register']->preDatabase = (object) array(
+    'enabled' => true,
+    'call' => function(){
 
-};
-$hooks['register']['postCache'] = function(object $arguments){
+    }
+);
+$hooks['register']->postDatabase = (object) array(
+    'enabled' => true,
+    'call' => function(){
 
-};
-$hooks['register']['preSession'] = function(object $arguments){
+    }
+);
+$hooks['register']->preCache = (object) array(
+    'enabled' => true,
+    'call' => function(){
 
-};
-$hooks['register']['postSession'] = function(object $arguments){
+    }
+);
+$hooks['register']->postCache = (object) array(
+    'enabled' => true,
+    'call' => function(){
 
-};
-$hooks['register']['preController'] = function(object $arguments){
+    }
+);
+$hooks['register']->preSession = (object) array(
+    'enabled' => true,
+    'call' => function(){
 
-};
-$hooks['register']['postController'] = function(object $arguments){
+    }
+);
+$hooks['register']->postSession = (object) array(
+    'enabled' => true,
+    'call' => function(){
 
-};
-$hooks['register']['preModel'] = function(object $arguments){
+    }
+);
+$hooks['register']->preController = (object) array(
+    'enabled' => true,
+    'call' => function(){
 
-};
-$hooks['register']['postModel'] = function(object $arguments){
+    }
+);
+$hooks['register']->postController = (object) array(
+    'enabled' => true,
+    'call' => function(){
 
-};
+    }
+);
+$hooks['register']->preModel = (object) array(
+    'enabled' => true,
+    'call' => function(){
+
+    }
+);
+$hooks['register']->postModel = (object) array(
+    'enabled' => true,
+    'call' => function(){
+
+    }
+);
