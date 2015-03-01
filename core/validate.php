@@ -1,34 +1,73 @@
 <?php
 
 namespace core;
+
 /**
- * Validate - A fast, extensible PHP input validation class
+ * An instance of this class represents a counting machine
  *
- * @author      Zech
- * @copyright   Copyright (c) 2014 zewadesign.com
- * @version     1.0
+ * <code>
+ *
+ * $data = ['fieldname' => 'value', 'fieldname2' => 'value2'];
+ *
+ * $array = [
+ *     'fieldname' => ['name' => 'Field Name', 'rules' => 'required|commonstring'],
+ *     'fieldname2' => ['name' => 'Field Name 2', 'rules' => 'required'],
+ * ];
+ *
+ * $bool = $this->validate->run($data, $array);
+ *
+ * </code>
+ *
+ * @author unknown, Zechariah Walden<zech @ zewadesign.com>
  */
+
 class Validate
 {
 
-    // Instance attribute containing errors from last run
+    /**
+     * System configuration
+     *
+     * @var object
+     */
+    private $_configuration;
+
+    /**
+     * Instance of output class. //handles sanitization/formatting of system generated strings
+     *
+     * @var object
+     */
+
+    private $_output;
+
+    /**
+     * Collects all errors on validation.
+     *
+     * @var array
+     */
+
     private $errors = array();
+
+    /**
+     * Reference to instantiated validation object.
+     *
+     * @var object
+     */
 
     public static $instance;
 
-    /**
-     * fetch myself
-     *
-     */
-//@TODO: setup a tool to load core components
-    // ** ------------------------- Validation Helpers ---------------------------- ** //
+    public function __construct() {
+
+        $this->_configuration = Registry::get('_configuration');
+        $this->_output = Registry::get('_output');
+
+    }
 
     /**
-     * Shorthand method for inline validation
+     * Validate data against validators.
      *
      * @param array $data The data to be validated
-     * @param array $validators The GUMP validators
-     * @return mixed True(boolean) or the array of error messages
+     * @param array $validators The validators
+     * @return boolean
      */
     public function run(array $data, array $validators) {
 
@@ -40,8 +79,6 @@ class Validate
 
     }
 
-    //@TODO: make objects, not arrays.. but php lacking some much needed object methods.. hmm
-
     /**
      * Run the filtering and validation after each other
      *
@@ -49,6 +86,7 @@ class Validate
      * @return array
      * @return boolean
      */
+
     private function _checkValidation(array $data, array $validators) {
 
         $validated = $this->_processValidation(
@@ -62,35 +100,6 @@ class Validate
         return $data;
     }
 
-//@TODO: phase out persistent errors?
-//    /**
-//     * Return the error array from the last validation run
-//     *
-//     * @return array
-//     */
-//    public function errors($persist = false) {
-//
-//        $errors = $this->errors;
-//
-//        if(!$persist) {
-//            $this->errors = array();
-//        }
-//
-//        return array('errorDebug' => $errors, 'messages' => $this->_getErrors($errors));
-//
-//
-//    }
-
-    public function errors($responseType = 'html') {
-
-        $errors = $this->errors;
-
-        $this->errors = array();
-
-        return array('errorDebug' => $errors, 'messages' => $this->_getErrors($errors, $responseType));
-
-
-    }
     /**
      * Perform data validation against the provided ruleset
      *
@@ -143,7 +152,7 @@ class Validate
     }
 
     /**
-     * Process the validation errors and return human readable error messages
+     * Process the errors and return proper language for error
      *
      * @param bool $convert_to_string = false
      * @param string $field_class
@@ -151,105 +160,99 @@ class Validate
      * @return array
      * @return string
      */
-    private function _getErrors($errors, $responseType) {
+    public function errors() {
 
-        if(empty($errors)) {
-            return false;
-        }
+        $formattedErrors = array();
 
-        $output = Registry::get('_output');
+        foreach($this->errors as $error) {
+            $field = $error['field'];
+            $stringReplacement = $error['friendlyName'];
+            $param = $error['param'];
 
-        $resp = array();
+            $formattedErrors[$field] = array();
 
-        foreach($errors as $e) {
-            $field = $e['field'];
-            $displayName = $e['formDisplayName'];
-            $param = $e['param'];
-
-            $resp[$field] = array();
-
-            switch($e['rule']) {
+            switch($error['rule']) {
                 case '_validateRequired':
-                    $resp[$field][] = $output->lang(strtoupper($responseType).'_VALIDATE_REQUIRED',$displayName);
+                    $formattedErrors[$field][] = $this->_output->lang('VALIDATE_REQUIRED',$stringReplacement);
                     break;
                 case '_validateValidEmail':
-                    $resp[$field][] = $output->lang(strtoupper($responseType).'_VALIDATE_VALID_EMAIL', $displayName);
+                    $formattedErrors[$field][] = $this->_output->lang('VALIDATE_VALID_EMAIL', $stringReplacement);
                     break;
                 case '_validateMaxLen':
                     if($param == 1) {
-                        $resp[$field][] = $output->lang(strtoupper($responseType).'_VALIDATE_MAX_LEN', array($displayName, $param));
+                        $formattedErrors[$field][] = $this->_output->lang('VALIDATE_MAX_LEN', array($stringReplacement, $param));
                     } else {
-                        $resp[$field][] = $output->lang(strtoupper($responseType).'_VALIDATE_mAX_LEN2', array($displayName, $param));
+                        $formattedErrors[$field][] = $this->_output->lang('VALIDATE_mAX_LEN2', array($stringReplacement, $param));
                     }
                     break;
                 case '_validateMinLen':
                     if($param == 1) {
-                        $resp[$field][] = $output->lang(strtoupper($responseType).'_VALIDATE_MIN_LEN', array($displayName, $param));
+                        $formattedErrors[$field][] = $this->_output->lang('VALIDATE_MIN_LEN', array($stringReplacement, $param));
                     } else {
-                        $resp[$field][] = $output->lang(strtoupper($responseType).'_VALIDATE_MIN_LEN2', array($displayName, $param));
+                        $formattedErrors[$field][] = $this->_output->lang('VALIDATE_MIN_LEN2', array($stringReplacement, $param));
                     }
                     break;
                 case '_validateExactLen':
                     if($param == 1) {
-                        $resp[$field][] = $output->lang(strtoupper($responseType).'_VALIDATE_EXACT_LEN', array($displayName, $param));
+                        $formattedErrors[$field][] = $this->_output->lang('VALIDATE_EXACT_LEN', array($stringReplacement, $param));
                     } else {
-                        $resp[$field][] = $output->lang(strtoupper($responseType).'_VALIDATE_EXACT_LEN2', array($displayName, $param));
+                        $formattedErrors[$field][] = $this->_output->lang('VALIDATE_EXACT_LEN2', array($stringReplacement, $param));
                     }
                     break;
                 case '_validateAlpha':
-                    $resp[$field][] = $output->lang(strtoupper($responseType).'_VALIDATE_ALPHA', $displayName);
+                    $formattedErrors[$field][] = $this->_output->lang('VALIDATE_ALPHA', $stringReplacement);
                     break;
                 case '_validateAlphaNumeric':
-                    $resp[$field][] = $output->lang(strtoupper($responseType).'_VALIDATE_ALPHA_NUMERIC', $displayName);
+                    $formattedErrors[$field][] = $this->_output->lang('VALIDATE_ALPHA_NUMERIC', $stringReplacement);
                     break;
                 case '_validateAlphaDash':
-                    $resp[$field][] = $output->lang(strtoupper($responseType).'_VALIDATE_ALPHA_DASH', $displayName);
+                    $formattedErrors[$field][] = $this->_output->lang('VALIDATE_ALPHA_DASH', $stringReplacement);
                     break;
                 case '_validateNumeric':
-                    $resp[$field][] = $output->lang(strtoupper($responseType).'_VALIDATE_NUMERIC', $displayName);
+                    $formattedErrors[$field][] = $this->_output->lang('VALIDATE_NUMERIC', $stringReplacement);
                     break;
                 case '_validateInteger':
-                    $resp[$field][] = $output->lang(strtoupper($responseType).'_VALIDATE_INTEGER', $displayName);
+                    $formattedErrors[$field][] = $this->_output->lang('VALIDATE_INTEGER', $stringReplacement);
                     break;
                 case '_validateBoolean':
-                    $resp[$field][] = $output->lang(strtoupper($responseType).'_VALIDATE_BOOLEAN', $displayName);
+                    $formattedErrors[$field][] = $this->_output->lang('VALIDATE_BOOLEAN', $stringReplacement);
                     break;
                 case '_validateFloat':
-                    $resp[$field][] = $output->lang(strtoupper($responseType).'_VALIDATE_FLOAT', $displayName);
+                    $formattedErrors[$field][] = $this->_output->lang('VALIDATE_FLOAT', $stringReplacement);
                     break;
                 case '_validateValidURL':
-                    $resp[$field][] = $output->lang(strtoupper($responseType).'_VALIDATE_VALID_URL', $displayName);
+                    $formattedErrors[$field][] = $this->_output->lang('VALIDATE_VALID_URL', $stringReplacement);
                     break;
                 case '_validateURLExists':
-                    $resp[$field][] = $output->lang(strtoupper($responseType).'_VALIDATE_URL_EXISTS', $displayName);
+                    $formattedErrors[$field][] = $this->_output->lang('VALIDATE_URL_EXISTS', $stringReplacement);
                     break;
                 case '_validateValidIp':
-                    $resp[$field][] = $output->lang(strtoupper($responseType).'_VALIDATE_VALID_IP', $displayName);
+                    $formattedErrors[$field][] = $this->_output->lang('VALIDATE_VALID_IP', $stringReplacement);
                     break;
                 case '_validateValidCc':
-                    $resp[$field][] = $output->lang(strtoupper($responseType).'_VALIDATE_VALID_CC', $displayName);
+                    $formattedErrors[$field][] = $this->_output->lang('VALIDATE_VALID_CC', $stringReplacement);
                     break;
                 case '_validateDate':
-                    $resp[$field][] = $output->lang(strtoupper($responseType).'_VALIDATE_VALID_DATE', $displayName);
+                    $formattedErrors[$field][] = $this->_output->lang('VALIDATE_VALID_DATE', $stringReplacement);
                     break;
                 case '_validateMinNumeric':
-                    $resp[$field][] = $output->lang(strtoupper($responseType).'_VALIDATE_MIN_NUMERIC', array($displayName, $param));
+                    $formattedErrors[$field][] = $this->_output->lang('VALIDATE_MIN_NUMERIC', array($stringReplacement, $param));
                     break;
                 case '_validateMaxNumeric':
-                    $resp[$field][] = $output->lang(strtoupper($responseType).'_VALIDATE_MAX_NUMERIC', array($displayName, $param));
+                    $formattedErrors[$field][] = $this->_output->lang('VALIDATE_MAX_NUMERIC', array($stringReplacement, $param));
                     break;
                 case '_validateIsUnique':
-                    $resp[$field][] = $output->lang(strtoupper($responseType).'_VALIDATE_IS_UNIQUE', $e['value']);
+                    $formattedErrors[$field][] = $this->_output->lang('VALIDATE_IS_UNIQUE', $error['value']);
                     break;
                 case '_validateMatches':
-                    $resp[$field][] = $output->lang(strtoupper($responseType).'_VALIDATE_MATCH', $displayName);
+                    $formattedErrors[$field][] = $this->_output->lang('VALIDATE_MATCH', $stringReplacement);
                     break;
                 case '_validateCommonString':
-                    $resp[$field][] = $output->lang(strtoupper($responseType).'_VALIDATE_COMMON_STRING',$displayName);
+                    $formattedErrors[$field][] = $this->_output->lang('VALIDATE_COMMON_STRING',$stringReplacement);
             }
         }
 
-        return $resp;
+        return $formattedErrors;
     }
 
 
@@ -266,8 +269,12 @@ class Validate
      * @param  array $input
      * @return mixed
      */
-    private function _validateIsUnique($displayName, $field, $input, $param = NULL) {
+    private function _validateIsUnique($fieldName, $field, $input, $param = NULL) {
+
         if(empty($input[$field])) return;
+
+
+
         $database = Registry::get('_database');
 
         $sqlFragments = explode('.',$param);
@@ -282,11 +289,11 @@ class Validate
         }
 
         return array(
+            'name' => $fieldName,
             'field' => $field,
             'value' => $input[$field],
             'rule'  => __FUNCTION__,
-            'param' => $param,
-            'formDisplayName' => $displayName
+            'param' => $param
         );
     }
     /**
