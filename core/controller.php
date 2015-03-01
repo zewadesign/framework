@@ -76,10 +76,10 @@ abstract class Controller {
     }
 
     /**
-     * Load up some basic configuration settings.
+     * Returns a reference of object once instantiated
      *
      * @access public
-     * @return object a reference of the controller
+     * @return object
      */
 
     public static function &getInstance() {
