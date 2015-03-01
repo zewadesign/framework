@@ -3,36 +3,84 @@
 namespace core;
 use app\modules as modules;
 
+/**
+ * Abstract class for controller extension
+ *
+ * @author Zechariah Walden<zech @ zewadesign.com>
+ */
+
 //can name spaces be removed in the classes extending..?
-class Controller {
+abstract class Controller {
+
+    /**
+     * Instantiated load class pointer
+     *
+     * @var object
+     */
 
     protected $load;
+
+    /**
+     * Instantiated router class pointer
+     *
+     * @var object
+     */
+
     protected $router;
+
+    /**
+     * Instantiated request class pointer
+     *
+     * @var object
+     */
+
     protected $request;
+
+    /**
+     * Instantiated output class pointer
+     *
+     * @var object
+     */
+
     protected $output;
+
+    /**
+     * Instantiated validate class pointer
+     *
+     * @var object
+     */
+
     protected $validate;
-    protected $data;
+
+    /**
+     * Reference to instantiated controller object.
+     *
+     * @var object
+     */
+
     public static $instance;
 
-    function __construct() {
+    /**
+     * Load up some basic configuration settings.
+     */
+
+    public function __construct() {
 
         $this->router = Registry::get('_router');
-        $this->load = Registry::get('_loader');
+        $this->load = Registry::get('_load');
         $this->request = Registry::get('_request');
         $this->output = Registry::get('_output');
         $this->validate = Registry::get('_validate');
 
-        //@TODO: make $this->license
-
-        $this->data = array();
-
-
-        if(Registry::get('_acl')) {
-
-
-        }
 
     }
+
+    /**
+     * Load up some basic configuration settings.
+     *
+     * @access public
+     * @return object a reference of the controller
+     */
 
     public static function &getInstance() {
 

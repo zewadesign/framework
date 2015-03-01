@@ -25,7 +25,7 @@ $core = array(
     ),
     'hooks' => true,
     'acl' => false,
-    /*array( // if acl is enabled from core, we can use acl
+    /*(object) ['roles' => (object) ['guest' => 1, 'admin' => 2, 'client' => 3, 'user' => 4]];
         'guestId' => 1,
         'adminId' => 2,
         'clientId' => 3,
