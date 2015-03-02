@@ -1,48 +1,84 @@
 <?php
 namespace core;
-//blacklist, removepunctuation,sanitizestring,urlencode, htmlencode,sanitizeemail,sanitizenumbers,basictags
+use \Exception as Exception;
+
+
 /**
-//@TODO: when printing out content from database, escape with htmlspecialchars and utf-8 & xxs
-//            $data = htmlspecialchars($data, ENT_QUOTES, 'UTF-8');
-
-
- * Output - output sanitization
+ * Output santization
  *
- * @author      Zech
- * @copyright   Copyright (c) 2014 zewadesign.com
- * @version     1.0
+ * <code>
+ *
+ * $data = $this->output->prepare($data, ['index' => 'truncate,150', 'title' => 'truncate,35'));
+ *
+ * </code>
+ *
+ * @author unknown, Zechariah Walden<zech @ zewadesign.com>
+ *
  */
+
 class Output
 {
 
+    /**
+     * Instantiated load class pointer
+     *
+     * @var object
+     */
+
     private $load;
 
+    /**
+     * Holds the loaded system language
+     *
+     * @var array
+     */
+    private $language;
+
+    /**
+     * Blacklisted html tags
+     *
+     * @var string
+     */
+
     private $basictags = "<br><p><a><strong><b><i><em><img><blockquote><code><dd><dl><hr><h1><h2><h3><h4><h5><h6><label><ul><li><span><sub><sup>";
+
+    /**
+     * Comma delimited list of blacklisted words
+     *
+     * @var string
+     */
 
     private $blacklist = "ass,fuck,shit,damn,cunt,whore,bitch,fag,dick,cock";
 
     /**
-     * fetch myself
-     *
+     * Load up some basic configuration settings.
      */
-//@TODO: deconstruct variables at earliest possible time for memory saving.
-//@TODO: load evertyhign through the registry for forward facing stuff
+    
     public function __construct() {
 
         $this->load = Registry::get('_load');
-        $this->loadedLanguage = $this->load->lang($this->load->config('core','language'));
+        $this->language = $this->load->lang($this->load->config('core','language'));
+
     }
 
-    public function lang($language, $replace = false) {
+    /**
+     * Replace with system language
+     *
+     * @param string $selection
+     * @param mixed $replace
+     * @return mixed sanitized data after scrub
+     */
 
-        $language = strtoupper($language);
-        $lang = $this->loadedLanguage[$language];
+    public function lang($selection, $replace = false) {
+
+        $selection = strtoupper($selection);
+        $lang = $this->language[$selection];
 
         if($replace) {
             if(is_array($replace)) {
-                $lang = vsprintf($this->loadedLanguage[$language], $replace);
+                $lang = vsprintf($this->language[$selection], $replace);
             } else {
-                $lang = sprintf($this->loadedLanguage[$language], $replace);
+                $lang = sprintf($this->language[$selection], $replace);
             }
 
         }
@@ -50,13 +86,16 @@ class Output
         return $lang;
 
     }
+
     /**
      * Shorthand method for running only the data filters
      *
      * @param array $data
      * @param array $filters
+     * @return mixed sanitized data after scrub
      */
-    public function prepare($data, $filters = array()) {
+
+    public function prepare($data, $filters = []) {
         return $this->_filter($data, $filters);
     }
 
@@ -64,29 +103,22 @@ class Output
      * Filter the input data according to the specified filter set
      *
      * @access private
-     * @param  mixed $input
+     * @param  mixed $data
      * @param  array $filterset
      * @return mixed
+     * @throws Exception When validation methods do not exist.
      */
+
     //@TODO: make sure all output is sanitized
+    //@TODO: this needs to be rewrote
     private function _filter($data, array $filterset) {
-//        echo "<PRE>";
-//        print_r($data);
-//        print_r($filterset);
-//        $contentIterationCount = count($data);
-//        var_dump($data);
         if($data === NULL) return false;
 
         $string = false;
         if(is_string($data)) {
             $string = true;
-//        } else {
-//            $data = json_decode (json_encode ($data), FALSE);
         }
 
-//        echo "<PRE>";
-//        print_r($data);
-//        print_r($filterset);
         foreach($filterset as $field => $filters) {
 
             if(is_object($data) && !array_key_exists_r($field, $data)) {
@@ -96,7 +128,7 @@ class Output
             $filters = explode('|', $filters);
 
             foreach($filters as $filter) {
-                $params = NULL;
+                $params = FALSE;
 
                 if(strstr($filter, ',') !== FALSE) {
                     $filter = explode(',', $filter);
@@ -137,7 +169,7 @@ class Output
                     }
 
                 } else {
-                    throw new \Exception("Filter method '$filter' does not exist.");
+                    throw new Exception("Filter method '$filter' does not exist.");
                 }
             }
         }
@@ -145,7 +177,6 @@ class Output
         return $data;
     }
 
-    // ** ------------------------- Filters --------------------------------------- ** //
 
     /**
      * Replace tidies html for valid html
@@ -154,10 +185,11 @@ class Output
      *
      * @access private
      * @param  string $value
-     * @param  array $params
+     * @param  mixed $params
      * @return string
      */
-    private function _filterTidy($value, $params = NULL) {
+
+    private function _filterTidy($value, $params = FALSE) {
 
         $tidy = new \tidy;
         $config = array( 'indent' => true, 'output-xhtml' => true, 'wrap' => 200, 'clean' => true, 'show-body-only' => true );
@@ -177,10 +209,10 @@ class Output
      *
      * @access private
      * @param  string $value
-     * @param  array $params
+     * @param  mixed $params
      * @return string
      */
-    private function _filterTruncate($value, $params = NULL) {
+    private function _filterTruncate($value, $params = FALSE) {
         $append = '&hellip;';
         $break = " ";
         $limit = $params[0];
@@ -205,10 +237,10 @@ class Output
      *
      * @access private
      * @param  string $value
-     * @param  array $params
+     * @param  mixed $params
      * @return string
      */
-    private function _filterBlacklist($value, $params = NULL) {
+    private function _filterBlacklist($value, $params = FALSE) {
 
         $value = preg_replace('/\s\s+/u', chr(32), $value);
 
@@ -317,11 +349,10 @@ class Output
     /**
      * Filter out all HTML tags except the defined basic tags
      *
-     * Usage: '<index>' => 'basictags'
+     * Usage: 'index' => 'basictags'
      *
      * @access private
      * @param  string $value
-     * @param  array $params
      * @return string
      */
     private function _filterBasicTags($value) {

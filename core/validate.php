@@ -1,6 +1,7 @@
 <?php
 
 namespace core;
+use \Exception as Exception;
 
 /**
  * Validation to compare data sets against rules
@@ -123,7 +124,7 @@ class Validate
      * @param  array $input
      * @param  array $validators
      * @return bool
-     * @throws \Exception When validation methods do not exist.
+     * @throws Exception When validation methods do not exist.
      */
 
     private function _processValidation(array $input, array $validators) {
@@ -158,7 +159,7 @@ class Validate
                     }
 
                 } else {
-                    throw new \Exception("Validate method '$method' does not exist.");
+                    throw new Exception("Validate method '$method' does not exist.");
                 }
             }
         }
@@ -177,7 +178,7 @@ class Validate
      * @param  array $input data
      * @param  mixed $param
      * @return mixed
-     * @throws \Exception If a database connection isn't present.
+     * @throws Exception If a database connection isn't present.
      */
 
     private function _validateIsUnique($field, $fieldName, $input, $param = false) {
@@ -185,7 +186,7 @@ class Validate
         if(empty($input[$fieldName])) return TRUE;
 
         if(!$this->_configuration->database)
-            throw new \Exception("The is unique validation rule required a valid database connection.");
+            throw new Exception("The is unique validation rule required a valid database connection.");
 
         $database = Registry::get('_database');
 
