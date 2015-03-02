@@ -89,8 +89,8 @@ class Acl
      * Load up some basic configuration settings.
      *
      * @access public
-     * @param int $userId
-     * @param int $roleId
+     * @param boolean|int $userId
+     * @param boolean|int $roleId
      */
 
     public function __construct($userId = false, $roleId = false) {

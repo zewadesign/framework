@@ -2,6 +2,12 @@
 
 namespace core;
 
+/**
+ * Abstract class for static handling of key/value pairs
+ *
+ * @author Zechariah Walden<zech @ zewadesign.com>
+ */
+
 abstract Class Registry {
 
     private static $registry = array();
