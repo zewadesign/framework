@@ -214,22 +214,22 @@ Class App
 
         if($this->_configuration->database) {
             $this->hook->dispatch('preDatabase');
-            $this->prepare('database');
+            $this->register('database');
             $this->hook->dispatch('postDatabase');
         }
         if($this->_configuration->cache) {
             $this->hook->dispatch('preCache');
-            $this->prepare('cache');
+            $this->register('cache');
             $this->hook->dispatch('postCache');
         }
         if($this->_configuration->session) {
             $this->hook->dispatch('preSession');
-            $this->prepare('session');
+            $this->register('session');
             $this->hook->dispatch('postSession');
         }
         if($this->_configuration->acl) {
             $this->hook->dispatch('preACL');
-            $this->prepare('acl');
+            $this->register('acl');
             $this->hook->dispatch('postACL');
         }
 
@@ -239,9 +239,10 @@ Class App
      * Registers core classes
      *
      * @access private
+     * @param string $resource
      */
 
-    private function register($resource, $callback = false) {
+    private function register($resource) {
 
         switch($resource) {
             case 'database':
@@ -257,8 +258,6 @@ Class App
                 $this->registerACL();
             break;
         }
-
-        if($callback && is_callable($callback)) $callback();
 
     }
 
