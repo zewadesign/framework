@@ -34,6 +34,10 @@ Class Home extends core\Controller {
         return "Hello " .$name;
     }
 
+    public function batman() {
+        return 'I\'m batman!';
+    }
+
     public function usages($usage = false) {
 
         $usage = strtolower($usage);

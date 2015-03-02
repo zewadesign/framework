@@ -104,6 +104,7 @@ Class App
                 'cache' => $this->load->config('core','cache'),
                 'acl' => $this->load->config('core','acl'),
                 'modules' => $this->load->config('core','modules'),
+                'routes' => $this->load->config('routes','override'),
                 'hooks' => $this->load->config('core','hooks')
             );
 
