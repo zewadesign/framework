@@ -1,78 +1,104 @@
 <?php
-
 namespace core;
+use \Exception as Exception;
+
+/**
+ * Handles everything relating to request variables/globals/properties
+ *
+ * @author Zechariah Walden<zech @ zewadesign.com>
+ */
 
 class Request
 {
 
+    /**
+     * normalized $_GET superglobal
+     *
+     * @var array
+     * @access private
+     */
+
     private $get = false;
+
+    /**
+     * normalized $_GET superglobal
+     *
+     * @var array
+     * @access private
+     */
+
     private $post = false;
+
+    /**
+     * normalized $_POST superglobal
+     *
+     * @var array
+     * @access private
+     */
+
     private $session = false;
-    public $cookie = false;
-    public $files = false;
-    public $server = false;
+
+    /**
+     * normalized $_SESSION superglobal
+     *
+     * @var array
+     * @access private
+     */
+
+    private $cookie = false;
+
+    /**
+     * normalized $_COOKIE superglobal
+     *
+     * @var array
+     * @access private
+     */
+
+    private $files = false;
+
+    /**
+     * normalized $_SERVER superglobal
+     *
+     * @var array
+     * @access private
+     */
+
+    private $server = false;
+
+
+    /**
+     * Flashdata container
+     *
+     * @var array
+     * @access private
+     * @TODO: move flashdata to sessionhandler, make available here with other request vars still
+     */
+
     private $flashdata;
+
+    /**
+     * Flashdata identifier
+     *
+     * @var string
+     * @access private
+     * @TODO: move flashdata to sessionhandler, make available here with other request vars still
+     */
+
     private $flashdataIdentifier;
 
-//    public function __get($key) {
-//
-//        if(isset($this->$key)) {
-//            return $this->$key;
-//        } else {
-//            return false;
-//        }
-//
-//    }
-    //@TODO: move flashdata to sessionhandler, make available here with other request vars still
+
+    /**
+     * Normalizes superglobals, handles flashdata
+     */
+
     public function __construct() {
 
         if(Registry::get('_configuration')->session) {
 
             // assume no flashdata
-            $this->flashdata = array();
-
+            $this->flashdata = [];
             $this->flashdataIdentifier = '_session_flashdata_12971';
-            // if there are any flashdata variables that need to be handled
-
-            if (isset($_SESSION[$this->flashdataIdentifier])) {
-                // store them
-
-                $this->flashdata = unserialize($_SESSION[$this->flashdataIdentifier]);
-                // and destroy the temporary session variable
-                unset($_SESSION[$this->flashdataIdentifier]);
-
-
-                if (!empty($this->flashdata)) {
-
-                    // iterate through all the entries
-                    foreach ($this->flashdata as $variable => $data) {
-
-                        // increment counter representing server requests
-                        $this->flashdata[$variable]['inc']++;
-
-                        // if we're past the first server request
-                        if ($this->flashdata[$variable]['inc'] > 1) {
-
-                            // unset the session variable
-                            unset($_SESSION[$variable]); //@TODO: add flashkey identifier?
-
-                            // stop tracking
-                            unset($this->flashdata[$variable]);
-
-                        }
-
-                    }
-
-                    // if there is any flashdata left to be handled
-                    if (!empty($this->flashdata))
-
-                        // store data in a temporary session variable
-                        $_SESSION[$this->flashdataIdentifier] = serialize($this->flashdata);
-                }
-
-
-            }
-
+            $this->prepareFlashdata();
             $this->session = $this->_normalize($_SESSION);
 
         }
@@ -83,50 +109,63 @@ class Request
         $this->files = $this->_normalize($_FILES);
         $this->server = $this->_normalize($_SERVER);
 
-        // handle flashdata after script execution
-//        register_shutdown_function(array($this, 'manageFlashdata'));
-
     }
 
-//    public function __destruct() {
-//
-//        $this->manageFlashdata();
-//
-//    }
 
-    public function manageFlashdata() {
+    /**
+     * Processes current requests flashdata, recycles old.
+     * @access private
+     */
+    private function prepareFlashdata() {
 
-        // if there is flashdata to be handled
-        if (!empty($this->flashdata)) {
 
-            // iterate through all the entries
-            foreach ($this->flashdata as $variable => $data) {
+        if (isset($_SESSION[$this->flashdataIdentifier])) {
+            // store them
 
-                // increment counter representing server requests
-                $this->flashdata[$variable]['inc']++;
+            $this->flashdata = unserialize($_SESSION[$this->flashdataIdentifier]);
+            // and destroy the temporary session variable
+            unset($_SESSION[$this->flashdataIdentifier]);
 
-                // if we're past the first server request
-                if ($this->flashdata[$variable]['inc'] > 1) {
 
-                    // unset the session variable
-                    unset($_SESSION[$variable]); //@TODO: add flashkey identifier?
+            if (!empty($this->flashdata)) {
 
-                    // stop tracking
-                    unset($this->flashdata[$variable]);
+                // iterate through all the entries
+                foreach ($this->flashdata as $variable => $data) {
+
+                    // increment counter representing server requests
+                    $this->flashdata[$variable]['inc']++;
+
+                    // if we're past the first server request
+                    if ($this->flashdata[$variable]['inc'] > 1) {
+
+                        // unset the session variable
+                        unset($_SESSION[$variable]);
+
+                        // stop tracking
+                        unset($this->flashdata[$variable]);
+
+                    }
 
                 }
 
+                // if there is any flashdata left to be handled
+                if (!empty($this->flashdata))
+
+                    // store data in a temporary session variable
+                    $_SESSION[$this->flashdataIdentifier] = serialize($this->flashdata);
             }
 
-            // if there is any flashdata left to be handled
-            if (!empty($this->flashdata))
-
-                // store data in a temporary session variable
-                $_SESSION[$this->flashdataIdentifier] = serialize($this->flashdata);
 
         }
 
     }
+
+    /**
+     * Sets flashdata
+     * @access public
+     * @params string $name
+     * @params mixed $value
+     */
 
     public function setFlashdata($name, $value){
 
@@ -143,6 +182,12 @@ class Request
 
     }
 
+    /**
+     * Gets flashdata
+     * @access public
+     * @params string $name
+     */
+
     public function getFlashdata($name = false) {
 
         if($name) {
@@ -157,6 +202,13 @@ class Request
 
     }
 
+    /**
+     * Get normalized $_POST data
+     * @access public
+     * @params string $index
+     * @return mixed
+     */
+
     public function post($index = false) {
 
         if($index === false && isset($this->post)) return $this->post;
@@ -167,6 +219,13 @@ class Request
 
     }
 
+
+    /**
+     * Get normalized $_GET data
+     * @access public
+     * @params string $index
+     * @return mixed
+     */
     public function get($index = false) {
 
         if($index === false && isset($this->get)) return $this->get;
@@ -177,6 +236,13 @@ class Request
 
     }
 
+
+    /**
+     * Get normalized $_SESSION data
+     * @access public
+     * @params string $index
+     * @return mixed
+     */
     public function session($index = false) {
 
         if($index === false && isset($this->session)) return $this->session;
@@ -187,14 +253,25 @@ class Request
 
     }
 
+
+    /**
+     * Remove session data
+     * @access public
+     * @params string $index
+     */
     public function removeSession($index) {
 
         unset($this->session[$index]);
         unset($_SESSION[$index]);
 
-        return true;
-
     }
+
+    /**
+     * Set session data
+     * @access public
+     * @params string $index
+     * @params mixed $value
+     */
 
     public function setSession($index = false, $value = false) {
 
@@ -220,6 +297,10 @@ class Request
 
     }
 
+    /**
+     * Dumps all session data
+     * @access public
+     */
     public function destroySession() {
 
         $_SESSION = array();
@@ -237,6 +318,11 @@ class Request
 
     }
 
+    /**
+     * Normalizes data
+     * @access private
+     * @TODO: expand functionality, set/perform based on configuration
+     */
     private function _normalize($data) {
 
         if (is_array($data)) {

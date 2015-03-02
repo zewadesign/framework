@@ -1,5 +1,4 @@
 <?php
-//depends on the load object, passed by reference
 namespace core;
 use \Exception as Exception;
 
