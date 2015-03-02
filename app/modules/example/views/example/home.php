@@ -10,7 +10,7 @@
     <div class="col-xs-12">
         <PRE>
             <code>
-        <?php print_r($app);?>
+        <?php //print_r($app);?>
             </code>
         </PRE>
     </div>
