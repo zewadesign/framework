@@ -1,6 +1,7 @@
 <?php
 
 namespace core;
+use \Exception as Exception;
 
 /**
  * Abstract class for static handling of key/value pairs
@@ -10,46 +11,37 @@ namespace core;
 
 abstract Class Registry {
 
-    private static $registry = array();
 
-    public static function baseURL($path = false) {
+    /**
+     * Reference to static registry array.
+     *
+     * @var object
+     */
 
-        return self::get('baseURL') . '/' . ltrim($path, '/');
+    private static $registry = [];
 
+    /**
+     * Get a value from the registry
+     *
+     * @access public
+     * @param  string $key
+     * @return mixed
+     */
+
+    public static function get($key) {
+
+        if (self::exists($key))
+            return self::$registry[$key];
+
+        return FALSE;
     }
 
-    public static function currentURL() {
-
-        return self::get('currentURL');
-
-    }
-
-    public static function path($path = false) {
-
-        return self::get('rootPath') . '/' . ltrim($path, '/');
-
-    }
-
-    public static function get($key, $value = false) {
-
-        $return = false;
-
-        if (self::exists($key)) {
-            if($value !== false) {
-
-                if(!empty(self::$registry[$key][$value])) {
-                    $return = self::$registry[$key][$value];
-                }
-
-            } else {
-
-                $return = self::$registry[$key];
-
-            }
-        }
-        
-        return $return;
-    }
+    /**
+     * Add javascript to load the registry
+     *
+     * @access public
+     * @param  string $script path/to/script
+     */
 
     public static function addJS($script) {
 
@@ -59,49 +51,67 @@ abstract Class Registry {
 
     }
 
+    /**
+     * Get all values from the registry
+     *
+     * @access public
+     * @return array
+     */
+
     public static function getAll() {
         return self::$registry;
     }
-    
-    public static function add($key, $value, $replace = true) {
-        if (self::exists($key) AND $replace === false) {
-            trigger_error($key.' already set. Use replace method.', E_USER_WARNING);
-            return false;
+
+    /**
+     * Add value to the registry
+     *
+     * @access public
+     * @param string $key
+     * @param mixed $value
+     * @param boolean $replace
+     * @throws Exception when key is set and replace is false.
+     */
+
+    public static function add($key, $value, $replace = TRUE) {
+        if (self::exists($key) && $replace === FALSE) {
+            throw new Exception($key.' already set. Use replace method.');
+//            trigger_error($key.' already set. Use replace method.', E_USER_WARNING);
         }
 
         self::$registry[$key] = $value;
-        return true;
     }
 
-
-//    public static function addArray($arr, $replace = true) {
-//        if (is_array($arr)) {
-//            foreach ($arr as $k=>$v) {
-//                self::add($k, $v, $replace);
-//            }
-//        }
-//
-//        return true;
-//    }
-    
-    public static function replace($key, $value) {
-        self::$registry[$key] = $value;
-        return true;
-    }
-    
-    public static function remove($index) {
-        if (!is_array($index) AND self::exists($index)) {
-            unset(self::$registry[$index]);
+    /**
+     * Omit value from the registry
+     *
+     * @access public
+     * @param string $key
+     */
+    public static function remove($key) {
+        if (!is_array($key) && self::exists($key)) {
+            unset(self::$registry[$key]);
         }
-        
-        return true;
     }
-    
+
+    /**
+     * Dumps entire registry
+     *
+     * @access public
+     */
+
     public static function clear() {
-        self::$registry = array();
+        self::$registry = [];
     }
-    
-    public static function exists($key = null) {
+
+    /**
+     * Checks if a value is present in the registry
+     *
+     * @access public
+     * @param string $key
+     * @return boolean
+     */
+
+    public static function exists($key) {
         return isset(self::$registry[$key]);
     }
     
