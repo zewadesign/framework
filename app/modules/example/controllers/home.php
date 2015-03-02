@@ -19,10 +19,12 @@ Class Home extends core\Controller {
 
 
         $layout = $this->load->view(
-            'example/layout',
             'example/home',
             $this->data
         );
+        //view takes an optional third parameter,
+        //which is the relative path to the preferred layout
+        //default is example/layout, 'example/layout',
 
         return $layout;
 
