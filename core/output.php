@@ -53,7 +53,7 @@ class Output
     /**
      * Load up some basic configuration settings.
      */
-    
+
     public function __construct() {
 
         $this->load = Registry::get('_load');
