@@ -1,6 +1,8 @@
 <?php
 // regex routing.
-$routes = array();
+$routes = ['override' => [
+    'home/batman/dotcom' => 'example/home/batman'
+]];
 
 // Route everything to the home/default controller
 //$routes['(.+)'] = 'home/homec/something';

@@ -12,6 +12,14 @@ Class Router
 {
     //@TODO: fix these to load from config.. and do some other stuff, no sure yet.
 
+
+    /**
+     * System configuration
+     *
+     * @var object
+     */
+    private $_configuration;
+
     /**
      * Instantiated load class pointer
      *
@@ -50,17 +58,49 @@ Class Router
 
     /**
      * Load up some basic configuration settings.
-     * @throws Exception on disallowed key characters in URL
      */
     public function __construct() {
 
+        $this->_configuration = Registry::get('_configuration');
+
         $uri = self::uri();
+
         $this->load = Registry::get('_load');
 
-        /*
-         * @TODO: implemnet routing
-         *
-         */
+        if($this->_configuration->routes) {
+            if(!empty($this->_configuration->routes[$uri])) {
+                $uri = $this->_configuration->routes[$uri];
+
+                $uriChunks = $this->parseURI($uri);
+
+            } elseif(!empty(array_flip($this->_configuration->routes)[$uri])) {
+                Router::redirect(Router::baseURL(array_flip($this->_configuration->routes)[$uri]),301);
+            }
+        }
+
+        if(empty($uriChunks))
+            $uriChunks = $this->parseURI($uri);
+
+        Registry::add('_module',$uriChunks[0]);
+        Registry::add('_controller', $uriChunks[1]);
+        Registry::add('_method',$uriChunks[2]);
+        Registry::add('_params', array_slice($uriChunks, 3));
+
+
+    }
+
+
+    /**
+     * Parse and explode URI segments into chunks
+     *
+     * @access private
+     * @param string $uri
+     * @return array chunks of uri
+     * @throws Exception on disallowed characters
+     */
+
+    private function parseURI($uri) {
+
         $uriFragments = explode('/', $uri);
 
         $uriChunks = array();
@@ -70,12 +110,6 @@ Class Router
             $uriChunks[] = $fragment;
 
         }
-
-
-        Registry::add('_module',$uriChunks[0]);
-        Registry::add('_controller', $uriChunks[1]);
-        Registry::add('_method',$uriChunks[2]);
-        Registry::add('_params', array_slice($uriChunks, 3));
 
         if( !preg_match("/^[a-z0-9:_\/\.\[\]-]+$/i", $uri) ||
             array_filter($uriChunks, function($uriChunk) {
@@ -89,6 +123,7 @@ Class Router
             throw new Exception('Disallowed key characters.');
         }
 
+        return $uriChunks;
     }
 
     /**
