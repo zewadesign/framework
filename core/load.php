@@ -119,10 +119,12 @@ Class Load
      * @throws Exception when a layout can not be found
      */
 
-    public function view($view = '', $data = [], $layout = 'example/layout') {
+    public function view($view = '', $data = [], $layout = 'layout') {
+
+        $module = Registry::get('_module');
 
         if($view != '') {
-            $file = APP_PATH . DS . 'modules' . DS . Registry::get('_module') . DS . 'views' . DS . strtolower($view) . '.php';
+            $file = APP_PATH . DS . 'modules' . DS . $module . DS . 'views' . DS . strtolower($view) . '.php';
             if (file_exists($file)) {
 
                 $data['view'] = $this->render($file, $data);
@@ -135,7 +137,7 @@ Class Load
         }
 
         if($layout != false) {
-            $file = APP_PATH . DS . 'layouts' . DS . strtolower($layout) . '.php';
+            $file = APP_PATH . DS . 'layouts' . DS . $module.DS.strtolower($layout) . '.php';
 
             if (file_exists($file)) {
                 return $this->render($file, $data);

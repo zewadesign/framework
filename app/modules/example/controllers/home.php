@@ -24,7 +24,7 @@ Class Home extends core\Controller {
         );
         //view takes an optional third parameter,
         //which is the relative path to the preferred layout
-        //default is example/layout, 'example/layout',
+        //default is "layout" within the active module layout directory. (layouts/activemodule/layout) ,
 
         return $layout;
 
