@@ -21,7 +21,7 @@ class Request
     private $get = false;
 
     /**
-     * normalized $_GET superglobal
+     * normalized $_POST superglobal
      *
      * @var array
      * @access private
@@ -30,7 +30,7 @@ class Request
     private $post = false;
 
     /**
-     * normalized $_POST superglobal
+     * normalized $_SESSION superglobal
      *
      * @var array
      * @access private
@@ -39,7 +39,7 @@ class Request
     private $session = false;
 
     /**
-     * normalized $_SESSION superglobal
+     * normalized $_COOKIE superglobal
      *
      * @var array
      * @access private
@@ -48,7 +48,7 @@ class Request
     private $cookie = false;
 
     /**
-     * normalized $_COOKIE superglobal
+     * normalized $_FILES superglobal
      *
      * @var array
      * @access private
