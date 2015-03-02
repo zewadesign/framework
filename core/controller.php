@@ -13,6 +13,13 @@ use app\modules as modules;
 abstract class Controller {
 
     /**
+     * System configuration
+     *
+     * @var object
+     */
+    private $configuration;
+
+    /**
      * Instantiated load class pointer
      *
      * @var object
@@ -65,7 +72,7 @@ abstract class Controller {
      */
 
     public function __construct() {
-
+        $this->configuration = Registry::get('_configuration');
         $this->router = Registry::get('_router');
         $this->load = Registry::get('_load');
         $this->request = Registry::get('_request');
