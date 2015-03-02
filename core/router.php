@@ -1,19 +1,59 @@
 <?php
 //depends on the load object, passed by reference
 namespace core;
+use \Exception as Exception;
+
+/**
+ * Handles everything relating to URL/URI.
+ *
+ * @author Zechariah Walden<zech @ zewadesign.com>
+ */
 
 Class Router 
 {
     //@TODO: fix these to load from config.. and do some other stuff, no sure yet.
 
-    private $load;
-    public $module;
-    public $controller;
-    public $method;
-    public $url = array();
+    /**
+     * Instantiated load class pointer
+     *
+     * @var object
+     * @access private
+     */
 
-    
-    function __construct() {
+    private $load;
+
+    /**
+     * The active module
+     *
+     * @var string
+     * @access public
+     */
+
+    public $module;
+
+    /**
+     * The active controller
+     *
+     * @var string
+     * @access public
+     */
+
+    public $controller;
+
+    /**
+     * The active method
+     *
+     * @var string
+     * @access public
+     */
+
+    public $method;
+
+    /**
+     * Load up some basic configuration settings.
+     * @throws Exception on disallowed key characters in URL
+     */
+    public function __construct() {
 
         $uri = self::uri();
         $this->load = Registry::get('_load');
@@ -32,10 +72,10 @@ Class Router
 
         }
 
-        Registry::add('rootPath', ROOT_PATH);
-        Registry::add('baseURL', self::baseURL());
-        Registry::add('uri', $this->uri());
-        Registry::add('currentURL', $this->url());
+
+        Registry::add('_module',$uriChunks[0]);
+        Registry::add('_controller', $uriChunks[1]);
+        Registry::add('_method',$uriChunks[2]);
         Registry::add('_params', array_slice($uriChunks, 3));
 
         if( !preg_match("/^[a-z0-9:_\/\.\[\]-]+$/i", $uri) ||
@@ -47,10 +87,17 @@ Class Router
             )
         ){
 
-            throw new \Exception('Disallowed key characters.');
+            throw new Exception('Disallowed key characters.');
         }
 
     }
+
+    /**
+     * Normalize the $_SERVER vars for formatting the URI.
+     *
+     * @access private
+     * @return string formatted/u/r/l
+     */
 
     private static function normalizeURI() {
 
@@ -76,6 +123,13 @@ Class Router
 
         return $normalizedURI;
     }
+
+    /**
+     * Normalize the $_SERVER vars for formatting the URI.
+     *
+     * @access public
+     * @return string formatted/u/r/l
+     */
 
     public static function uri() {
 
@@ -105,22 +159,33 @@ Class Router
 
         }
 
-        Registry::add('_module',$uriChunks[0]);
-        Registry::add('_controller', $uriChunks[1]);
-        Registry::add('_method',$uriChunks[2]);
         $uri = ltrim(implode('/', $uriChunks),'/');
 
         return $uri;
 
     }
 
-    public static function url() {
+    /**
+     * Return the currentURL w/ query strings
+     *
+     * @access public
+     * @return string http://tld.com/formatted/u/r/l?q=bingo
+     */
+
+    public static function currentURL() {
 
         return self::baseURL().'/'.self::uri().(!empty($_SERVER['QUERY_STRING']) ? '?'.$_SERVER['QUERY_STRING'] : '');
 
     }
-    
-    public static function baseURL() {
+
+    /**
+     * Return the baseURL
+     *
+     * @access public
+     * @return string http://tld.com
+     */
+
+    public static function baseURL($path = '') {
 
         $self = $_SERVER['PHP_SELF'];
         $server = $_SERVER['HTTP_HOST'].rtrim(str_replace(strstr($self, 'index.php'), '', $self), '/');
@@ -134,9 +199,21 @@ Class Router
 
         }
 
-        return $protocol.$server;
+        $url = $protocol.$server;
+
+        if($path !== '')
+            $url .= '/'.$path;
+
+        return $url;
 
     }
+
+    /**
+     * Set 401 header, and return noaccess view contents
+     *
+     * @access public
+     * @return string
+     */
 
     public static function showNoAccess($layout) {
 
@@ -150,6 +227,13 @@ Class Router
 
     }
 
+    /**
+     * Set 404 header, and return 404 view contents
+     *
+     * @access public
+     * @return string
+     */
+
     public static function show404($layout) {
 
 
@@ -162,6 +246,15 @@ Class Router
         return $layout;
 
     }
+
+
+    /**
+     * Set optional status header, and redirect to provided URL
+     *
+     * @access public
+     * @return bool
+     */
+
 
     public static function redirect($url = '/', $status = null) {
         $url = str_replace(array('\r','\n','%0d','%0a'), '', $url);
@@ -199,7 +292,7 @@ Class Router
         }
         // strip leading slashies
         $url = preg_replace('!^/*!', '', $url);
-        header("Location: ".self::baseURL().'/'.$url);
+        header("Location: ".self::baseURL($url));
         exit;
 
     }
