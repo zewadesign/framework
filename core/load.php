@@ -214,7 +214,12 @@ Class Load
         if (isset($this->config[$file])) {
             return (isset($this->config[$file][$item]) ? $this->config[$file][$item] : $this->config[$file]);
         }
-    
+
+        if (is_null($file)) {
+            // This will never happen unless you intentionally Load->config(null);
+            return $this->config;
+        }
+
         if ($file != '' AND file_exists(APP_PATH.DS.'config'.DS.$file.'.php')) {
 
             if (!file_exists(APP_PATH.DS.'config'.DS.$file.'.php')) {
@@ -236,8 +241,6 @@ Class Load
                 return (isset($this->config[$file][$item]) ? $this->config[$file][$item] : $this->config[$file]);
             }
 
-        } elseif (is_null($file)) {
-            return $this->config;
         }
         
         return array();
