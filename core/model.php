@@ -57,7 +57,7 @@ abstract class Model {
      */
 
     public function __construct() {
-
+        // This abstract is strictly to establish inheritance from a global registery.
         $this->configuration = Registry::get('_configuration');
         $this->database = Registry::get('_database');
 

@@ -1,5 +1,7 @@
 <?php
-
+// If anything should gets comments, the config file should.
+// This needs to be broken up so it's more readable.
+// The use of PHP 5.3 array construct syntax is definitely distracting.
 $core = array(
     'autoload' => array(
         'helpers' => array(

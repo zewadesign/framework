@@ -1,5 +1,5 @@
 <?php
-
+// one file for all translations for a single language?
 $en_lang = array(
 
 /* Validation messages */

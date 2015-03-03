@@ -1,5 +1,7 @@
 <?php
-
+// Can't really use this or even play with it until it's built out to
+// function on it's own. db setup, etc.
+// in general this is a strange class.
 namespace core;
 
 class SessionHandler
@@ -110,7 +112,7 @@ class SessionHandler
     public function destroy($session_id) {
 
         $success = $this->database->where('id',$session_id)
-            ->table($this->tableName)
+            ->table($this->tableName) // totally looks like you'd be deleting a table. lol
             ->delete();
 
         if($success) {
@@ -130,7 +132,7 @@ class SessionHandler
     }
 
     public function open($save_path, $session_name) {
-
+        //??
         return true;
 
     }
@@ -146,6 +148,7 @@ class SessionHandler
 
         $hash = '';
 
+        // You repeated the next 6 lines in the SessionHandler->write() method. DRY
         if($this->lockToUserAgent && isset($_SERVER['HTTP_USER_AGENT'])) {
             $hash .= $_SERVER['HTTP_USER_AGENT'];
         }
@@ -181,7 +184,9 @@ class SessionHandler
         if($this->lockToUserAgent && isset($_SERVER['HTTP_USER_AGENT'])) {
             $hash .= $_SERVER['HTTP_USER_AGENT'];
         }
-
+        // This doesn't work if you're forwarding traffic thru proxies or load balancers.
+        // and since you don't use cookies to validate sessions (and user agents are 100% spoofable)
+        // then this would be an obscure but potentially painful oversight.
         if($this->lockToIp && isset($_SERVER['REMOTE_ADDR'])) {
             $hash .= $_SERVER['REMOTE_ADDR'];
         }

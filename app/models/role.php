@@ -1,5 +1,5 @@
 <?php
-
+// This model/class builds pieces of html forms and manipulates the db?
 namespace app\models;
 use \core as core;
 

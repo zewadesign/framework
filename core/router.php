@@ -309,6 +309,7 @@ Class Router
             switch($status){
                 case '301': $msg = '301 Moved Permanently'; break;
                 case '307': $msg = '307 Temporary Redirect'; break;
+                // Using these below (except 302) would be an intentional misuse of the 'system'
                 case '401': $msg = '401 Access Denied'; break;
                 case '403': $msg = '403 Request Forbidden'; break;
                 case '404': $msg = '404 Not Found'; break;

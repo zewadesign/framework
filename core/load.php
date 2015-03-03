@@ -67,11 +67,11 @@ Class Load
         $class = 'app\\models\\'.ucfirst($model);
 
         if (!class_exists($class)) {
-
+            // Sometimes you \Exception
             throw new \Exception($model.' does not exist.');
 
         }
-
+        // Your controllers below (albeit a strange approach) can be singletons but models are not?
         return new $class;
 
     }
@@ -92,15 +92,16 @@ Class Load
         $class = 'app\\modules\\'.$module.'\\controllers\\'.ucfirst($controller);
 
         if (!class_exists($class)) {
-
+            // Other times you don't \Exception.  Doesn't matter I suppose.
             throw new Exception($module.'::'.$controller.' does not exist.');
 
         }
 
         if(!empty($args)) {
+            // if we pass arguments do we get a new instance of $controller class?
             return new $class($args);
         }
-
+        // if we don't pass arguments we get a singleton. Interesting approach.
         return $class::getInstance();
 
     }
@@ -120,10 +121,11 @@ Class Load
      */
 
     public function view($view = '', $data = [], $layout = 'layout') {
-
+        // This is the same as using globals.
         $module = Registry::get('_module');
 
         if($view != '') {
+            // I like how you use spaces here to concat a string
             $file = APP_PATH . DS . 'modules' . DS . $module . DS . 'views' . DS . strtolower($view) . '.php';
             if (file_exists($file)) {
 
@@ -137,6 +139,7 @@ Class Load
         }
 
         if($layout != false) {
+            // but sometimes you don't space em all the same. code style standards are easy to adopt.
             $file = APP_PATH . DS . 'layouts' . DS . $module.DS.strtolower($layout) . '.php';
 
             if (file_exists($file)) {
@@ -162,6 +165,8 @@ Class Load
      */
 
     public function library($file, $args=[]) {
+        // This seems like some kind of half baked exception throwin' autoloader needin' thingamajig.
+        // Why aren't all libraries just autoloaded. Libraries don't exist anymore, just classes.
         if (class_exists($file)) {
             $obj = new $file($args);
             return $obj;
@@ -181,7 +186,7 @@ Class Load
      */
 
     public function helper($file, $require = false) {
-
+        // Shouldn't helpers just be auto-loaded static class methods?
         $path = APP_PATH.DS.'helpers'.DS.strtolower($file).'.php';
 
         if (isset($this->helpers[$path])) {
@@ -212,9 +217,15 @@ Class Load
     public function config($file='', $item='') {
 
         if (isset($this->config[$file])) {
+            // you know we throw an exception later if the $item doesn't exist.
             return (isset($this->config[$file][$item]) ? $this->config[$file][$item] : $this->config[$file]);
         }
-    
+
+        if (is_null($file)) {
+            // This will never happen unless you intentionally Load->config(null);
+            return $this->config;
+        }
+
         if ($file != '' AND file_exists(APP_PATH.DS.'config'.DS.$file.'.php')) {
 
             if (!file_exists(APP_PATH.DS.'config'.DS.$file.'.php')) {
@@ -228,7 +239,8 @@ Class Load
                 $this->config[$file] = $$file;
 
                 if (!is_null($item) AND !isset($this->config[$file][$item])) {
-
+                    // Why do we throw an exception down here if the $item can't be found
+                    // but up above if the config[$file] exists but the $item doesn't we just return the config[$file]
                     throw new \Exception($item.' could not be found in '.$file);
 
                 }
@@ -236,10 +248,10 @@ Class Load
                 return (isset($this->config[$file][$item]) ? $this->config[$file][$item] : $this->config[$file]);
             }
 
-        } elseif (is_null($file)) {
-            return $this->config;
         }
-        
+
+        // Why does this return an empty array when we request Loader->config() but
+        // if we Loader->config(null) we pass back $this->config as seen above?
         return array();
     }
 
@@ -257,12 +269,14 @@ Class Load
 
     public function lang($file = '', $item = '') {
 
-        if ($this->lang !== false) {
+        if ($this->lang !== false) { // sometimes you use em
             return $this->lang;
         }
 
-        if($file == '')
+        if($file == '') // { sometimes ya don't. }
             throw new Exception('The language path can not be empty.');
+        // Not using brackets makes this stuff harder to read.
+        // Pick any code style standard and try it out
 
         if (file_exists(APP_PATH.DS.'lang'.DS.$file.'.php')) {
 
@@ -273,7 +287,8 @@ Class Load
                 $this->lang = $$file;
 
                 return $this->lang;
-            }
+            } // So if I have a lang file that's got the right filename but not the right content, $$file
+              // we get "Notice: Undefined variable:" instead of a fancy exception.
 
         } else {
             throw new Exception('Language file: '.$file.' could not be found');
@@ -296,6 +311,7 @@ Class Load
 
     //@TODO: come back and clean up this and the way the view receives stuff
     private function render($file, $data=[]) {
+        // Why does the Load class also render?
         // make sure..
         // INCLUDE SOME BASE STUFF HERE, BASE URL FOR ONE.
         if(!file_exists($file)) {

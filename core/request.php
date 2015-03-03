@@ -347,6 +347,7 @@ class Request
                     }
                 }
                 //Global XXS?
+                // This is not sanitary.  FILTER_SANITIZE_STRING doesn't do much.
                 $data = filter_var($data, FILTER_SANITIZE_STRING);
 
             } elseif(is_numeric($data)) {

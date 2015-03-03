@@ -95,7 +95,7 @@ Class App
         //@TODO: setup custom routing based on regex // (can't we get away without using regex tho?)!!!!!!! routesssssss!!!!!!!!
         //@TODO: system vars (_) need to be moved to an array called "system" in the registry, and write protected, _ is lame.
         try {
-
+            // The whole app seems to rely on this global Registry...
             Registry::add('_load', new Load());
             $this->load = Registry::get('_load');
             $this->_configuration = (object) array(
