@@ -1,5 +1,11 @@
 <?php
-
+// Need to switch the hooks out for a proper events system.
+// Then your loaded app (including modules) registers watchers
+// and as the events are fired, the event system fires similar
+// callbacks to watchers but as you add more watchers and event
+// items you don't have to keep blowing up this array to maintain
+// all the possible points of hooking the app even in to events
+// and watchers in the modules n' whatnot.
 $hooks = array('register' => (object)array());
 
 $hooks['register']->preApplication = (object) array(

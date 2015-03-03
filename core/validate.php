@@ -1,5 +1,6 @@
 <?php
-
+// Some kind of form validation library in the core of the framework ..  but doesn't get used?
+// This definitely seems out of place at the moment.
 namespace core;
 use \Exception as Exception;
 

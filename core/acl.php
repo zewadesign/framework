@@ -1,6 +1,6 @@
 <?php
-// This whole thing is based on a database schema and an interface to that
-// schema that doesn't exist.
+// This whole thing is based on a database schema and an interface
+// to a schema that doesn't exist.
 namespace core;
 
 /**

@@ -273,7 +273,7 @@ Class Load
             return $this->lang;
         }
 
-        if($file == '') // sometimes ya don't.
+        if($file == '') // { sometimes ya don't. }
             throw new Exception('The language path can not be empty.');
         // Not using brackets makes this stuff harder to read.
         // Pick any code style standard and try it out

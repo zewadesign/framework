@@ -7,7 +7,7 @@ ini_set('display_errors', 1);
 
 define('DS', DIRECTORY_SEPARATOR);
 $path_info = pathinfo(__FILE__);
-$root = $path_info['dirname']; // php 5.3.0+
+$root = $path_info['dirname']; // php 5.3.0+ ??? lol
 
 define('ROOT_PATH', $root);
 define('CORE_PATH', ROOT_PATH.DS.'core');
