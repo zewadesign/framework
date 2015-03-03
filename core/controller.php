@@ -1,6 +1,7 @@
 <?php
 
 namespace core;
+
 use app\modules as modules;
 
 /**
@@ -8,9 +9,9 @@ use app\modules as modules;
  *
  * @author Zechariah Walden<zech @ zewadesign.com>
  */
-
 //can name spaces be removed in the classes extending..?
-abstract class Controller {
+abstract class Controller
+{
 
     /**
      * System configuration
@@ -71,7 +72,8 @@ abstract class Controller {
      * Load up some basic configuration settings.
      */
 
-    public function __construct() {
+    public function __construct()
+    {
         // This is interesting use of global stuffs.
         // It's not bad if you're shooting for shit tons of inheritance.
         $this->configuration = Registry::get('_configuration');
@@ -91,7 +93,8 @@ abstract class Controller {
      * @return object
      */
 
-    public static function &getInstance() {
+    public static function &getInstance()
+    {
 
         if (static::$instance === null) {
             static::$instance = new static();
@@ -100,5 +103,4 @@ abstract class Controller {
         return static::$instance;
 
     }
-
 }

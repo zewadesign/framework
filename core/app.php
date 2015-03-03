@@ -15,7 +15,7 @@ namespace core;
  * @author Zechariah Walden<zech @ zewadesign.com>
  */
 
-Class App
+class App
 {
 
     /**
@@ -88,7 +88,8 @@ Class App
      * and then processes, and makes available the configured resources
      */
 
-    public function __construct() {
+    public function __construct()
+    {
         //@TODO: unset unnececessary vars/profile/unit testing..? how?
         //@TODO: better try/catch usage
         //@TODO: validation needs a second look, the required is screwing up on empty (the ol' isset/empty nonsense.. need to validate intent
@@ -100,15 +101,15 @@ Class App
             $this->load = Registry::get('_load');
             $this->_configuration = (object) array(
                 'database' => $this->load->config('core', 'database'),
-                'session' => $this->load->config('core', 'session'),
-                'cache' => $this->load->config('core','cache'),
-                'acl' => $this->load->config('core','acl'),
-                'modules' => $this->load->config('core','modules'),
-                'routes' => $this->load->config('routes','override'),
-                'hooks' => $this->load->config('core','hooks')
+                'session'  => $this->load->config('core', 'session'),
+                'cache'    => $this->load->config('core', 'cache'),
+                'acl'      => $this->load->config('core', 'acl'),
+                'modules'  => $this->load->config('core', 'modules'),
+                'routes'   => $this->load->config('routes', 'override'),
+                'hooks'    => $this->load->config('core', 'hooks')
             );
 
-            Registry::add('_configuration',$this->_configuration);
+            Registry::add('_configuration', $this->_configuration);
 
             $this->hook = new Hook();
 
@@ -118,21 +119,17 @@ Class App
 
             $this->autoload();
 
-            $this->class = 'app\\modules\\'.Registry::get('_module').'\\controllers\\'.ucfirst($this->controller);
+            $this->class = 'app\\modules\\' . Registry::get('_module') . '\\controllers\\' . ucfirst($this->controller);
 
-            if($this->_configuration->acl) {
-
+            if ($this->_configuration->acl) {
                 $this->secureStart();
 
             } else {
-
                 $this->start();
 
             }
 
-        } catch(\Exception $e) {
-
-
+        } catch (\Exception $e) {
             trigger_error($e->getMessage(), E_USER_ERROR);
 
 
@@ -146,14 +143,14 @@ Class App
      * @access private
      */
 
-    private function autoload() {
+    private function autoload()
+    {
 
         // autoload helpers and such.
 
         if ($autoload = Registry::get('_autoload')) {
             foreach ($autoload as $type => $component) {
-
-                foreach($component as $comp) {
+                foreach ($component as $comp) {
                     switch ($type) {
                         case 'helpers':
 
@@ -162,7 +159,7 @@ Class App
                             break;
                         case 'libraries':
 
-                            foreach($comp as $lib => $args){
+                            foreach ($comp as $lib => $args) {
                                 $this->load->library($lib, $args);
                             }
 
@@ -179,13 +176,14 @@ Class App
      * @access private
      */
 
-    private function prepareRegistry() {
+    private function prepareRegistry()
+    {
 
         Registry::add('_request', new Request());
         Registry::add('_router', new Router());
         Registry::add('_output', new Output());
         Registry::add('_validate', new Validate());
-        Registry::add('_autoload', Registry::get('_load')->config('core','autoload'));
+        Registry::add('_autoload', Registry::get('_load')->config('core', 'autoload'));
 
         $this->module = Registry::get('_module');
         $this->controller = Registry::get('_controller');
@@ -205,30 +203,31 @@ Class App
      * @access private
      */
 
-    private function prepareApplication() {
+    private function prepareApplication()
+    {
 
         $this->hook->dispatch('preRegistry');
         $this->prepareRegistry();
         $this->hook->dispatch('postRegistry');
 
-        Registry::add('lang', $this->load->lang($this->load->config('core','language')));
+        Registry::add('lang', $this->load->lang($this->load->config('core', 'language')));
 
-        if($this->_configuration->database) {
+        if ($this->_configuration->database) {
             $this->hook->dispatch('preDatabase');
             $this->register('database');
             $this->hook->dispatch('postDatabase');
         }
-        if($this->_configuration->cache) {
+        if ($this->_configuration->cache) {
             $this->hook->dispatch('preCache');
             $this->register('cache');
             $this->hook->dispatch('postCache');
         }
-        if($this->_configuration->session) {
+        if ($this->_configuration->session) {
             $this->hook->dispatch('preSession');
             $this->register('session');
             $this->hook->dispatch('postSession');
         }
-        if($this->_configuration->acl) {
+        if ($this->_configuration->acl) {
             $this->hook->dispatch('preACL');
             $this->register('acl');
             $this->hook->dispatch('postACL');
@@ -240,24 +239,26 @@ Class App
      * Registers core classes
      *
      * @access private
+     *
      * @param string $resource
      */
 
-    private function register($resource) {
+    private function register($resource)
+    {
 
-        switch($resource) {
+        switch ($resource) {
             case 'database':
                 $this->registerDatabase();
-            break;
+                break;
             case 'cache':
                 $this->registerCache();
-            break;
+                break;
             case 'session':
                 $this->registerSession();
-            break;
+                break;
             case 'acl':
                 $this->registerACL();
-            break;
+                break;
         }
 
     }
@@ -268,7 +269,8 @@ Class App
      * @access private
      */
 
-    private function registerDatabase() {
+    private function registerDatabase()
+    {
 
         Registry::add('_database', new Database(
             'default', // you can name your db, for switching between..
@@ -283,10 +285,11 @@ Class App
      * @access private
      */
 
-    private function registerCache() {
+    private function registerCache()
+    {
 
         $memcached = new \Memcached();
-        $memcached->addServer($this->_configuration->cache->host,$this->_configuration->cache->port);
+        $memcached->addServer($this->_configuration->cache->host, $this->_configuration->cache->port);
 
         Registry::add('_memcached', $memcached);
 
@@ -299,12 +302,12 @@ Class App
      * @access private
      */
 
-    private function registerSession() {
+    private function registerSession()
+    {
 
-        if(!$this->_configuration->session['database']) {
+        if (!$this->_configuration->session['database']) {
             throw new \Exception('Not supported yet..');
         } else {
-
             new SessionHandler(Registry::get('_database'), 'securitycode', 7200, true, false, 1, 100);
         }
 
@@ -316,7 +319,8 @@ Class App
      * @access private
      */
 
-    private function registerACL() {
+    private function registerACL()
+    {
 
         Registry::add('_acl', $this->_configuration->acl);
 
@@ -328,20 +332,21 @@ Class App
      * @access private
      */
 
-    private function verifyApplicationRequest() {
+    private function verifyApplicationRequest()
+    {
 
-        $moduleExist = file_exists(APP_PATH.'/modules/'.$this->module);
+        $moduleExist = file_exists(APP_PATH . '/modules/' . $this->module);
         $classExist = class_exists($this->class);
         $methodExist = method_exists($this->class, Registry::get('_method'));
 
-        if(!$moduleExist) {
-            $this->output = Router::show404($this->_configuration->modules['defaultModule'].'/404');
+        if (!$moduleExist) {
+            $this->output = Router::show404($this->_configuration->modules['defaultModule'] . '/404');
             return false;
-        } else if(!$classExist) {
-            $this->output = Router::show404($this->module.'/404');
+        } elseif (!$classExist) {
+            $this->output = Router::show404($this->module . '/404');
             return false;
-        } else if(!$methodExist) {
-            $this->output = Router::show404($this->module.'/404');
+        } elseif (!$methodExist) {
+            $this->output = Router::show404($this->module . '/404');
             return false;
         }
 
@@ -355,10 +360,12 @@ Class App
      * @access private
      */
 
-    private function start() {
+    private function start()
+    {
 
-        if(!$this->verifyApplicationRequest())
+        if (!$this->verifyApplicationRequest()) {
             return false;
+        }
 
         $this->hook->dispatch('preController');
         $this->instantiatedClass = new $this->class();
@@ -383,7 +390,8 @@ Class App
      */
 
 
-    public function secureStart() {
+    public function secureStart()
+    {
 
         $request = Registry::get('_request');
 
@@ -395,7 +403,7 @@ Class App
         $authorizationCode = $ACL->hasAccessRights($this->module, $this->controller, $this->method);
 
         //@TODO:store access rights in registry for dynamic menu display
-        switch($authorizationCode) {
+        switch ($authorizationCode) {
 
             case '1':
                 $this->start();
@@ -417,17 +425,18 @@ Class App
      * @access private
      */
 
-    private function secureRedirect() {
+    private function secureRedirect()
+    {
 
         Registry::get('_request')->setFlashdata('alert', (object) array('info' => 'Please login to continue!'));
 
         $currentURL = currentURL();
-        $currentURL = str_replace(baseURL(),'',$currentURL);
+        $currentURL = str_replace(baseURL(), '', $currentURL);
         $currentURL = base64_encode($currentURL);
 
-        $redirect = $this->load->config('core','modules')[$this->module]['aclRedirect'];
+        $redirect = $this->load->config('core', 'modules')[$this->module]['aclRedirect'];
 
-        Router::redirect(baseURL($redirect.'?r='.$currentURL));
+        Router::redirect(baseURL($redirect . '?r=' . $currentURL));
 
     }
 
@@ -438,9 +447,10 @@ Class App
      * @access private
      */
 
-    private function noAccessRedirect() {
+    private function noAccessRedirect()
+    {
 
-        return Router::showNoAccess($this->module.'/noaccess');
+        return Router::showNoAccess($this->module . '/noaccess');
 
     }
 
@@ -451,14 +461,15 @@ Class App
      * @return string
      */
 
-    public function __toString() {
+    public function __toString()
+    {
 
-        if(!$this->output)
+        if (!$this->output) {
             $this->output = '';
+        }
 
         $this->hook->dispatch('postApplication');
 
         return $this->output;
     }
-
 }

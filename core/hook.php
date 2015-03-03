@@ -70,14 +70,15 @@ class Hook
      * if they are enabled, register them.
      */
 
-    public function __construct() {
+    public function __construct()
+    {
 
 
         $this->load = Registry::get('_load');
 
-        $this->enabled = $this->load->config('core','hooks');
+        $this->enabled = $this->load->config('core', 'hooks');
 
-        if($this->enabled) {
+        if ($this->enabled) {
             // Why would this class care if it's enabled?
             // Don't even new it up in the first place if it's not enabled?
             $this->registerHooks();
@@ -95,12 +96,13 @@ class Hook
      * @access private
      */
 
-    private function registerHooks() {
+    private function registerHooks()
+    {
 
-        $registeredHooks = $this->load->config('hooks','register');
+        $registeredHooks = $this->load->config('hooks', 'register');
 
-        foreach($registeredHooks as $hook => $config) {
-            $this->hooks[$hook]= ($config->enabled) ? $config->call : false;
+        foreach ($registeredHooks as $hook => $config) {
+            $this->hooks[$hook] = ($config->enabled) ? $config->call : false;
             $this->processed[$hook] = false;
         }
 
@@ -112,13 +114,14 @@ class Hook
      * Dispatch a hook to $this->process to be invoked
      *
      * @access public
+     *
      * @param string $hook pointer to closure
      */
 
-    public function dispatch($hook) {
+    public function dispatch($hook)
+    {
 
-        if($this->enabled && $this->hooks[$hook]) {
-
+        if ($this->enabled && $this->hooks[$hook]) {
             $this->process($hook);
 
         }
@@ -131,14 +134,15 @@ class Hook
      * Processes queued hooks
      *
      * @access private
+     *
      * @param string $hook pointer to closure
      */
 
-    private function process($hook) {
+    private function process($hook)
+    {
         //@TODO handle hook execution in try/catch with silent fail (notification to system?)
         $call = $this->hooks[$hook];
-        if(is_callable($call)) {
-
+        if (is_callable($call)) {
             $call();
             $this->processed[$hook] = true;
 
@@ -155,7 +159,8 @@ class Hook
      * @return object
      */
 
-    public static function &getInstance() {
+    public static function &getInstance()
+    {
 
         if (static::$instance === null) {
             static::$instance = new static();

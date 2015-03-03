@@ -1,6 +1,7 @@
 <?php
 // I think this global registry might be getting confused for a DI container or something similar.
 namespace core;
+
 use \Exception as Exception;
 
 /**
@@ -9,7 +10,8 @@ use \Exception as Exception;
  * @author Zechariah Walden<zech @ zewadesign.com>
  */
 // How does this even work?
-abstract Class Registry {
+abstract class Registry
+{
 // You instantiate this class as a regular concrete class.
 // not how PHP is supposed to work. At least now how I understand it.
 // Sentence 2: http://php.net/manual/en/language.oop5.abstract.php
@@ -26,28 +28,34 @@ abstract Class Registry {
      * Get a value from the registry
      *
      * @access public
+     *
      * @param  string $key
+     *
      * @return mixed
      */
 
-    public static function get($key) {
+    public static function get($key)
+    {
 
-        if (self::exists($key))
+        if (self::exists($key)) {
             return self::$registry[$key];
+        }
 
-        return FALSE;
+        return false;
     }
 
     /**
      * Add javascript to load the registry
      *
      * @access public
+     *
      * @param  string $script path/to/script
      */
 
-    public static function addJS($script) {
+    public static function addJS($script)
+    {
         // hackish
-        if(!array_search($script, self::$registry['_scripts'])) {
+        if (!array_search($script, self::$registry['_scripts'])) {
             self::$registry['_scripts'] = array_push(self::$registry['_scripts'], $script);
         }
 
@@ -60,7 +68,8 @@ abstract Class Registry {
      * @return array
      */
 
-    public static function getAll() {
+    public static function getAll()
+    {
         return self::$registry;
     }
 
@@ -68,15 +77,18 @@ abstract Class Registry {
      * Add value to the registry
      *
      * @access public
+     *
      * @param string $key
      * @param mixed $value
      * @param boolean $replace
+     *
      * @throws Exception when key is set and replace is false.
      */
 
-    public static function add($key, $value, $replace = TRUE) {
-        if (self::exists($key) && $replace === FALSE) {
-            throw new Exception($key.' already set. Use replace method.');
+    public static function add($key, $value, $replace = true)
+    {
+        if (self::exists($key) && $replace === false) {
+            throw new Exception($key . ' already set. Use replace method.');
 //            trigger_error($key.' already set. Use replace method.', E_USER_WARNING);
         }
 
@@ -87,9 +99,11 @@ abstract Class Registry {
      * Omit value from the registry
      *
      * @access public
+     *
      * @param string $key
      */
-    public static function remove($key) {
+    public static function remove($key)
+    {
         if (!is_array($key) && self::exists($key)) {
             unset(self::$registry[$key]);
         }
@@ -101,7 +115,8 @@ abstract Class Registry {
      * @access public
      */
 
-    public static function clear() {
+    public static function clear()
+    {
         self::$registry = [];
     }
 
@@ -109,12 +124,14 @@ abstract Class Registry {
      * Checks if a value is present in the registry
      *
      * @access public
+     *
      * @param string $key
+     *
      * @return boolean
      */
 
-    public static function exists($key) {
+    public static function exists($key)
+    {
         return isset(self::$registry[$key]);
     }
-    
 }

@@ -1,5 +1,6 @@
 <?php
 namespace core;
+
 use app\modules as modules;
 
 /**
@@ -7,8 +8,8 @@ use app\modules as modules;
  *
  * @author Zechariah Walden<zech @ zewadesign.com>
  */
-
-abstract class Model {
+abstract class Model
+{
 
     /**
      * System configuration
@@ -56,13 +57,13 @@ abstract class Model {
      * Load up some basic configuration settings.
      */
 
-    public function __construct() {
+    public function __construct()
+    {
         // This abstract is strictly to establish inheritance from a global registery.
         $this->configuration = Registry::get('_configuration');
         $this->database = Registry::get('_database');
 
-        if($this->_configuration->cache) {
-
+        if ($this->_configuration->cache) {
             $this->cache = Registry::get('_memcached');
 
         }
@@ -71,5 +72,4 @@ abstract class Model {
         $this->request = Registry::get('_request');
 
     }
-
 }

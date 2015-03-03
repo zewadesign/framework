@@ -2,6 +2,7 @@
 // Some kind of form validation library in the core of the framework ..  but doesn't get used?
 // This definitely seems out of place at the moment.
 namespace core;
+
 use \Exception as Exception;
 
 /**
@@ -22,7 +23,6 @@ use \Exception as Exception;
  *
  * @author unknown, Zechariah Walden<zech @ zewadesign.com>
  */
-
 class Validate
 {
 
@@ -56,7 +56,8 @@ class Validate
      * Load up some basic configuration settings.
      */
 
-    public function __construct() {
+    public function __construct()
+    {
 
         $this->_configuration = Registry::get('_configuration');
         $this->_output = Registry::get('_output');
@@ -67,18 +68,21 @@ class Validate
      * Validate data against validators.
      *
      * @access public
+     *
      * @param array $data The data to be validated
      * @param array $validators The validators
+     *
      * @return boolean
      */
 
-    public function run(array $data, array $validators) {
+    public function run(array $data, array $validators)
+    {
 
-        if($this->_processValidation($data, $validators) === FALSE) {
+        if ($this->_processValidation($data, $validators) === false) {
             return false;
         }
 
-        return TRUE;
+        return true;
 
     }
 
@@ -86,23 +90,26 @@ class Validate
      * Process the errors and return proper language for error
      *
      * @param bool $clear false persist errors
+     *
      * @return mixed bool(false) for no errors, array for errors
      */
 
-    public function errors($clear = TRUE) {
+    public function errors($clear = true)
+    {
 
-        if(empty($this->errors))
-            return FALSE;
+        if (empty($this->errors)) {
+            return false;
+        }
 
         $result = [];
 
-        foreach($this->errors as $error) {
+        foreach ($this->errors as $error) {
             $fieldName = $error['fieldName'];
 
             $result[$fieldName] = [];
 
             //Convert camelcase to underscore & remove leading underscore.
-            $rule = preg_replace('/(?<=\\w)(?=[A-Z])/',"_$1", str_replace('_','',$error['rule']));
+            $rule = preg_replace('/(?<=\\w)(?=[A-Z])/', "_$1", str_replace('_', '', $error['rule']));
             $rule = strtoupper($rule);
 
             $replace = $error['replace'];//[$field, $params];
@@ -111,8 +118,9 @@ class Validate
 
         }
 
-        if($clear)
+        if ($clear) {
             $this->errors = [];
+        }
 
         return $result;
     }
@@ -122,40 +130,43 @@ class Validate
      * Perform data validation against the provided ruleset
      *
      * @access private
+     *
      * @param  array $input
      * @param  array $validators
+     *
      * @return bool
      * @throws Exception When validation methods do not exist.
      */
 
-    private function _processValidation(array $input, array $validators) {
+    private function _processValidation(array $input, array $validators)
+    {
 
-        $validation = TRUE;
+        $validation = true;
 
-        foreach($validators as $fieldName => $config) {
-
+        foreach ($validators as $fieldName => $config) {
             $field = $config['name'];
 
             $ruleset = explode('|', $config['rules']);
 
-            foreach($ruleset as $rule) {
+            foreach ($ruleset as $rule) {
                 $param = false;
                 $method = false;
 
-                if(strstr($rule, ',') !== FALSE) { // has params
-                    $split   = explode(',', $rule);
+                if (strstr($rule, ',') !== false) {
+// has params
+                    $split = explode(',', $rule);
                     $method = '_validate' . $split[0];
-                    $params  = $split[1];
+                    $params = $split[1];
                 } else {
                     $method = '_validate' . $rule;
                 }
 
-                if(is_callable(array($this, $method))) {
-
+                if (is_callable(array($this, $method))) {
                     $result = $this->$method($field, $fieldName, $input, $param);
 
-                    if($result) { // Validation Failed
-                        $validation = FALSE;
+                    if ($result) {
+// Validation Failed
+                        $validation = false;
                         $this->errors[] = $result;
                     }
 
@@ -174,32 +185,38 @@ class Validate
      * Usage: 'rules' => 'isunique,table.column'
      *
      * @access private
+     *
      * @param  string $field friendly display name
      * @param  string $fieldName post field name
      * @param  array $input data
      * @param  mixed $param
+     *
      * @return mixed
      * @throws Exception If a database connection isn't present.
      */
 
-    private function _validateIsUnique($field, $fieldName, $input, $param = false) {
+    private function _validateIsUnique($field, $fieldName, $input, $param = false)
+    {
 
-        if(empty($input[$fieldName])) return TRUE;
+        if (empty($input[$fieldName])) {
+            return true;
+        }
 
-        if(!$this->_configuration->database)
+        if (!$this->_configuration->database) {
             throw new Exception("The is unique validation rule required a valid database connection.");
+        }
 
         $database = Registry::get('_database');
 
         list($table, $column) = explode('.', $param);
 
         $unique = $database->select($column)
-            ->table($table) // table
-            ->where($column, $input[$fieldName])
-            ->fetch();
+                           ->table($table)// table
+                           ->where($column, $input[$fieldName])
+                           ->fetch();
 
-        if(!$unique) {
-            return TRUE;
+        if (!$unique) {
+            return true;
         }
 
         return ['fieldName' => $fieldName, 'replace' => [$input[$fieldName]]];
@@ -212,18 +229,21 @@ class Validate
      * Usage: 'rules' => 'required'
      *
      * @access private
+     *
      * @param  string $field friendly display name
      * @param  string $fieldName post field name
      * @param  array $input data
      * @param  mixed $param
+     *
      * @return mixed
      */
 
-    private function _validateRequired($field, $fieldName, $input, $param = false) {
+    private function _validateRequired($field, $fieldName, $input, $param = false)
+    {
 
 
-        if(isset($input[$fieldName]) && !empty($input[$fieldName])) {
-            return TRUE;
+        if (isset($input[$fieldName]) && !empty($input[$fieldName])) {
+            return true;
         }
 
         return ['fieldName' => $fieldName, 'replace' => [$field]];
@@ -236,21 +256,23 @@ class Validate
      * Usage: 'rules' => 'validemail'
      *
      * @access private
+     *
      * @param  string $field friendly display name
      * @param  string $fieldName post field name
      * @param  array $input data
      * @param  mixed $param
+     *
      * @return mixed
      */
 
-    private function _validateValidEmail($field, $fieldName, $input, $param = false) {
+    private function _validateValidEmail($field, $fieldName, $input, $param = false)
+    {
 
-        if(!isset($input[$field]) || empty($input[$field])) {
-            return TRUE;
+        if (!isset($input[$field]) || empty($input[$field])) {
+            return true;
         }
 
-        if(!filter_var($input[$field], FILTER_VALIDATE_EMAIL)) {
-
+        if (!filter_var($input[$field], FILTER_VALIDATE_EMAIL)) {
             return ['fieldName' => $fieldName, 'replace' => [$field]];
 
         }
@@ -262,20 +284,23 @@ class Validate
      * Usage: 'rules' => 'maxlen,240'
      *
      * @access private
+     *
      * @param  string $field friendly display name
      * @param  string $fieldName post field name
      * @param  array $input data
      * @param  mixed $param
+     *
      * @return mixed
      */
 
-    private function _validateMatches($field, $fieldName, $input, $param = false) {
+    private function _validateMatches($field, $fieldName, $input, $param = false)
+    {
 
-        if(!isset($input[$field])) {
-            return TRUE;
+        if (!isset($input[$field])) {
+            return true;
         }
-        if($input[$field] == $input[$param]) {
-            return TRUE;
+        if ($input[$field] == $input[$param]) {
+            return true;
         }
 
         return ['fieldName' => $fieldName, 'replace' => [$field, $param]];
@@ -287,26 +312,29 @@ class Validate
      * Usage: 'rules' => 'maxlen,240'
      *
      * @access private
+     *
      * @param  string $field friendly display name
      * @param  string $fieldName post field name
      * @param  array $input data
      * @param  mixed $param
+     *
      * @return mixed
      */
 
-    private function _validateMaxLen($field, $fieldName, $input, $param = false) {
+    private function _validateMaxLen($field, $fieldName, $input, $param = false)
+    {
 
-        if(!isset($input[$field])) {
-            return TRUE;
+        if (!isset($input[$field])) {
+            return true;
         }
 
-        if(function_exists('mb_strlen')) {
-            if(mb_strlen($input[$field]) <= (int)$param) {
-                return TRUE;
+        if (function_exists('mb_strlen')) {
+            if (mb_strlen($input[$field]) <= (int) $param) {
+                return true;
             }
         } else {
-            if(strlen($input[$field]) <= (int)$param) {
-                return TRUE;
+            if (strlen($input[$field]) <= (int) $param) {
+                return true;
             }
         }
 
@@ -319,26 +347,29 @@ class Validate
      * Usage: 'rules' => 'minlen,4'
      *
      * @access private
+     *
      * @param  string $field friendly display name
      * @param  string $fieldName post field name
      * @param  array $input data
      * @param  mixed $param
+     *
      * @return mixed
      */
 
-    private function _validateMinLen($field, $fieldName, $input, $param = false) {
+    private function _validateMinLen($field, $fieldName, $input, $param = false)
+    {
 
-        if(!isset($input[$field])) {
-            return TRUE;
+        if (!isset($input[$field])) {
+            return true;
         }
 
-        if(function_exists('mb_strlen')) {
-            if(mb_strlen($input[$field]) >= (int)$param) {
-                return TRUE;
+        if (function_exists('mb_strlen')) {
+            if (mb_strlen($input[$field]) >= (int) $param) {
+                return true;
             }
         } else {
-            if(strlen($input[$field]) >= (int)$param) {
-                return TRUE;
+            if (strlen($input[$field]) >= (int) $param) {
+                return true;
             }
         }
         return ['fieldName' => $fieldName, 'replace' => [$field, $param]];
@@ -350,26 +381,29 @@ class Validate
      * Usage: 'rules' => 'exactlen,5'
      *
      * @access private
+     *
      * @param  string $field friendly display name
      * @param  string $fieldName post field name
      * @param  array $input data
      * @param  mixed $param
+     *
      * @return mixed
      */
 
-    private function _validateExactLen($field, $fieldName, $input, $param = false) {
+    private function _validateExactLen($field, $fieldName, $input, $param = false)
+    {
 
-        if(!isset($input[$field])) {
-            return TRUE;
+        if (!isset($input[$field])) {
+            return true;
         }
 
-        if(function_exists('mb_strlen')) {
-            if(mb_strlen($input[$field]) == (int)$param) {
-                return TRUE;
+        if (function_exists('mb_strlen')) {
+            if (mb_strlen($input[$field]) == (int) $param) {
+                return true;
             }
         } else {
-            if(strlen($input[$field]) == (int)$param) {
-                return TRUE;
+            if (strlen($input[$field]) == (int) $param) {
+                return true;
             }
         }
 
@@ -382,20 +416,24 @@ class Validate
      * Usage: 'rules' => 'alpha'
      *
      * @access private
+     *
      * @param  string $field friendly display name
      * @param  string $fieldName post field name
      * @param  array $input data
      * @param  mixed $param
+     *
      * @return mixed
      */
 
-    private function _validateAlpha($field, $fieldName, $input, $param = false) {
+    private function _validateAlpha($field, $fieldName, $input, $param = false)
+    {
 
-        if(!isset($input[$field]) || empty($input[$field])) {
-            return TRUE;
+        if (!isset($input[$field]) || empty($input[$field])) {
+            return true;
         }
 
-        if(!preg_match("/^([a-zÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÒÓÔÕÖÙÚÛÜÝàáâãäåçèéêëìíîïðòóôõöùúûüýÿ])+$/i", $input[$field]) !== FALSE) {
+        if (!preg_match("/^([a-zÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÒÓÔÕÖÙÚÛÜÝàáâãäåçèéêëìíîïðòóôõöùúûüýÿ])+$/i", $input[$field]) !== false
+        ) {
             return ['fieldName' => $fieldName, 'replace' => [$field]];
         }
     }
@@ -406,19 +444,26 @@ class Validate
      * Usage: 'rules' => 'commonstring'
      *
      * @access private
+     *
      * @param  string $field friendly display name
      * @param  string $fieldName post field name
      * @param  array $input data
      * @param  mixed $param
+     *
      * @return mixed
      */
-    private function _validateCommonString($field, $fieldName, $input, $param = false) {
+    private function _validateCommonString($field, $fieldName, $input, $param = false)
+    {
 
-        if(!isset($input[$fieldName]) || empty($input[$fieldName])) {
-            return TRUE;
+        if (!isset($input[$fieldName]) || empty($input[$fieldName])) {
+            return true;
         }
 
-        if(!preg_match("/^([\sa-z0-9ÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÒÓÔÕÖÙÚÛÜÝàáâãäåçèéêëìíîïðòóôõöùúûüýÿ?!.+-])+$/i", $input[$fieldName]) !== FALSE) {
+        if (!preg_match(
+            "/^([\sa-z0-9ÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÒÓÔÕÖÙÚÛÜÝàáâãäåçèéêëìíîïðòóôõöùúûüýÿ?!.+-])+$/i",
+            $input[$fieldName]
+        ) !== false
+        ) {
             return ['fieldName' => $fieldName, 'replace' => [$field]];
         }
     }
@@ -429,19 +474,26 @@ class Validate
      * Usage: 'rules' => 'alphanumeric'
      *
      * @access private
+     *
      * @param  string $field friendly display name
      * @param  string $fieldName post field name
      * @param  array $input data
      * @param  mixed $param
+     *
      * @return mixed
      */
-    private function _validateAlphaNumeric($field, $fieldName, $input, $param = false) {
+    private function _validateAlphaNumeric($field, $fieldName, $input, $param = false)
+    {
 
-        if(!isset($input[$fieldName]) || empty($input[$fieldName])) {
-            return TRUE;
+        if (!isset($input[$fieldName]) || empty($input[$fieldName])) {
+            return true;
         }
 
-        if(!preg_match("/^([a-z0-9ÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÒÓÔÕÖÙÚÛÜÝàáâãäåçèéêëìíîïðòóôõöùúûüýÿ])+$/i", $input[$fieldName]) !== FALSE) {
+        if (!preg_match(
+            "/^([a-z0-9ÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÒÓÔÕÖÙÚÛÜÝàáâãäåçèéêëìíîïðòóôõöùúûüýÿ])+$/i",
+            $input[$fieldName]
+        ) !== false
+        ) {
             return ['fieldName' => $fieldName, 'replace' => [$field]];
         }
     }
@@ -452,19 +504,26 @@ class Validate
      * Usage: 'rules' => 'alphadash'
      *
      * @access private
+     *
      * @param  string $field friendly display name
      * @param  string $fieldName post field name
      * @param  array $input data
      * @param  mixed $param
+     *
      * @return mixed
      */
-    private function _validateAlphaDash($field, $fieldName, $input, $param = false) {
+    private function _validateAlphaDash($field, $fieldName, $input, $param = false)
+    {
 
-        if(!isset($input[$fieldName]) || empty($input[$fieldName])) {
-            return TRUE;
+        if (!isset($input[$fieldName]) || empty($input[$fieldName])) {
+            return true;
         }
 
-        if(!preg_match("/^([a-z0-9ÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÒÓÔÕÖÙÚÛÜÝàáâãäåçèéêëìíîïðòóôõöùúûüýÿ_-])+$/i", $input[$fieldName]) !== FALSE) {
+        if (!preg_match(
+            "/^([a-z0-9ÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÒÓÔÕÖÙÚÛÜÝàáâãäåçèéêëìíîïðòóôõöùúûüýÿ_-])+$/i",
+            $input[$fieldName]
+        ) !== false
+        ) {
             return ['fieldName' => $fieldName, 'replace' => [$field]];
         }
     }
@@ -475,19 +534,22 @@ class Validate
      * Usage: 'rules' => 'numeric'
      *
      * @access private
+     *
      * @param  string $field friendly display name
      * @param  string $fieldName post field name
      * @param  array $input data
      * @param  mixed $param
+     *
      * @return mixed
      */
-    private function _validateNumeric($field, $fieldName, $input, $param = false) {
+    private function _validateNumeric($field, $fieldName, $input, $param = false)
+    {
 
-        if(!isset($input[$fieldName]) || empty($input[$fieldName])) {
-            return TRUE;
+        if (!isset($input[$fieldName]) || empty($input[$fieldName])) {
+            return true;
         }
 
-        if(!is_numeric($input[$fieldName])) {
+        if (!is_numeric($input[$fieldName])) {
             return ['fieldName' => $fieldName, 'replace' => [$field]];
         }
     }
@@ -498,19 +560,22 @@ class Validate
      * Usage: 'rules' => 'integer'
      *
      * @access private
+     *
      * @param  string $field friendly display name
      * @param  string $fieldName post field name
      * @param  array $input data
      * @param  mixed $param
+     *
      * @return mixed
      */
-    private function _validateInteger($field, $fieldName, $input, $param = false) {
+    private function _validateInteger($field, $fieldName, $input, $param = false)
+    {
 
-        if(!isset($input[$fieldName]) || empty($input[$fieldName])) {
-            return TRUE;
+        if (!isset($input[$fieldName]) || empty($input[$fieldName])) {
+            return true;
         }
 
-        if(!filter_var($input[$fieldName], FILTER_VALIDATE_INT)) {
+        if (!filter_var($input[$fieldName], FILTER_VALIDATE_INT)) {
             return ['fieldName' => $fieldName, 'replace' => [$field]];
         }
     }
@@ -521,21 +586,24 @@ class Validate
      * Usage: 'rules' => 'boolean'
      *
      * @access private
+     *
      * @param  string $field friendly display name
      * @param  string $fieldName post field name
      * @param  array $input data
      * @param  mixed $param
+     *
      * @return mixed
      */
-    private function _validateBoolean($field, $fieldName, $input, $param = false) {
+    private function _validateBoolean($field, $fieldName, $input, $param = false)
+    {
 
-        if(!isset($input[$fieldName]) || empty($input[$fieldName])) {
-            return TRUE;
+        if (!isset($input[$fieldName]) || empty($input[$fieldName])) {
+            return true;
         }
 
         $bool = filter_var($input[$fieldName], FILTER_VALIDATE_BOOLEAN);
 
-        if(!is_bool($bool)) {
+        if (!is_bool($bool)) {
             return ['fieldName' => $fieldName, 'replace' => [$field]];
         }
     }
@@ -546,19 +614,22 @@ class Validate
      * Usage: 'rules' => 'float'
      *
      * @access private
+     *
      * @param  string $field friendly display name
      * @param  string $fieldName post field name
      * @param  array $input data
      * @param  mixed $param
+     *
      * @return mixed
      */
-    private function _validateFloat($field, $fieldName, $input, $param = false) {
+    private function _validateFloat($field, $fieldName, $input, $param = false)
+    {
 
-        if(!isset($input[$fieldName]) || empty($input[$fieldName])) {
-            return TRUE;
+        if (!isset($input[$fieldName]) || empty($input[$fieldName])) {
+            return true;
         }
 
-        if(!filter_var($input[$fieldName], FILTER_VALIDATE_FLOAT)) {
+        if (!filter_var($input[$fieldName], FILTER_VALIDATE_FLOAT)) {
             return ['fieldName' => $fieldName, 'replace' => [$field]];
         }
     }
@@ -569,19 +640,22 @@ class Validate
      * Usage: 'rules' => 'validurl'
      *
      * @access private
+     *
      * @param  string $field friendly display name
      * @param  string $fieldName post field name
      * @param  array $input data
      * @param  mixed $param
+     *
      * @return mixed
      */
-    private function _validateValidURL($field, $fieldName, $input, $param = false) {
+    private function _validateValidURL($field, $fieldName, $input, $param = false)
+    {
 
-        if(!isset($input[$fieldName]) || empty($input[$fieldName])) {
-            return TRUE;
+        if (!isset($input[$fieldName]) || empty($input[$fieldName])) {
+            return true;
         }
 
-        if(!filter_var($input[$fieldName], FILTER_VALIDATE_URL)) {
+        if (!filter_var($input[$fieldName], FILTER_VALIDATE_URL)) {
             return ['fieldName' => $fieldName, 'replace' => [$field]];
         }
     }
@@ -592,29 +666,34 @@ class Validate
      * Usage: 'rules' => 'urlexists'
      *
      * @access private
+     *
      * @param  string $field friendly display name
      * @param  string $fieldName post field name
      * @param  array $input data
      * @param  mixed $param
+     *
      * @return mixed
      */
 
-    private function _validateURLExists($field, $fieldName, $input, $param = false) {
+    private function _validateURLExists($field, $fieldName, $input, $param = false)
+    {
 
-        if(!isset($input[$fieldName]) || empty($input[$fieldName])) {
-            return TRUE;
+        if (!isset($input[$fieldName]) || empty($input[$fieldName])) {
+            return true;
         }
 
         $url = str_replace(
-            array('http://', 'https://', 'ftp://'), '', strtolower($input[$fieldName])
+            array('http://', 'https://', 'ftp://'),
+            '',
+            strtolower($input[$fieldName])
         );
 
-        if(function_exists('checkdnsrr')) {
-            if(!checkdnsrr($url)) {
+        if (function_exists('checkdnsrr')) {
+            if (!checkdnsrr($url)) {
                 return ['fieldName' => $fieldName, 'replace' => [$field]];
             }
         } else {
-            if(gethostbyname($url) == $url) {
+            if (gethostbyname($url) == $url) {
                 return ['fieldName' => $fieldName, 'replace' => [$field]];
             }
         }
@@ -626,20 +705,23 @@ class Validate
      * Usage: 'rules' => 'validip'
      *
      * @access private
+     *
      * @param  string $field friendly display name
      * @param  string $fieldName post field name
      * @param  array $input data
      * @param  mixed $param
+     *
      * @return mixed
      */
 
-    private function _validateValidIp($field, $fieldName, $input, $param = false) {
+    private function _validateValidIp($field, $fieldName, $input, $param = false)
+    {
 
-        if(!isset($input[$fieldName]) || empty($input[$fieldName])) {
-            return TRUE;
+        if (!isset($input[$fieldName]) || empty($input[$fieldName])) {
+            return true;
         }
 
-        if(!filter_var($input[$fieldName], FILTER_VALIDATE_IP) !== FALSE) {
+        if (!filter_var($input[$fieldName], FILTER_VALIDATE_IP) !== false) {
             return ['fieldName' => $fieldName, 'replace' => [$field]];
         }
     }
@@ -650,10 +732,12 @@ class Validate
      * Usage: 'rules' => 'validipv4'
      *
      * @access private
+     *
      * @param  string $field friendly display name
      * @param  string $fieldName post field name
      * @param  array $input data
      * @param  mixed $param
+     *
      * @return mixed
      * @see http://pastebin.com/UvUPPYK0
      */
@@ -662,14 +746,16 @@ class Validate
      * What about private networks? http://en.wikipedia.org/wiki/Private_network
      * What about loop-back address? 127.0.0.1
      */
-    private function _validateValidIpv4($field, $fieldName, $input, $param = false) {
+    private function _validateValidIpv4($field, $fieldName, $input, $param = false)
+    {
 
-        if(!isset($input[$fieldName]) || empty($input[$fieldName])) {
-            return TRUE;
+        if (!isset($input[$fieldName]) || empty($input[$fieldName])) {
+            return true;
         }
 
-        if(!filter_var($input[$fieldName], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) // removed !== FALSE
-        { // it passes
+        if (!filter_var($input[$fieldName], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+// removed !== FALSE
+         // it passes
             return ['fieldName' => $fieldName, 'replace' => [$field]];
         }
     }
@@ -680,20 +766,23 @@ class Validate
      * Usage: 'rules' => 'validipv6'
      *
      * @access private
+     *
      * @param  string $field friendly display name
      * @param  string $fieldName post field name
      * @param  array $input data
      * @param  mixed $param
+     *
      * @return mixed
      */
 
-    private function _validateValidIpv6($field, $fieldName, $input, $param = false) {
+    private function _validateValidIpv6($field, $fieldName, $input, $param = false)
+    {
 
-        if(!isset($input[$fieldName]) || empty($input[$fieldName])) {
-            return TRUE;
+        if (!isset($input[$fieldName]) || empty($input[$fieldName])) {
+            return true;
         }
 
-        if(!filter_var($input[$fieldName], FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+        if (!filter_var($input[$fieldName], FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
             return ['fieldName' => $fieldName, 'replace' => [$field]];
         }
     }
@@ -705,22 +794,25 @@ class Validate
      * Usage: 'rules' => 'validcc'
      *
      * @access private
+     *
      * @param  string $field friendly display name
      * @param  string $fieldName post field name
      * @param  array $input data
      * @param  mixed $param
+     *
      * @return mixed
      */
 
-    private function _validateValidCc($field, $fieldName, $input, $param = false) {
+    private function _validateValidCc($field, $fieldName, $input, $param = false)
+    {
 
-        if(!isset($input[$fieldName]) || empty($input[$fieldName])) {
-            return TRUE;
+        if (!isset($input[$fieldName]) || empty($input[$fieldName])) {
+            return true;
         }
 
         $number = preg_replace('/\D/', '', $input[$fieldName]);
 
-        if(function_exists('mb_strlen')) {
+        if (function_exists('mb_strlen')) {
             $number_length = mb_strlen($number);
         } else {
             $number_length = strlen($number);
@@ -730,13 +822,13 @@ class Validate
 
         $total = 0;
 
-        for($i = 0; $i < $number_length; $i++) {
+        for ($i = 0; $i < $number_length; $i ++) {
             $digit = $number[$i];
 
-            if($i % 2 == $parity) {
+            if ($i % 2 == $parity) {
                 $digit *= 2;
 
-                if($digit > 9) {
+                if ($digit > 9) {
                     $digit -= 9;
                 }
             }
@@ -744,7 +836,7 @@ class Validate
             $total += $digit;
         }
 
-        if($total % 10 == 0) {
+        if ($total % 10 == 0) {
             return; // Valid
         }
 
@@ -757,23 +849,26 @@ class Validate
      * Usage: 'rules' => 'date'
      *
      * @access private
+     *
      * @param  string $field friendly display name
      * @param  string $fieldName post field name
      * @param  array $input data ('Y-m-d') or datetime ('Y-m-d H:i:s')
      * @param  mixed $param
+     *
      * @return mixed
      */
 
-    private function _validateDate($field, $fieldName, $input, $param = false) {
+    private function _validateDate($field, $fieldName, $input, $param = false)
+    {
 
-        if(!isset($input[$fieldName]) || empty($input[$fieldName])) {
-            return TRUE;
+        if (!isset($input[$fieldName]) || empty($input[$fieldName])) {
+            return true;
         }
 
         $cdate1 = date('m/d/Y', strtotime($input[$fieldName]));
         $cdate2 = date('m/d/Y H:i:s', strtotime($input[$fieldName]));
 
-        if($cdate1 != $input[$fieldName] && $cdate2 != $input[$fieldName]) {
+        if ($cdate1 != $input[$fieldName] && $cdate2 != $input[$fieldName]) {
             return ['fieldName' => $fieldName, 'replace' => [$field]];
         }
     }
@@ -784,21 +879,24 @@ class Validate
      * Usage: 'rules' => 'maxnumeric,50'
      *
      * @access private
+     *
      * @param  string $field friendly display name
      * @param  string $fieldName post field name
      * @param  array $input data
      * @param  mixed $param
+     *
      * @return mixed
      */
 
-    private function _validateMaxNumeric($field, $fieldName, $input, $param = false) {
+    private function _validateMaxNumeric($field, $fieldName, $input, $param = false)
+    {
 
-        if(!isset($input[$fieldName]) || empty($input[$fieldName])) {
-            return TRUE;
+        if (!isset($input[$fieldName]) || empty($input[$fieldName])) {
+            return true;
         }
 
-        if(is_numeric($input[$fieldName]) && is_numeric($param) && ($input[$fieldName] <= $param)) {
-            return TRUE;
+        if (is_numeric($input[$fieldName]) && is_numeric($param) && ($input[$fieldName] <= $param)) {
+            return true;
         }
 
         return ['fieldName' => $fieldName, 'replace' => [$field, $param]];
@@ -810,24 +908,26 @@ class Validate
      * Usage: 'rules' => 'minnumeric,1'
      *
      * @access private
+     *
      * @param  string $field friendly display name
      * @param  string $fieldName post field name
      * @param  array $input data
      * @param  mixed $param
+     *
      * @return mixed
      */
 
-    private function _validateMinNumeric($field, $fieldName, $input, $param = false) {
+    private function _validateMinNumeric($field, $fieldName, $input, $param = false)
+    {
 
-        if(!isset($input[$fieldName]) || empty($input[$fieldName])) {
-            return TRUE;
+        if (!isset($input[$fieldName]) || empty($input[$fieldName])) {
+            return true;
         }
 
-        if(is_numeric($input[$fieldName]) && is_numeric($param) && ($input[$fieldName] >= $param)) {
-            return TRUE;
+        if (is_numeric($input[$fieldName]) && is_numeric($param) && ($input[$fieldName] >= $param)) {
+            return true;
         }
 
         return ['fieldName' => $fieldName, 'replace' => [$field, $param]];
     }
 }
-
