@@ -1,6 +1,6 @@
 <?php
 
-$en_lang = array(
+$en_lang_ = array(
 
 /* Validation messages */
 'VALIDATE_MATCH' => 'The %s must match %s', // fix lol

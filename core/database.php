@@ -1,4 +1,6 @@
 <?php
+// This whole class is pretty n' doesn't lend well to the reader
+// but I imagine it's under the hammer.
 //TODO add USE Schema query
 namespace core;
 use \PDO as PDO;
@@ -59,7 +61,7 @@ class Database
             } else {
 
                 if(empty(Registry::get('_loader')->config('core','database')[$name])) {
-
+                    // Throw an exception here
                     throw new \Exception('Please specify connection parameters for: '.$name.' in the configuration file.');
 
                 }
@@ -74,7 +76,7 @@ class Database
             }
 
         } catch(PDOException $e) {
-
+            // Echo a different exception here.
             echo $e->getMessage();
 
         }
@@ -559,7 +561,7 @@ class Database
 
 
         } catch (PDOException $e) {
-
+            // How come you use throw exceptions in the rest of your app but here you just dump the text of the exception.?.
             echo '<pre>', $e->getMessage(), '</pre>';
 
         }

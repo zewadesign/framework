@@ -44,7 +44,7 @@ abstract Class Registry {
      */
 
     public static function addJS($script) {
-
+        // hackish
         if(!array_search($script, self::$registry['_scripts'])) {
             self::$registry['_scripts'] = array_push(self::$registry['_scripts'], $script);
         }

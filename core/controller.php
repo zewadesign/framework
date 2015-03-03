@@ -72,6 +72,8 @@ abstract class Controller {
      */
 
     public function __construct() {
+        // This is interesting use of global stuffs.
+        // It's not bad if you're shooting for shit tons of inheritance.
         $this->configuration = Registry::get('_configuration');
         $this->router = Registry::get('_router');
         $this->load = Registry::get('_load');
