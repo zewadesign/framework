@@ -26,7 +26,7 @@ class Acl
      *
      * @var object
      */
-    private $_configuration;
+    private $_configuration; // The _ prefix is not alloud on properties.
 
     /**
      * Database object reference
@@ -90,22 +90,23 @@ class Acl
      * Load up some basic configuration settings.
      *
      * @access public
+     *
      * @param boolean|int $userId
      * @param boolean|int $roleId
      */
 
-    public function __construct($userId = false, $roleId = false) {
+    public function __construct($userId = false, $roleId = false)
+    {
 
         $this->_configuration = Registry::get('_configuration');
         $this->database = Registry::get('_database');
 
-        if($this->_configuration->cache) {
-
+        if ($this->_configuration->cache) {
             $this->cache = Registry::get('_memcached');
 
         }
 
-        if(!$userId) {
+        if (!$userId) {
             $this->roleId = $this->_configuration->acl->roles->guest;
         } else {
             $this->roleId = $roleId;
@@ -118,48 +119,54 @@ class Acl
      * Check if client has permission for request
      *
      * @access public
+     *
      * @param string $module
      * @param string $controller
      * @param string $method
+     *
      * @return int 1 = permitted, 2 = please authenticate, 3 = no access
      */
 
-    public function hasAccessRights($module, $controller, $method) {
+    public function hasAccessRights($module, $controller, $method)
+    {
 
         $this->module = $module;
         $this->controller = $controller;
         $this->method = $method;
 
-        if(!$this->userId)
+        if (!$this->userId) {
             return $this->hasGuestAccessRights();
+        }
 
 
-        $_cacheKey = 'hasAccessRights::'.$module.'::'.$controller.'::'.$method.'::'.$this->userId;
+        $_cacheKey = 'hasAccessRights::' . $module . '::' . $controller . '::' . $method . '::' . $this->userId;
 
-        if($this->cache && $result = $this->cache->get($_cacheKey)) {
-
+        if ($this->cache && $result = $this->cache->get($_cacheKey)) {
             $access = $result;
 
         } else {
-
             $where = 'UserRole.user_id = ? AND RoleAccess.role_id = ?';
             $where .= ' AND ( RoleAccess.role_module = ? OR RoleAccess.role_module = ? ) ';
             $where .= ' AND ( RoleAccess.role_controller = ? OR RoleAccess.role_controller = ? ) ';
             $where .= ' AND ( RoleAccess.role_method = ? OR RoleAccess.role_method = ? ) ';
 
             $access = $this->database->select('UserRole.user_id, UserRole.role_id')->table('UserRole')
-                ->join('RoleAccess','UserRole.role_id = RoleAccess.role_id')
-                ->where($where,
-                    [
-                        'userid' => $this->userId, 'roleid' => $this->roleId,
-                        'module' => $module, 'ormodule' => '%',
-                        'controller' => $controller, 'orcontroller' => '%',
-                        'method' => $method, 'ormethod' => '%'
-                    ]
-                )->limit(1)->fetch();
+                                     ->join('RoleAccess', 'UserRole.role_id = RoleAccess.role_id')
+                                     ->where(
+                                         $where,
+                                         [
+                                             'userid'       => $this->userId,
+                                             'roleid'       => $this->roleId,
+                                             'module'       => $module,
+                                             'ormodule'     => '%',
+                                             'controller'   => $controller,
+                                             'orcontroller' => '%',
+                                             'method'       => $method,
+                                             'ormethod'     => '%'
+                                         ]
+                                     )->limit(1)->fetch();
 
-            if($this->cache) {
-
+            if ($this->cache) {
                 $this->cache->set($_cacheKey, $access, time() + 300);
 
             }
@@ -167,8 +174,9 @@ class Acl
         }
 
 
-        if(!$access)
-            return 3; //no access permitted
+        if (!$access) {
+            return 3;
+        } //no access permitted
 
         return 1;
 
@@ -182,7 +190,8 @@ class Acl
      * @return int 1 = permitted, 2 = please authenticate
      */
 
-    private function hasGuestAccessRights() {
+    private function hasGuestAccessRights()
+    {
 
 
         $where = 'RoleAccess.role_id = ?';
@@ -191,24 +200,24 @@ class Acl
         $where .= ' AND ( RoleAccess.role_method = ? OR RoleAccess.role_method = ? ) ';
 
         $access = $this->database->select('RoleAccess.role_id')
-            ->table('RoleAccess')
-            ->where($where, array(
-                'roleid' => $this->roleId,
-                'module' => $this->module,
-                'ormodule' => '%',
-                'controller' => $this->controller,
-                'orcontroller' => '%',
-                'method' => $this->method,
-                'ormethod' => '%',
-            ))
-            ->limit(1)
-            ->fetch();
+                                 ->table('RoleAccess')
+                                 ->where($where, array(
+                                     'roleid'       => $this->roleId,
+                                     'module'       => $this->module,
+                                     'ormodule'     => '%',
+                                     'controller'   => $this->controller,
+                                     'orcontroller' => '%',
+                                     'method'       => $this->method,
+                                     'ormethod'     => '%',
+                                 ))
+                                 ->limit(1)
+                                 ->fetch();
 
-        if(!$access)
-            return 2; // please login
+        if (!$access) {
+            return 2;
+        } // please login
 
         return 1; // you can view..
 
     }
-
 }

@@ -1,7 +1,7 @@
 <?php
 namespace core;
-use \Exception as Exception;
 
+use \Exception as Exception;
 
 /**
  * Output santization
@@ -15,7 +15,6 @@ use \Exception as Exception;
  * @author unknown, Zechariah Walden<zech @ zewadesign.com>
  *
  */
-
 class Output
 {
 
@@ -54,10 +53,11 @@ class Output
      * Load up some basic configuration settings.
      */
 
-    public function __construct() {
+    public function __construct()
+    {
 
         $this->load = Registry::get('_load');
-        $this->language = $this->load->lang($this->load->config('core','language'));
+        $this->language = $this->load->lang($this->load->config('core', 'language'));
 
     }
 
@@ -66,16 +66,18 @@ class Output
      *
      * @param string $selection
      * @param mixed $replace
+     *
      * @return mixed sanitized data after scrub
      */
 
-    public function lang($selection, $replace = false) {
+    public function lang($selection, $replace = false)
+    {
 
         $selection = strtoupper($selection);
         $lang = $this->language[$selection];
 
-        if($replace) {
-            if(is_array($replace)) {
+        if ($replace) {
+            if (is_array($replace)) {
                 $lang = vsprintf($this->language[$selection], $replace);
             } else {
                 $lang = sprintf($this->language[$selection], $replace);
@@ -92,10 +94,12 @@ class Output
      *
      * @param array $data
      * @param array $filters
+     *
      * @return mixed sanitized data after scrub
      */
 
-    public function prepare($data, $filters = []) {
+    public function prepare($data, $filters = [])
+    {
         return $this->_filter($data, $filters);
     }
 
@@ -103,34 +107,38 @@ class Output
      * Filter the input data according to the specified filter set
      *
      * @access private
+     *
      * @param  mixed $data
      * @param  array $filterset
+     *
      * @return mixed
      * @throws Exception When validation methods do not exist.
      */
 
     //@TODO: make sure all output is sanitized
     //@TODO: this needs to be rewrote
-    private function _filter($data, array $filterset) {
-        if($data === NULL) return false;
+    private function _filter($data, array $filterset)
+    {
+        if ($data === null) {
+            return false;
+        }
 
         $string = false;
-        if(is_string($data)) {
+        if (is_string($data)) {
             $string = true;
         }
 
-        foreach($filterset as $field => $filters) {
-
-            if(is_object($data) && !array_key_exists_r($field, $data)) {
+        foreach ($filterset as $field => $filters) {
+            if (is_object($data) && !array_key_exists_r($field, $data)) {
                 continue;
             }
 
             $filters = explode('|', $filters);
 
-            foreach($filters as $filter) {
-                $params = FALSE;
+            foreach ($filters as $filter) {
+                $params = false;
 
-                if(strstr($filter, ',') !== FALSE) {
+                if (strstr($filter, ',') !== false) {
                     $filter = explode(',', $filter);
 
                     $params = array_slice($filter, 1, count($filter) - 1);
@@ -138,26 +146,24 @@ class Output
                     $filter = $filter[0];
                 }
 
-                if(is_callable(array($this, '_filter' . $filter))) {
-                    $method        = '_filter' . $filter;
+                if (is_callable(array($this, '_filter' . $filter))) {
+                    $method = '_filter' . $filter;
 
-                    if($string === false) {
+                    if ($string === false) {
                         foreach ($data as $k => $v) {
-                            if(is_object($data) || is_object($data[$k])) {
-                                if(isset($data->$field) && !is_object($data->$field)) {
-
+                            if (is_object($data) || is_object($data[$k])) {
+                                if (isset($data->$field) && !is_object($data->$field)) {
                                     $data->$field = $this->$method($data->$field, $params);
 
                                 } else {
                                     $data[$k]->$field = $this->$method($data[$k]->$field, $params);
                                 }
 
-                            } else if(is_array($data)) {
-
-                                if(isset($data[$field]) && !is_array($data[$field])) {
-
+                            } elseif (is_array($data)) {
+                                if (isset($data[$field]) && !is_array($data[$field])) {
                                     $data[$field] = $this->$method($data[$field], $params);
-                                } else { //
+                                } else {
+//
 
                                     $data[$k][$field] = $this->$method($data[$k][$field], $params);
                                 }
@@ -184,16 +190,24 @@ class Output
      * Usage: '<index>' => 'tidy'
      *
      * @access private
+     *
      * @param  string $value
      * @param  mixed $params
+     *
      * @return string
      */
 
-    private function _filterTidy($value, $params = FALSE) {
+    private function _filterTidy($value, $params = false)
+    {
 
         $tidy = new \tidy;
-        $config = array( 'indent' => true, 'output-xhtml' => true, 'wrap' => 200, 'clean' => true, 'show-body-only' => true );
-        $tidy->parseString( $value, $config, 'utf8' );
+        $config = array('indent'         => true,
+                        'output-xhtml'   => true,
+                        'wrap'           => 200,
+                        'clean'          => true,
+                        'show-body-only' => true
+        );
+        $tidy->parseString($value, $config, 'utf8');
         $tidy->cleanRepair();
         $value = $tidy;
 
@@ -208,21 +222,24 @@ class Output
      * Usage: '<index>' => 'truncate','param'
      *
      * @access private
+     *
      * @param  string $value
      * @param  mixed $params
+     *
      * @return string
      */
-    private function _filterTruncate($value, $params = FALSE) {
+    private function _filterTruncate($value, $params = false)
+    {
         $append = '&hellip;';
         $break = " ";
         $limit = $params[0];
 
-        if(strlen($value) <= $limit) {
+        if (strlen($value) <= $limit) {
             return $value;
         }
 
-        if(false !== ($breakpoint = strpos($value, $break, $limit))) {
-            if($breakpoint < strlen($value) - 1) {
+        if (false !== ($breakpoint = strpos($value, $break, $limit))) {
+            if ($breakpoint < strlen($value) - 1) {
                 $value = substr($value, 0, $breakpoint) . $append;
             }
         }
@@ -236,11 +253,14 @@ class Output
      * Usage: '<index>' => 'filterblacklist'
      *
      * @access private
+     *
      * @param  string $value
      * @param  mixed $params
+     *
      * @return string
      */
-    private function _filterBlacklist($value, $params = FALSE) {
+    private function _filterBlacklist($value, $params = false)
+    {
 
         $value = preg_replace('/\s\s+/u', chr(32), $value);
 
@@ -248,12 +268,12 @@ class Output
 
         $words = explode(',', $this->blacklist);
 
-        foreach($words as $word) {
+        foreach ($words as $word) {
             $word = trim($word);
 
             $word = " $word "; // Normalize
 
-            if(stripos($value, $word) !== FALSE) {
+            if (stripos($value, $word) !== false) {
                 $value = str_ireplace($word, chr(32), $value);
             }
         }
@@ -267,10 +287,13 @@ class Output
      * Usage: '<index>' => 'rmpunctuataion'
      *
      * @access private
+     *
      * @param  string $value
+     *
      * @return string
      */
-    private function _filterRemovePunctuation($value) {
+    private function _filterRemovePunctuation($value)
+    {
 
         return preg_replace("/(?![.=$'€%-])\p{P}/u", '', $value);
     }
@@ -282,10 +305,13 @@ class Output
      * Usage: '<index>' => 'sanitizestring'
      *
      * @access private
+     *
      * @param  string $value
+     *
      * @return string
      */
-    private function _filterSanitizeString($value) {
+    private function _filterSanitizeString($value)
+    {
 
         return filter_var($value, FILTER_SANITIZE_STRING);
     }
@@ -296,10 +322,13 @@ class Output
      * Usage: '<index>' => 'urlencode'
      *
      * @access private
+     *
      * @param  string $value
+     *
      * @return string
      */
-    private function _filterURLencode($value) {
+    private function _filterURLencode($value)
+    {
 
         return filter_var($value, FILTER_SANITIZE_ENCODED);
     }
@@ -310,10 +339,13 @@ class Output
      * Usage: '<index>' => 'htmlencode'
      *
      * @access private
+     *
      * @param  string $value
+     *
      * @return string
      */
-    private function _filterHTMLencode($value) {
+    private function _filterHTMLencode($value)
+    {
 
         return filter_var($value, FILTER_SANITIZE_SPECIAL_CHARS);
     }
@@ -324,10 +356,13 @@ class Output
      * Usage: '<index>' => 'sanitizeemail'
      *
      * @access private
+     *
      * @param  string $value
+     *
      * @return string
      */
-    private function _filterSanitizeEmail($value) {
+    private function _filterSanitizeEmail($value)
+    {
 
         return filter_var($value, FILTER_SANITIZE_EMAIL);
     }
@@ -338,10 +373,13 @@ class Output
      * Usage: '<index>' => 'sanitizenumbers'
      *
      * @access private
+     *
      * @param  string $value
+     *
      * @return string
      */
-    private function _filterSanitizeNumbers($value) {
+    private function _filterSanitizeNumbers($value)
+    {
 
         return filter_var($value, FILTER_SANITIZE_NUMBER_INT);
     }
@@ -352,12 +390,14 @@ class Output
      * Usage: 'index' => 'basictags'
      *
      * @access private
+     *
      * @param  string $value
+     *
      * @return string
      */
-    private function _filterBasicTags($value) {
+    private function _filterBasicTags($value)
+    {
 
         return strip_tags($value, $this->basictags);
     }
-
 }
