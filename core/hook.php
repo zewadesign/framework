@@ -78,7 +78,7 @@ class Hook
         $this->enabled = $this->load->config('core','hooks');
 
         if($this->enabled) {
-            // Why would this class care of it's enabled?
+            // Why would this class care if it's enabled?
             // Don't even new it up in the first place if it's not enabled?
             $this->registerHooks();
         }

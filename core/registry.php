@@ -1,5 +1,5 @@
 <?php
-
+// I think this global registry might be getting confused for a DI container or something similar.
 namespace core;
 use \Exception as Exception;
 
@@ -8,9 +8,11 @@ use \Exception as Exception;
  *
  * @author Zechariah Walden<zech @ zewadesign.com>
  */
-
+// How does this even work?
 abstract Class Registry {
-
+// You instantiate this class as a regular concrete class.
+// not how PHP is supposed to work. At least now how I understand it.
+// Sentence 2: http://php.net/manual/en/language.oop5.abstract.php
 
     /**
      * Reference to static registry array.
