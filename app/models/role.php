@@ -3,9 +3,17 @@
 namespace app\models;
 use \core as core;
 
+/**
+ * Fetches and sets user roles
+ * @package app\models
+ */
+
 Class Role extends core\Model
 {
-
+    /**
+     * Grab the modules from the database
+     * @return string
+     */
     public function fetchModules() {
 
         $string = '<option value="%">%</option>';
@@ -17,7 +25,14 @@ Class Role extends core\Model
 
         return $string;
     }
-    //@TODO: make these return arrays, make controllers do string logic
+
+    /**
+     * Grab controllers from the database
+     * @param $module
+     * @return string
+     *
+     * @TODO: make these return arrays, make controllers do string logic
+     */
     public function fetchControllers($module) {
 
         $string = '<option value="%">%</option>';
@@ -30,6 +45,12 @@ Class Role extends core\Model
         return $string;
     }
 
+    /**
+     * Grab methods from the database
+     * @param $module
+     * @param $controller
+     * @return string
+     */
     public function fetchMethods($module, $controller) {
 
         $string = '<option value="%">%</option>';
@@ -47,6 +68,11 @@ Class Role extends core\Model
 
     }
 
+    /**
+     * Delete permission from ACL list
+     * @param $permissionId
+     * @return mixed
+     */
     public function deletePermission($permissionId) {
 
         return $this->database->where('id',$permissionId)
@@ -54,6 +80,11 @@ Class Role extends core\Model
 
     }
 
+    /**
+     * Delete role from ACL list
+     * @param $roleId
+     * @return mixed
+     */
     public function delete($roleId) {
 
         return $this->database->where('id',$roleId)
@@ -62,6 +93,12 @@ Class Role extends core\Model
 
     }
 
+    /**
+     * Update role in ACL list
+     * @param $roleId
+     * @param $roleName
+     * @return bool
+     */
     public function update($roleId, $roleName) {
 
         $roleId = (int) $roleId;
@@ -84,6 +121,14 @@ Class Role extends core\Model
 
     }
 
+    /**
+     * Update permission in ACL list
+     * @param $permissionId
+     * @param $roleModule
+     * @param $roleController
+     * @param $roleMethod
+     * @return bool
+     */
     public function updatePermission($permissionId, $roleModule, $roleController, $roleMethod) {
 
         $permission = array(
@@ -106,6 +151,14 @@ Class Role extends core\Model
 
     }
 
+    /**
+     * Add permission to the ACL list
+     * @param $id
+     * @param $roleModule
+     * @param $roleController
+     * @param $roleMethod
+     * @return bool
+     */
     public function insertPermissions($id, $roleModule, $roleController, $roleMethod) {
 
         $permission = array(
@@ -126,6 +179,11 @@ Class Role extends core\Model
 
     }
 
+    /**
+     * insert role into ACL list
+     * @param $roleName
+     * @return bool
+     */
     public function insert($roleName) {
 
         $result = $this->database->table('Role')
@@ -145,6 +203,11 @@ Class Role extends core\Model
 
     }
 
+    /**
+     * fetch permission total from ACL list
+     * @param $roleId
+     * @return mixed
+     */
     public function fetchPermissionCount($roleId) {
         return $this->database->select('COUNT(id) as count')
             ->table('RoleAccess')
@@ -152,6 +215,12 @@ Class Role extends core\Model
             ->fetch();
     }
 
+    /**
+     * fetch permission from ACL list
+     * @param $roleId
+     * @param int $page
+     * @return mixed
+     */
     public function fetchPermissions($roleId, $page = 1) {
 
         $limit = 10;
@@ -165,6 +234,11 @@ Class Role extends core\Model
             ->fetch('result');
 
     }
+
+    /**
+     * fetch Roles from the ACL list
+     * @return mixed
+     */
     public function fetchRoleList() {
 
         return $this->database->select('id, role_name')
