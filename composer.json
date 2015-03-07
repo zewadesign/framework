@@ -1,6 +1,7 @@
 {
-  "name": "ZechWalden/ZechFramework",
+  "name": "zewa/framework",
   "description": "A framework by Zech.",
+  "keywords": ["framework", "laravel"],
   "minimum-stability": "stable",
   "license": "MIT",
   "authors": [
@@ -11,8 +12,11 @@
   ],
   "autoload": {
     "psr-0": {
-      "core\\": "./",
-      "app\\": "./"
+      "core\\": "./"
     }
-  }
+  },
+  "require": {
+    "php": ">=5.4.0"
+  },
+  "require-dev": {}
 }
