@@ -1,9 +1,6 @@
 <?php
 require __DIR__ . DIRECTORY_SEPARATOR . "vendor" . DIRECTORY_SEPARATOR . "autoload.php";
 
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
 // Define constants for file paths, url, etc.
 define('DS', DIRECTORY_SEPARATOR);
 define('ROOT_PATH', __DIR__);
