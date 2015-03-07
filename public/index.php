@@ -6,4 +6,4 @@
  * @created 3/5/15 8:04 PM
  */
 
-require __DIR__ . "/../index.php";
+require __DIR__ . "/../zechframework.php";
