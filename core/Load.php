@@ -134,7 +134,7 @@ class Load
 
         if ($view != '') {
             // I like how you use spaces here to concat a string
-            $file = APP_PATH . DS . 'modules' . DS . $module . DS . 'views' . DS . strtolower($view) . '.php';
+            $file = APP_PATH . DIRECTORY_SEPARATOR . 'modules' . DIRECTORY_SEPARATOR . $module . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . strtolower($view) . '.php';
             if (file_exists($file)) {
                 $data['view'] = $this->render($file, $data);
 
@@ -146,7 +146,7 @@ class Load
 
         if ($layout != false) {
             // but sometimes you don't space em all the same. code style standards are easy to adopt.
-            $file = APP_PATH . DS . 'layouts' . DS . $module . DS . strtolower($layout) . '.php';
+            $file = APP_PATH . DIRECTORY_SEPARATOR . 'layouts' . DIRECTORY_SEPARATOR . $module . DIRECTORY_SEPARATOR . strtolower($layout) . '.php';
 
             if (file_exists($file)) {
                 return $this->render($file, $data);
@@ -199,7 +199,7 @@ class Load
     public function helper($file, $require = false)
     {
         // Shouldn't helpers just be auto-loaded static class methods?
-        $path = APP_PATH . DS . 'helpers' . DS . strtolower($file) . '.php';
+        $path = APP_PATH . DIRECTORY_SEPARATOR . 'helpers' . DIRECTORY_SEPARATOR . strtolower($file) . '.php';
 
         if (isset($this->helpers[$path])) {
             return $this->helpers[$path];
@@ -241,12 +241,12 @@ class Load
             return $this->config;
         }
 
-        if ($file != '' and file_exists(APP_PATH . DS . 'config' . DS . $file . '.php')) {
-            if (!file_exists(APP_PATH . DS . 'config' . DS . $file . '.php')) {
+        if ($file != '' and file_exists(APP_PATH . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . $file . '.php')) {
+            if (!file_exists(APP_PATH . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . $file . '.php')) {
                 throw new \Exception($file . ' could not be found');
             }
 
-            include(APP_PATH . DS . 'config' . DS . $file . '.php');
+            include(APP_PATH . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . $file . '.php');
 
             if (is_array($$file)) {
                 $this->config[$file] = $$file;
@@ -286,19 +286,17 @@ class Load
     {
 
         if ($this->lang !== false) {
-// sometimes you use em
             return $this->lang;
         }
 
         if ($file == '') {
-// { sometimes ya don't. }
             throw new Exception('The language path can not be empty.');
         }
         // Not using brackets makes this stuff harder to read.
         // Pick any code style standard and try it out
 
-        if (file_exists(APP_PATH . DS . 'lang' . DS . $file . '.php')) {
-            include(APP_PATH . DS . 'lang' . DS . $file . '.php');
+        if (file_exists(APP_PATH . DIRECTORY_SEPARATOR . 'lang' . DIRECTORY_SEPARATOR . $file . '.php')) {
+            include(APP_PATH . DIRECTORY_SEPARATOR . 'lang' . DIRECTORY_SEPARATOR . $file . '.php');
 
             if (is_array($$file)) {
                 $this->lang = $$file;
