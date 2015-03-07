@@ -7,10 +7,7 @@ ini_set('display_errors', 1);
 // Define constants for file paths, url, etc.
 define('DS', DIRECTORY_SEPARATOR);
 define('ROOT_PATH', __DIR__);
-//define('CORE_PATH', ROOT_PATH.DS.'core');
-//define('WWW_PATH', ROOT_PATH);
 define('APP_PATH', ROOT_PATH.DS.'app');
-//define('LIBRARY_PATH', ROOT_PATH.DS.'libraries');
 
 if (!ob_start("ob_gzhandler")) ob_start();
 
