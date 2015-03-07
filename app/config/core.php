@@ -16,13 +16,11 @@ $core = array(
     'modules' => array(
         'defaultModule' => 'example',
         'example' => array(
-
             'aclRedirect' => 'user/account/login', // redirect to a different module for verification or whatever.
             'defaultController' => 'home',
             'defaultMethod' => 'index',
 //            '404' => 'admin/404',
 //            'noAccess' => 'admin/noaccess'
-
         ),
     ),
     'hooks' => true,

@@ -33,15 +33,6 @@ Class Example extends core\Model
 
     }
 
-//    public function deductCreditBalance($uid, $credit) {
-//        $credit = str_replace(',','',$credit);
-//        $params = [$uid];
-//
-//        $this->database->query('UPDATE User SET credit = credit - '.$credit.' WHERE id = ?', $params);
-//        return true;
-//
-//    }
-
     public function setCreditBalance($uid, $credit) {
 
         $this->database->table('User')
@@ -86,6 +77,7 @@ Class Example extends core\Model
         return false;
 
     }
+
     public function insertBatch($clientId, $users, $uniqueIds) {
 
         if($this->database->table('User')->insertBatch($users)) {
@@ -183,7 +175,6 @@ Class Example extends core\Model
 
     }
 
-
     public function activate($clientId, $userId) {
 
         $result = $this->database->table('User')
@@ -223,6 +214,7 @@ Class Example extends core\Model
         return false;
 
     }
+
     public function delete($clientId, $userId) {
 
         return $this->database->where(array(
