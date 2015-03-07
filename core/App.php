@@ -119,20 +119,16 @@ class App
 
             $this->autoload();
 
-            $this->class = 'app\\modules\\' . Registry::get('_module') . '\\controllers\\' . ucfirst($this->controller);
+            $this->class = '\\app\\modules\\' . Registry::get('_module') . '\\controllers\\' . ucfirst($this->controller);
 
             if ($this->_configuration->acl) {
                 $this->secureStart();
-
             } else {
                 $this->start();
-
             }
 
         } catch (\Exception $e) {
             trigger_error($e->getMessage(), E_USER_ERROR);
-
-
         }
 
     }

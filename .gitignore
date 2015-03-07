@@ -8,3 +8,6 @@
 build/logs/
 build/pdepend/
 build/phpdox/
+
+# Composer Sourced Files
+vendor/

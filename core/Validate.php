@@ -39,7 +39,6 @@ class Validate
      * @access private
      * @var object
      */
-
     private $_output;
 
     /**
@@ -48,14 +47,11 @@ class Validate
      * @access private
      * @var array
      */
-
     private $errors = [];
-
 
     /**
      * Load up some basic configuration settings.
      */
-
     public function __construct()
     {
 
@@ -74,7 +70,6 @@ class Validate
      *
      * @return boolean
      */
-
     public function run(array $data, array $validators)
     {
 
@@ -93,7 +88,6 @@ class Validate
      *
      * @return mixed bool(false) for no errors, array for errors
      */
-
     public function errors($clear = true)
     {
 
@@ -124,7 +118,6 @@ class Validate
 
         return $result;
     }
-
 
     /**
      * Perform data validation against the provided ruleset

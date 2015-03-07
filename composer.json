@@ -1,0 +1,18 @@
+{
+  "name": "ZechWalden/ZechFramework",
+  "description": "A framework by Zech.",
+  "minimum-stability": "stable",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Zech Walden",
+      "email": "zech@zewadesign.com"
+    }
+  ],
+  "autoload": {
+    "psr-0": {
+      "core\\": "./",
+      "app\\": "./"
+    }
+  }
+}
