@@ -30,7 +30,7 @@ Class Home extends core\Controller {
 
     }
 
-    private function hello($name) {
+    public function hello($name) {
         return "Hello " .$name;
     }
 
