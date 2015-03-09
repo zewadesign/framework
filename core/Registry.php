@@ -1,8 +1,6 @@
 <?php
 namespace core;
 
-use \Exception as Exception;
-
 /**
  * Registry handling of key/value pairs
  *
@@ -69,12 +67,12 @@ class Registry
      * @param mixed $value
      * @param boolean $replace
      *
-     * @throws Exception when key is set and replace is false.
+     * @throws \Exception when key is set and replace is false.
      */
     public static function add($key, $value, $replace = true)
     {
         if (self::exists($key) && $replace === false) {
-            throw new Exception($key . ' already set. Use replace method.');
+            throw new \Exception($key . ' already set. Use replace method.');
         }
 
         self::$registry[$key] = $value;
