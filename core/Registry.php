@@ -28,7 +28,6 @@ class Registry
      */
     public static function get($key)
     {
-
         if (self::exists($key)) {
             return self::$registry[$key];
         }
@@ -45,11 +44,9 @@ class Registry
      */
     public static function addJS($script)
     {
-        // hackish
         if (!array_search($script, self::$registry['_scripts'])) {
             self::$registry['_scripts'] = array_push(self::$registry['_scripts'], $script);
         }
-
     }
 
     /**
@@ -78,7 +75,6 @@ class Registry
     {
         if (self::exists($key) && $replace === false) {
             throw new Exception($key . ' already set. Use replace method.');
-//            trigger_error($key.' already set. Use replace method.', E_USER_WARNING);
         }
 
         self::$registry[$key] = $value;
