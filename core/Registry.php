@@ -10,7 +10,7 @@ use \Exception as Exception;
  * @author Zechariah Walden<zech @ zewadesign.com>
  */
 // How does this even work?
-abstract class Registry
+class Registry
 {
 // You instantiate this class as a regular concrete class.
 // not how PHP is supposed to work. At least now how I understand it.
