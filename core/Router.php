@@ -10,9 +10,6 @@ use \Exception as Exception;
  */
 class Router
 {
-    //@TODO: fix these to load from config.. and do some other stuff, no sure yet.
-
-
     /**
      * System configuration
      *
@@ -26,7 +23,6 @@ class Router
      * @var object
      * @access private
      */
-
     private $load;
 
     /**
@@ -35,7 +31,6 @@ class Router
      * @var string
      * @access public
      */
-
     public $module;
 
     /**
@@ -44,7 +39,6 @@ class Router
      * @var string
      * @access public
      */
-
     public $controller;
 
     /**
@@ -53,7 +47,6 @@ class Router
      * @var string
      * @access public
      */
-
     public $method;
 
     /**
@@ -61,19 +54,14 @@ class Router
      */
     public function __construct()
     {
-
         $this->_configuration = Registry::get('_configuration');
-
         $uri = self::uri();
-
         $this->load = Registry::get('_load');
 
         if ($this->_configuration->routes) {
             if (!empty($this->_configuration->routes[$uri])) {
                 $uri = $this->_configuration->routes[$uri];
-
                 $uriChunks = $this->parseURI($uri);
-
             } elseif (!empty(array_flip($this->_configuration->routes)[$uri])) {
                 Router::redirect(Router::baseURL(array_flip($this->_configuration->routes)[$uri]), 301);
             }
@@ -87,10 +75,7 @@ class Router
         Registry::add('_controller', $uriChunks[1]);
         Registry::add('_method', $uriChunks[2]);
         Registry::add('_params', array_slice($uriChunks, 3));
-
-
     }
-
 
     /**
      * Parse and explode URI segments into chunks
@@ -102,7 +87,6 @@ class Router
      * @return array chunks of uri
      * @throws Exception on disallowed characters
      */
-
     private function parseURI($uri)
     {
 
@@ -137,7 +121,6 @@ class Router
      * @access private
      * @return string formatted/u/r/l
      */
-
     private static function normalizeURI()
     {
 
@@ -168,7 +151,6 @@ class Router
      * @access public
      * @return string formatted/u/r/l
      */
-
     public static function uri()
     {
 
@@ -208,7 +190,6 @@ class Router
      * @access public
      * @return string http://tld.com/formatted/u/r/l?q=bingo
      */
-
     public static function currentURL()
     {
 
@@ -222,7 +203,6 @@ class Router
      * @access public
      * @return string http://tld.com
      */
-
     public static function baseURL($path = '')
     {
 
@@ -252,7 +232,6 @@ class Router
      * @access public
      * @return string
      */
-
     public static function showNoAccess($layout)
     {
 
@@ -272,7 +251,6 @@ class Router
      * @access public
      * @return string
      */
-
     public static function show404($layout)
     {
 
@@ -287,15 +265,12 @@ class Router
 
     }
 
-
     /**
      * Set optional status header, and redirect to provided URL
      *
      * @access public
      * @return bool
      */
-
-
     public static function redirect($url = '/', $status = null)
     {
         $url = str_replace(array('\r', '\n', '%0d', '%0a'), '', $url);

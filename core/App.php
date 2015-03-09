@@ -17,7 +17,6 @@ namespace core;
 
 class App
 {
-
     /**
      * System configuration
      *
@@ -30,7 +29,6 @@ class App
      *
      * @var string
      */
-
     private $output = false;
 
     /**
@@ -38,7 +36,6 @@ class App
      *
      * @var string
      */
-
     private $class;
 
     /**
@@ -46,7 +43,6 @@ class App
      *
      * @var string
      */
-
     private $instantiatedClass;
 
     /**
@@ -54,7 +50,6 @@ class App
      *
      * @var string
      */
-
     private $module;
 
     /**
@@ -62,7 +57,6 @@ class App
      *
      * @var string
      */
-
     private $controller;
 
     /**
@@ -70,7 +64,6 @@ class App
      *
      * @var string
      */
-
     private $method;
 
     /**
@@ -78,7 +71,6 @@ class App
      *
      * @var object
      */
-
     private $hooks;
 
     /**
@@ -87,7 +79,6 @@ class App
      * The application registers the configuration in the app/config/core.php
      * and then processes, and makes available the configured resources
      */
-
     public function __construct()
     {
         //@TODO: unset unnececessary vars/profile/unit testing..? how?
@@ -111,14 +102,10 @@ class App
 
             Registry::add('_configuration', $this->_configuration);
 
-            $this->hook = new Hook();
-
+            $this->hook = new Hook($this->load);
             $this->hook->dispatch('preApplication');
-
             $this->prepareApplication();
-
             $this->autoload();
-
             $this->class = '\\app\\modules\\' . Registry::get('_module') . '\\controllers\\' . ucfirst($this->controller);
 
             if ($this->_configuration->acl) {
@@ -138,27 +125,19 @@ class App
      *
      * @access private
      */
-
     private function autoload()
     {
-
-        // autoload helpers and such.
-
         if ($autoload = Registry::get('_autoload')) {
             foreach ($autoload as $type => $component) {
                 foreach ($component as $comp) {
                     switch ($type) {
                         case 'helpers':
-
                             $this->load->helper($comp);
-
                             break;
                         case 'libraries':
-
                             foreach ($comp as $lib => $args) {
                                 $this->load->library($lib, $args);
                             }
-
                             break;
                     }
                 }
@@ -171,13 +150,11 @@ class App
      *
      * @access private
      */
-
     private function prepareRegistry()
     {
-
         Registry::add('_request', new Request());
         Registry::add('_router', new Router());
-        Registry::add('_output', new Output());
+        Registry::add('_output', new Output($this->load));
         Registry::add('_validate', new Validate());
         Registry::add('_autoload', Registry::get('_load')->config('core', 'autoload'));
 
@@ -198,7 +175,6 @@ class App
      *
      * @access private
      */
-
     private function prepareApplication()
     {
 
@@ -238,7 +214,6 @@ class App
      *
      * @param string $resource
      */
-
     private function register($resource)
     {
 
@@ -264,7 +239,6 @@ class App
      *
      * @access private
      */
-
     private function registerDatabase()
     {
 
@@ -280,16 +254,11 @@ class App
      *
      * @access private
      */
-
     private function registerCache()
     {
-
         $memcached = new \Memcached();
         $memcached->addServer($this->_configuration->cache->host, $this->_configuration->cache->port);
-
         Registry::add('_memcached', $memcached);
-
-
     }
 
     /**
@@ -297,7 +266,6 @@ class App
      *
      * @access private
      */
-
     private function registerSession()
     {
 
@@ -314,7 +282,6 @@ class App
      *
      * @access private
      */
-
     private function registerACL()
     {
 
@@ -327,7 +294,6 @@ class App
      *
      * @access private
      */
-
     private function verifyApplicationRequest()
     {
 
@@ -355,7 +321,6 @@ class App
      *
      * @access private
      */
-
     private function start()
     {
 
@@ -365,6 +330,12 @@ class App
 
         $this->hook->dispatch('preController');
         $this->instantiatedClass = new $this->class();
+        $this->instantiatedClass->setConfiguration(Registry::get('_configuration'));
+        $this->instantiatedClass->setRouter(Registry::get('_router'));
+        $this->instantiatedClass->setLoad(Registry::get('_load'));
+        $this->instantiatedClass->setRequest(Registry::get('_request'));
+        $this->instantiatedClass->setOutput(Registry::get('_output'));
+        $this->instantiatedClass->setValidate(Registry::get('_validate'));
         $this->hook->dispatch('postController');
 
         $this->output = call_user_func_array(
@@ -375,17 +346,11 @@ class App
 
     }
 
-    /* ACL & USER STUFF
-    * @TODO: I think perhaps, this can be handled somewhere else?..
-    */
-
     /**
      * Handles client request within  ACL
      *
      * @access private
      */
-
-
     public function secureStart()
     {
 
@@ -414,13 +379,11 @@ class App
         }
     }
 
-
     /**
      * Redirect if guest and access is insufficient / protected
      *
      * @access private
      */
-
     private function secureRedirect()
     {
 
@@ -442,7 +405,6 @@ class App
      *
      * @access private
      */
-
     private function noAccessRedirect()
     {
 
@@ -456,7 +418,6 @@ class App
      * @access public
      * @return string
      */
-
     public function __toString()
     {
 

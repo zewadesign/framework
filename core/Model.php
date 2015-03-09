@@ -10,13 +10,11 @@ use app\modules as modules;
  */
 abstract class Model
 {
-
     /**
      * System configuration
      *
      * @var object
      */
-
     protected $configuration;
 
     /**
@@ -25,7 +23,6 @@ abstract class Model
      * @access private
      * @var object
      */
-
     protected $database;
 
     /**
@@ -33,7 +30,6 @@ abstract class Model
      *
      * @var object
      */
-
     protected $load;
 
     /**
@@ -41,7 +37,6 @@ abstract class Model
      *
      * @var object
      */
-
     protected $request;
 
     /**
@@ -50,13 +45,11 @@ abstract class Model
      * @access protected
      * @var mixed
      */
-
     protected $cache = false;
 
     /**
      * Load up some basic configuration settings.
      */
-
     public function __construct()
     {
         // This abstract is strictly to establish inheritance from a global registery.
@@ -70,6 +63,45 @@ abstract class Model
 
         $this->load = Registry::get('_load');
         $this->request = Registry::get('_request');
+    }
 
+    /**
+     * @param object $configuration
+     */
+    public function setConfiguration($configuration)
+    {
+        $this->configuration = $configuration;
+    }
+
+    /**
+     * @param object $database
+     */
+    public function setDatabase($database)
+    {
+        $this->database = $database;
+    }
+
+    /**
+     * @param object $load
+     */
+    public function setLoad($load)
+    {
+        $this->load = $load;
+    }
+
+    /**
+     * @param object $request
+     */
+    public function setRequest($request)
+    {
+        $this->request = $request;
+    }
+
+    /**
+     * @param mixed $cache
+     */
+    public function setCache($cache)
+    {
+        $this->cache = $cache;
     }
 }

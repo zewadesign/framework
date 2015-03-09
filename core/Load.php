@@ -23,14 +23,12 @@ use \Exception as Exception;
  */
 class Load
 {
-
     /**
      * Container for configured language
      *
      * @access private
      * @var mixed false if not loaded, array if loaded
      */
-
     private $lang = false;
 
     /**
@@ -39,7 +37,6 @@ class Load
      * @access private
      * @var array
      */
-
     private $config = [];
 
     /**
@@ -48,7 +45,6 @@ class Load
      * @access private
      * @var array
      */
-
     private $helper = [];
 
     /**
@@ -61,8 +57,6 @@ class Load
      * @return object
      * @throws Exception when a model does not exist
      */
-
-
     public function model($model)
     {
 
@@ -90,7 +84,6 @@ class Load
      * @return object invoked based on arguments, or instance
      * @throws Exception when a controller does not exist
      */
-
     public function controller($module, $controller, $args = [])
     {
 
@@ -111,7 +104,6 @@ class Load
 
     }
 
-
     /**
      * Loads a view
      *
@@ -126,7 +118,6 @@ class Load
      * @throws Exception when a view can not be found
      * @throws Exception when a layout can not be found
      */
-
     public function view($view = '', $data = [], $layout = 'layout')
     {
         // This is the same as using globals.
@@ -159,7 +150,6 @@ class Load
 
     }
 
-
     /**
      * Loads a library
      *
@@ -171,7 +161,6 @@ class Load
      * @return object instantiated library
      * @throws Exception when a library can not be found
      */
-
     public function library($file, $args = [])
     {
         // This seems like some kind of half baked exception throwin' autoloader needin' thingamajig.
@@ -195,7 +184,6 @@ class Load
      * @return resource
      * @throws Exception when a helper file can not be found
      */
-
     public function helper($file, $require = false)
     {
         // Shouldn't helpers just be auto-loaded static class methods?
@@ -226,8 +214,6 @@ class Load
      * @throws Exception when a config file can not be found
      * @throws Exception when a config item can not be found
      */
-
-
     public function config($file = '', $item = '')
     {
 
@@ -280,8 +266,6 @@ class Load
      * @throws Exception when a language path isn't provided.
      * @throws Exception when a language item can not be found
      */
-
-
     public function lang($file = '', $item = '')
     {
 
@@ -313,7 +297,6 @@ class Load
 
     }
 
-
     /**
      * Processes view/layouts and exposes variables to the view/layout
      *
@@ -324,8 +307,6 @@ class Load
      *
      * @return string processed content
      */
-
-
     //@TODO: come back and clean up this and the way the view receives stuff
     private function render($file, $data = [])
     {

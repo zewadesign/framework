@@ -53,12 +53,10 @@ class Output
      * Load up some basic configuration settings.
      */
 
-    public function __construct()
+    public function __construct($load)
     {
-
-        $this->load = Registry::get('_load');
+        $this->load = $load;
         $this->language = $this->load->lang($this->load->config('core', 'language'));
-
     }
 
     /**

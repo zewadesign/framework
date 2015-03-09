@@ -54,10 +54,8 @@ class Validate
      */
     public function __construct()
     {
-
         $this->_configuration = Registry::get('_configuration');
         $this->_output = Registry::get('_output');
-
     }
 
     /**
@@ -130,7 +128,6 @@ class Validate
      * @return bool
      * @throws Exception When validation methods do not exist.
      */
-
     private function _processValidation(array $input, array $validators)
     {
 
@@ -187,7 +184,6 @@ class Validate
      * @return mixed
      * @throws Exception If a database connection isn't present.
      */
-
     private function _validateIsUnique($field, $fieldName, $input, $param = false)
     {
 
@@ -230,7 +226,6 @@ class Validate
      *
      * @return mixed
      */
-
     private function _validateRequired($field, $fieldName, $input, $param = false)
     {
 
@@ -257,7 +252,6 @@ class Validate
      *
      * @return mixed
      */
-
     private function _validateValidEmail($field, $fieldName, $input, $param = false)
     {
 
@@ -285,7 +279,6 @@ class Validate
      *
      * @return mixed
      */
-
     private function _validateMatches($field, $fieldName, $input, $param = false)
     {
 
@@ -313,7 +306,6 @@ class Validate
      *
      * @return mixed
      */
-
     private function _validateMaxLen($field, $fieldName, $input, $param = false)
     {
 
@@ -348,7 +340,6 @@ class Validate
      *
      * @return mixed
      */
-
     private function _validateMinLen($field, $fieldName, $input, $param = false)
     {
 
@@ -382,7 +373,6 @@ class Validate
      *
      * @return mixed
      */
-
     private function _validateExactLen($field, $fieldName, $input, $param = false)
     {
 
@@ -417,7 +407,6 @@ class Validate
      *
      * @return mixed
      */
-
     private function _validateAlpha($field, $fieldName, $input, $param = false)
     {
 
@@ -667,7 +656,6 @@ class Validate
      *
      * @return mixed
      */
-
     private function _validateURLExists($field, $fieldName, $input, $param = false)
     {
 
@@ -706,7 +694,6 @@ class Validate
      *
      * @return mixed
      */
-
     private function _validateValidIp($field, $fieldName, $input, $param = false)
     {
 
@@ -734,8 +721,7 @@ class Validate
      * @return mixed
      * @see http://pastebin.com/UvUPPYK0
      */
-
-    /*
+    /**
      * What about private networks? http://en.wikipedia.org/wiki/Private_network
      * What about loop-back address? 127.0.0.1
      */
@@ -767,7 +753,6 @@ class Validate
      *
      * @return mixed
      */
-
     private function _validateValidIpv6($field, $fieldName, $input, $param = false)
     {
 
@@ -795,7 +780,6 @@ class Validate
      *
      * @return mixed
      */
-
     private function _validateValidCc($field, $fieldName, $input, $param = false)
     {
 
@@ -850,7 +834,6 @@ class Validate
      *
      * @return mixed
      */
-
     private function _validateDate($field, $fieldName, $input, $param = false)
     {
 
@@ -880,7 +863,6 @@ class Validate
      *
      * @return mixed
      */
-
     private function _validateMaxNumeric($field, $fieldName, $input, $param = false)
     {
 
@@ -909,7 +891,6 @@ class Validate
      *
      * @return mixed
      */
-
     private function _validateMinNumeric($field, $fieldName, $input, $param = false)
     {
 

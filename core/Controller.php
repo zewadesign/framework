@@ -12,20 +12,18 @@ use app\modules as modules;
 //can name spaces be removed in the classes extending..?
 abstract class Controller
 {
-
     /**
      * System configuration
      *
      * @var object
      */
-    private $configuration;
+    protected $configuration;
 
     /**
      * Instantiated load class pointer
      *
      * @var object
      */
-
     protected $load;
 
     /**
@@ -33,7 +31,6 @@ abstract class Controller
      *
      * @var object
      */
-
     protected $router;
 
     /**
@@ -41,7 +38,6 @@ abstract class Controller
      *
      * @var object
      */
-
     protected $request;
 
     /**
@@ -49,7 +45,6 @@ abstract class Controller
      *
      * @var object
      */
-
     protected $output;
 
     /**
@@ -57,7 +52,6 @@ abstract class Controller
      *
      * @var object
      */
-
     protected $validate;
 
     /**
@@ -65,25 +59,110 @@ abstract class Controller
      *
      * @var object
      */
-
     public static $instance;
 
     /**
      * Load up some basic configuration settings.
      */
-
     public function __construct()
     {
-        // This is interesting use of global stuffs.
-        // It's not bad if you're shooting for shit tons of inheritance.
-        $this->configuration = Registry::get('_configuration');
-        $this->router = Registry::get('_router');
-        $this->load = Registry::get('_load');
-        $this->request = Registry::get('_request');
-        $this->output = Registry::get('_output');
-        $this->validate = Registry::get('_validate');
 
+    }
 
+    /**
+     * @return object
+     */
+    public function getConfiguration()
+    {
+        return $this->configuration;
+    }
+
+    /**
+     * @param object $configuration
+     */
+    public function setConfiguration($configuration)
+    {
+        $this->configuration = $configuration;
+    }
+
+    /**
+     * @return object
+     */
+    public function getLoad()
+    {
+        return $this->load;
+    }
+
+    /**
+     * @param object $load
+     */
+    public function setLoad($load)
+    {
+        $this->load = $load;
+    }
+
+    /**
+     * @return object
+     */
+    public function getRouter()
+    {
+        return $this->router;
+    }
+
+    /**
+     * @param object $router
+     */
+    public function setRouter($router)
+    {
+        $this->router = $router;
+    }
+
+    /**
+     * @return object
+     */
+    public function getRequest()
+    {
+        return $this->request;
+    }
+
+    /**
+     * @param object $request
+     */
+    public function setRequest($request)
+    {
+        $this->request = $request;
+    }
+
+    /**
+     * @return object
+     */
+    public function getOutput()
+    {
+        return $this->output;
+    }
+
+    /**
+     * @param object $output
+     */
+    public function setOutput($output)
+    {
+        $this->output = $output;
+    }
+
+    /**
+     * @return object
+     */
+    public function getValidate()
+    {
+        return $this->validate;
+    }
+
+    /**
+     * @param object $validate
+     */
+    public function setValidate($validate)
+    {
+        $this->validate = $validate;
     }
 
     /**
@@ -92,7 +171,6 @@ abstract class Controller
      * @access public
      * @return object
      */
-
     public static function &getInstance()
     {
 
