@@ -14,7 +14,6 @@ namespace core;
  *
  * @author Zechariah Walden<zech @ zewadesign.com>
  */
-
 class App
 {
     /**
@@ -71,7 +70,7 @@ class App
      *
      * @var object
      */
-    private $hooks;
+    private $hook;
 
     /**
      * Application bootstrap process
@@ -177,7 +176,6 @@ class App
      */
     private function prepareApplication()
     {
-
         $this->hook->dispatch('preRegistry');
         $this->prepareRegistry();
         $this->hook->dispatch('postRegistry');
@@ -323,7 +321,6 @@ class App
      */
     private function start()
     {
-
         if (!$this->verifyApplicationRequest()) {
             return false;
         }
@@ -342,8 +339,6 @@ class App
             array(&$this->instantiatedClass, $this->method),
             $this->params
         );
-
-
     }
 
     /**
