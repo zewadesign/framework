@@ -1,27 +1,20 @@
 <?php
-// I think this global registry might be getting confused for a DI container or something similar.
 namespace core;
 
 use \Exception as Exception;
 
 /**
- * Abstract class for static handling of key/value pairs
+ * Registry handling of key/value pairs
  *
  * @author Zechariah Walden<zech @ zewadesign.com>
  */
-// How does this even work?
 class Registry
 {
-// You instantiate this class as a regular concrete class.
-// not how PHP is supposed to work. At least now how I understand it.
-// Sentence 2: http://php.net/manual/en/language.oop5.abstract.php
-
     /**
      * Reference to static registry array.
      *
      * @var object
      */
-
     private static $registry = [];
 
     /**
@@ -33,7 +26,6 @@ class Registry
      *
      * @return mixed
      */
-
     public static function get($key)
     {
 
@@ -51,7 +43,6 @@ class Registry
      *
      * @param  string $script path/to/script
      */
-
     public static function addJS($script)
     {
         // hackish
@@ -67,7 +58,6 @@ class Registry
      * @access public
      * @return array
      */
-
     public static function getAll()
     {
         return self::$registry;
@@ -84,7 +74,6 @@ class Registry
      *
      * @throws Exception when key is set and replace is false.
      */
-
     public static function add($key, $value, $replace = true)
     {
         if (self::exists($key) && $replace === false) {
@@ -114,7 +103,6 @@ class Registry
      *
      * @access public
      */
-
     public static function clear()
     {
         self::$registry = [];
@@ -129,7 +117,6 @@ class Registry
      *
      * @return boolean
      */
-
     public static function exists($key)
     {
         return isset(self::$registry[$key]);
