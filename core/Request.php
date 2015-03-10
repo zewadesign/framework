@@ -135,11 +135,11 @@ class Request
     {
 
 
-        if ($this->session($this->flashdataIdentifier)) {
+        if ($this->session($this->flashdataId)) {
 
-            $this->flashdata = unserialize($this->session($this->flashdataIdentifier));
+            $this->flashdata = unserialize($this->session($this->flashdataId));
             // and destroy the temporary session variable
-            unset($_SESSION[$this->flashdataIdentifier]);
+            unset($_SESSION[$this->flashdataId]);
 
 
             if (!empty($this->flashdata)) {
@@ -163,7 +163,7 @@ class Request
                 // if there is any flashdata left to be handled
                 if (!empty($this->flashdata)) {
 // store data in a temporary session variable
-                    $_SESSION[$this->flashdataIdentifier] = serialize($this->flashdata);
+                    $_SESSION[$this->flashdataId] = serialize($this->flashdata);
                 }
             }
 
@@ -192,7 +192,7 @@ class Request
             'inc'   => 0
         );
 
-        $_SESSION[$this->flashdataIdentifier] = serialize($this->flashdata);
+        $_SESSION[$this->flashdataId] = serialize($this->flashdata);
 
     }
 

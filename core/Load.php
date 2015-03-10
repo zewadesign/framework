@@ -212,12 +212,13 @@ class Load
 
         if (isset($this->config[$file])) {
             // you know we throw an exception later if the $item doesn't exist.
-            return (isset($this->config[$file][$item]) ? $this->config[$file][$item] : $this->config[$file]);
+            $config = (isset($this->config[$file][$item]) ? $this->config[$file][$item] : $this->config[$file]);
+            return json_decode(json_encode($config));
         }
 
         if (is_null($file)) {
             // This will never happen unless you intentionally Load->config(null);
-            return $this->config;
+            return json_decode(json_encode($this->config));
         }
 
         if ($file != '' and file_exists(APP_PATH . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . $file . '.php')) {
@@ -237,14 +238,16 @@ class Load
 
                 }
 
-                return (isset($this->config[$file][$item]) ? $this->config[$file][$item] : $this->config[$file]);
+                $config = (isset($this->config[$file][$item]) ? $this->config[$file][$item] : $this->config[$file]);
+                return json_decode(json_encode($config));
+
             }
 
         }
 
         // Why does this return an empty array when we request Loader->config() but
         // if we Loader->config(null) we pass back $this->config as seen above?
-        return array();
+        return (object)[];
     }
 
     /**
