@@ -73,6 +73,27 @@ class App
     private $params;
 
     /**
+     * Instantiated load class
+     *
+     * @var object
+     */
+    private $load;
+
+    /**
+     * Instantiated router class
+     *
+     * @var object
+     */
+    private $router;
+
+    /**
+     * Instantiated request class
+     *
+     * @var object
+     */
+    private $request;
+
+    /**
      * Instiated hook class
      *
      * @var object
@@ -93,7 +114,7 @@ class App
         //@TODO: setup custom routing based on regex // (can't we get away without using regex tho?)!!!!!!! routesssssss!!!!!!!!
         //@TODO: system vars (_) need to be moved to an array called "system" in the registry, and write protected, _ is lame.
         try {
-            // The whole app seems to rely on this global Registry...
+
             $this->load = new Load();
 
             $configObject = (object) array(
@@ -109,12 +130,33 @@ class App
 
             self::setConfiguration($configObject);
 
-            $this->prepare();
             $this->initialize();
 
         } catch (\Exception $e) {
             trigger_error($e->getMessage(), E_USER_ERROR);
         }
+    }
+
+    /**
+     * Calls the proper shell for app execution
+     * @access private
+     */
+    private function initialize() {
+
+        $this->prepare();
+
+        if (self::$configuration->acl) {
+
+            $acl = new \app\libraries\ACL(
+                $this->request->session('userId'),
+                $this->request->session('roleId')
+            );
+
+            $acl->secureStart($this->start());
+        } else {
+            $this->start();
+        }
+
     }
 
     /**
@@ -129,30 +171,18 @@ class App
 
         $this->hook->call('preApplication');
 
-        new Router();
+        $this->router = new Router();
+        $this->request = new Request();
 
         $this->module = self::$configuration->router->module;
         $this->controller = self::$configuration->router->controller;
         $this->method = self::$configuration->router->method;
         $this->params = self::$configuration->router->params;
 
+
         $this->initializeDependencies();
         $this->autoload();
         $this->class = '\\app\\modules\\' . self::$configuration->router->module . '\\controllers\\' . ucfirst($this->controller);
-
-    }
-
-    /**
-     * Calls the proper shell for app execution
-     * @access private
-     */
-    private function initialize() {
-
-        if (self::$configuration->acl) {
-            $this->secureStart();
-        } else {
-            $this->start();
-        }
 
     }
 
@@ -268,9 +298,6 @@ class App
             case 'session':
                 $this->registerSession();
                 break;
-            case 'acl':
-                $this->registerACL();
-                break;
         }
 
     }
@@ -283,10 +310,10 @@ class App
     private function registerDatabase()
     {
 
-        Registry::add('_database', new Database(
+        $this->database = new Database(
             'default', // you can name your db, for switching between..
             self::$configuration->database['default']
-        ));
+        );
 
     }
 
@@ -315,18 +342,6 @@ class App
         } else {
             new SessionHandler(Registry::get('_database'), 'securitycode', 7200, true, false, 1, 100);
         }
-
-    }
-
-    /**
-     * Registers the ACL object
-     *
-     * @access private
-     */
-    private function registerACL()
-    {
-
-        Registry::add('_acl', self::$configuration->acl);
 
     }
 
@@ -370,85 +385,12 @@ class App
 
         $this->hook->call('preController');
         $this->instantiatedClass = new $this->class();
-        /*
-        $this->instantiatedClass->setRouter(Registry::get('_router'));
-        $this->instantiatedClass->setLoad(Registry::get('_load'));
-        $this->instantiatedClass->setRequest(Registry::get('_request'));
-        $this->instantiatedClass->setOutput(Registry::get('_output'));
-        $this->instantiatedClass->setValidate(Registry::get('_validate'));
-        */
         $this->hook->call('postController');
 
         $this->output = call_user_func_array(
             array(&$this->instantiatedClass, $this->method),
             $this->params
         );
-    }
-
-    /**
-     * Handles client request within  ACL
-     *
-     * @access private
-     */
-    public function secureStart()
-    {
-
-        $request = Registry::get('_request');
-
-        $userId = $request['uid'];
-        $roleId = $request['roleId'];
-
-        $ACL = new Acl($userId, $roleId);
-
-        $authorizationCode = $ACL->hasAccessRights($this->module, $this->controller, $this->method);
-
-        //@TODO:store access rights in registry for dynamic menu display
-        switch ($authorizationCode) {
-
-            case '1':
-                $this->start();
-                break;
-            case '2':
-                $this->secureRedirect();
-                break;
-
-            case '3': //@TODO: setup module 404's.
-                $this->output = $this->noAccessRedirect();
-                break;
-        }
-    }
-
-    /**
-     * Redirect if guest and access is insufficient / protected
-     *
-     * @access private
-     */
-    private function secureRedirect()
-    {
-
-        Registry::get('_request')->setFlashdata('alert', (object) array('info' => 'Please login to continue!'));
-
-        $currentURL = currentURL();
-        $currentURL = str_replace(baseURL(), '', $currentURL);
-        $currentURL = base64_encode($currentURL);
-
-        $redirect = $this->load->config('core', 'modules')[$this->module]['aclRedirect'];
-
-        Router::redirect(baseURL($redirect . '?r=' . $currentURL));
-
-    }
-
-    /**
-     * Set 401 header, provide no access view if authenticated
-     * and access is insufficient / protected
-     *
-     * @access private
-     */
-    private function noAccessRedirect()
-    {
-
-        return Router::showNoAccess($this->module . '/noaccess');
-
     }
 
     /**

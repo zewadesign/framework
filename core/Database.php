@@ -8,6 +8,12 @@ use \PDO as PDO;
 
 class Database
 {
+    /**
+     * Reference to instantiated controller object.
+     *
+     * @var object
+     */
+    protected static $instance;
     private $dbh;
     private $dbhStore = array();
     private $join = '';
@@ -667,6 +673,32 @@ if ($sth->rowCount() > 0) {
 
         } catch (PDOException $e) {
             echo '<pre>', $e->getMessage(), '</pre>';
+
+        }
+
+    }
+
+    /**
+     * Returns a reference of object once instantiated
+     *
+     * @access public
+     * @return object
+     */
+
+    public static function &getInstance()
+    {
+
+        try {
+
+            if (self::$instance === null) {
+                throw new Exception('Unable to get an instance of the database class. The class has not been instantiated yet.');
+            }
+
+            return self::$instance;
+
+        } catch(Exception $e) {
+
+            echo 'Message' . $e->getMessage();
 
         }
 

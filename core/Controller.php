@@ -48,13 +48,6 @@ abstract class Controller
     protected $output;
 
     /**
-     * Instantiated validate class pointer
-     *
-     * @var object
-     */
-    protected $validate;
-
-    /**
      * Reference to instantiated controller object.
      *
      * @var object
@@ -67,8 +60,9 @@ abstract class Controller
     public function __construct()
     {
         static::$instance = $this;
+        $this->configuration = App::getConfiguration();
         $this->load = Load::getInstance();
-//        $this->request = Request::
+        $this->request = Request::getInstance();
     }
 
     /**
