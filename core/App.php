@@ -66,6 +66,13 @@ class App
     private $method;
 
     /**
+     * Params being passed
+     *
+     * @var array
+     */
+    private $params;
+
+    /**
      * Instiated hook class
      *
      * @var object
@@ -87,8 +94,7 @@ class App
         //@TODO: system vars (_) need to be moved to an array called "system" in the registry, and write protected, _ is lame.
         try {
             // The whole app seems to rely on this global Registry...
-            Registry::add('_load', Load::getInstance());
-            $this->load = Load::getInstance();
+            $this->load = new Load();
 
             $configObject = (object) array(
                 'database' => $this->load->config('core', 'database'),
@@ -97,12 +103,14 @@ class App
                 'acl'      => $this->load->config('core', 'acl'),
                 'modules'  => $this->load->config('core', 'modules'),
                 'routes'   => $this->load->config('routes', 'override'),
-                'hooks'    => $this->load->config('core', 'hooks')
+                'hooks'    => $this->load->config('core', 'hooks'),
+                'autoload' => $this->load->config('core', 'autoload')
             );
 
             self::setConfiguration($configObject);
 
-            $this->initiateApplication();
+            $this->prepare();
+            $this->initialize();
 
         } catch (\Exception $e) {
             trigger_error($e->getMessage(), E_USER_ERROR);
@@ -110,16 +118,35 @@ class App
     }
 
     /**
-     * App initiation cycle
+     * App preparation cycle
      */
-    private function initiateApplication()
+    private function prepare()
     {
 
-        $this->hook = new Hook($this->load);
-        $this->hook->dispatch('preApplication');
-        $this->prepareApplication();
+        if(self::$configuration->hooks !== false) {
+            $this->hook = new \app\libraries\Hook();
+        }
+
+        $this->hook->call('preApplication');
+
+        new Router();
+
+        $this->module = self::$configuration->router->module;
+        $this->controller = self::$configuration->router->controller;
+        $this->method = self::$configuration->router->method;
+        $this->params = self::$configuration->router->params;
+
+        $this->initializeDependencies();
         $this->autoload();
-        $this->class = '\\app\\modules\\' . Registry::get('_module') . '\\controllers\\' . ucfirst($this->controller);
+        $this->class = '\\app\\modules\\' . self::$configuration->router->module . '\\controllers\\' . ucfirst($this->controller);
+
+    }
+
+    /**
+     * Calls the proper shell for app execution
+     * @access private
+     */
+    private function initialize() {
 
         if (self::$configuration->acl) {
             $this->secureStart();
@@ -130,14 +157,51 @@ class App
     }
 
     /**
+     * Initiates the dependencies
+     *
+     * @access private
+     */
+    private function initializeDependencies()
+    {
+
+        if (self::$configuration->database) {
+            $this->hook->call('preDatabase');
+            $this->register('database');
+            $this->hook->call('postDatabase');
+        }
+        if (self::$configuration->cache) {
+            $this->hook->call('preCache');
+            $this->register('cache');
+            $this->hook->call('postCache');
+        }
+        if (self::$configuration->session) {
+            $this->hook->call('preSession');
+            $this->register('session');
+            $this->hook->call('postSession');
+        }
+        if (self::$configuration->acl) {
+            $this->hook->call('preACL');
+            $this->register('acl');
+            $this->hook->call('postACL');
+        }
+
+    }
+
+    /**
      * @param mixed optional string with reference to config
-     * @return object
+     * @return mixed bool or config values
      */
     public static function getConfiguration($config = false)
     {
 
         if($config !== false) {
-            return (empty(self::$configuration[$config]) ? false : self::$configuration[$config]);
+
+            if( empty( self::$configuration[$config] ) ) {
+                return false;
+            } else {
+                return self::$configuration[$config];
+            }
+
         }
 
         return self::$configuration;
@@ -146,13 +210,12 @@ class App
 
     /**
      * @param mixed string or object
-     * @param mixed optional object of configuration data
+     * @param mixed optional array of configuration data
      */
     public static function setConfiguration($config, $configObject = false)
     {
-
-        if($configObject !== false) {
-            self::$configuration[$config] = $configObject;
+        if( !empty( $configObject ) ) {
+            self::$configuration->$config = $configObject;
         } else {
             self::$configuration = $config;
         }
@@ -167,7 +230,7 @@ class App
      */
     private function autoload()
     {
-        if ($autoload = Registry::get('_autoload')) {
+        if ($autoload = self::$configuration->autoload) {
             foreach ($autoload as $type => $component) {
                 foreach ($component as $comp) {
                     switch ($type) {
@@ -183,43 +246,6 @@ class App
                 }
             }
         }
-    }
-
-    /**
-     * Prepares the application core classes and dependencies
-     *
-     * @access private
-     */
-    private function prepareApplication()
-    {
-        $this->module = Registry::get('_module');
-        $this->controller = Registry::get('_controller');
-        $this->method = Registry::get('_method');
-        $this->params = Registry::get('_params');
-
-        Registry::add('lang', $this->load->lang($this->load->config('core', 'language')));
-
-        if (self::$configuration->database) {
-            $this->hook->dispatch('preDatabase');
-            $this->register('database');
-            $this->hook->dispatch('postDatabase');
-        }
-        if (self::$configuration->cache) {
-            $this->hook->dispatch('preCache');
-            $this->register('cache');
-            $this->hook->dispatch('postCache');
-        }
-        if (self::$configuration->session) {
-            $this->hook->dispatch('preSession');
-            $this->register('session');
-            $this->hook->dispatch('postSession');
-        }
-        if (self::$configuration->acl) {
-            $this->hook->dispatch('preACL');
-            $this->register('acl');
-            $this->hook->dispatch('postACL');
-        }
-
     }
 
     /**
@@ -314,7 +340,7 @@ class App
 
         $moduleExist = file_exists(APP_PATH . '/modules/' . $this->module);
         $classExist = class_exists($this->class);
-        $methodExist = method_exists($this->class, Registry::get('_method'));
+        $methodExist = method_exists($this->class, $this->method);
 
         if (!$moduleExist) {
             $this->output = Router::show404(self::$configuration->modules['defaultModule'] . '/404');
@@ -342,14 +368,16 @@ class App
             return false;
         }
 
-        $this->hook->dispatch('preController');
+        $this->hook->call('preController');
         $this->instantiatedClass = new $this->class();
+        /*
         $this->instantiatedClass->setRouter(Registry::get('_router'));
         $this->instantiatedClass->setLoad(Registry::get('_load'));
         $this->instantiatedClass->setRequest(Registry::get('_request'));
         $this->instantiatedClass->setOutput(Registry::get('_output'));
         $this->instantiatedClass->setValidate(Registry::get('_validate'));
-        $this->hook->dispatch('postController');
+        */
+        $this->hook->call('postController');
 
         $this->output = call_user_func_array(
             array(&$this->instantiatedClass, $this->method),
@@ -436,7 +464,7 @@ class App
             $this->output = '';
         }
 
-        $this->hook->dispatch('postApplication');
+        $this->hook->call('postApplication');
 
         return $this->output;
     }

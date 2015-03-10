@@ -56,11 +56,10 @@ class Router
     {
         $this->configuration = App::getConfiguration();
         $uri = self::uri();
-        $this->load = Registry::get('_load');
 
         if ($this->configuration->routes) {
-            if (!empty($this->_configuration->routes[$uri])) {
-                $uri = $this->_configuration->routes[$uri];
+            if (!empty($this->configuration->routes[$uri])) {
+                $uri = $this->configuration->routes[$uri];
                 $uriChunks = $this->parseURI($uri);
             } elseif (!empty(array_flip($this->configuration->routes)[$uri])) {
                 Router::redirect(Router::baseURL(array_flip($this->configuration->routes)[$uri]), 301);
@@ -71,10 +70,13 @@ class Router
             $uriChunks = $this->parseURI($uri);
         }
 
-        Registry::add('_module', $uriChunks[0]);
-        Registry::add('_controller', $uriChunks[1]);
-        Registry::add('_method', $uriChunks[2]);
-        Registry::add('_params', array_slice($uriChunks, 3));
+        App::setConfiguration('router', (object)[
+            'module' => $uriChunks[0],
+            'controller' => $uriChunks[1],
+            'method' => $uriChunks[2],
+            'params' => array_slice($uriChunks, 3)
+        ]);
+
     }
 
     /**
@@ -155,9 +157,9 @@ class Router
     {
 
         $uri = self::normalizeURI();
-        $defaultModule = Registry::get('_load')->config('core', 'modules')['defaultModule'];
-        $defaultController = Registry::get('_load')->config('core', 'modules')[$defaultModule]['defaultController'];
-        $defaultMethod = Registry::get('_load')->config('core', 'modules')[$defaultModule]['defaultMethod'];
+        $defaultModule = Load::getInstance()->config('core', 'modules')['defaultModule'];
+        $defaultController = Load::getInstance()->config('core', 'modules')[$defaultModule]['defaultController'];
+        $defaultMethod = Load::getInstance()->config('core', 'modules')[$defaultModule]['defaultMethod'];
 
         if ($uri) {
             $uriChunks = explode('/', filter_var(trim(strtolower($uri)), FILTER_SANITIZE_URL));
@@ -237,9 +239,7 @@ class Router
 
         header('HTTP/1.1 401 Access Denied');
 
-        $layout = Registry::get('_load')->view(
-            $layout
-        );
+        $layout = Load::getInstance()->view($layout);
 
         return $layout;
 
@@ -254,12 +254,9 @@ class Router
     public static function show404($layout)
     {
 
-
         header('HTTP/1.1 404 Not Found');
 
-        $layout = Registry::get('_load')->view($layout);
-
-        return $layout;
+        return Load::getInstance()->view($layout);
 
     }
 

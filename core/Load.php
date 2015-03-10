@@ -28,7 +28,7 @@ class Load
      *
      * @var object
      */
-    public static $instance;
+    protected static $instance;
 
     /**
      * Container for configured language
@@ -53,6 +53,15 @@ class Load
      * @var array
      */
     private $helper = [];
+
+    /**
+     * Create instance
+     */
+
+    public function __construct()
+    {
+        self::$instance = $this;
+    }
 
     /**
      * Loads a model
@@ -128,7 +137,7 @@ class Load
     public function view($view = '', $data = [], $layout = 'layout')
     {
         // This is the same as using globals.
-        $module = Registry::get('_module');
+        $module = App::getConfiguration()->router->module;
 
         if ($view != '') {
             // I like how you use spaces here to concat a string
@@ -155,29 +164,6 @@ class Load
 
         throw new Exception('Invalid parameters for view loading.');
 
-    }
-
-    /**
-     * Loads a library
-     *
-     * @access public
-     *
-     * @param string $file file name of library class
-     * @param array $args array of arguments for constructor
-     *
-     * @return object instantiated library
-     * @throws Exception when a library can not be found
-     */
-    public function library($file, $args = [])
-    {
-        // This seems like some kind of half baked exception throwin' autoloader needin' thingamajig.
-        // Why aren't all libraries just autoloaded. Libraries don't exist anymore, just classes.
-        if (class_exists($file)) {
-            $obj = new $file($args);
-            return $obj;
-        }
-
-        throw new \Exception('Library: "' . $file . '" could not be found.');
     }
 
     /**
@@ -354,14 +340,23 @@ class Load
      * @access public
      * @return object
      */
+
     public static function &getInstance()
     {
 
-        if (static::$instance === null) {
-            static::$instance = new static();
-        }
+        try {
 
-        return static::$instance;
+            if (self::$instance === null) {
+                throw new Exception('Unable to get an instance of the load class. The class has not been instantiated yet.');
+            }
+
+            return self::$instance;
+
+        } catch(Exception $e) {
+
+            echo 'Message' . $e->getMessage();
+
+        }
 
     }
 }

@@ -66,87 +66,9 @@ abstract class Controller
      */
     public function __construct()
     {
-
-    }
-
-    /**
-     * @return object
-     */
-    public function getLoad()
-    {
-        return $this->load;
-    }
-
-    /**
-     * @param object $load
-     */
-    public function setLoad($load)
-    {
-        $this->load = $load;
-    }
-
-    /**
-     * @return object
-     */
-    public function getRouter()
-    {
-        return $this->router;
-    }
-
-    /**
-     * @param object $router
-     */
-    public function setRouter($router)
-    {
-        $this->router = $router;
-    }
-
-    /**
-     * @return object
-     */
-    public function getRequest()
-    {
-        return $this->request;
-    }
-
-    /**
-     * @param object $request
-     */
-    public function setRequest($request)
-    {
-        $this->request = $request;
-    }
-
-    /**
-     * @return object
-     */
-    public function getOutput()
-    {
-        return $this->output;
-    }
-
-    /**
-     * @param object $output
-     */
-    public function setOutput($output)
-    {
-        $this->output = $output;
-    }
-
-    /**
-     * @return object
-     */
-    public function getValidate()
-    {
-        return $this->validate;
-    }
-
-    /**
-     * @param object $validate
-     */
-    public function setValidate($validate)
-    {
-        $this->validate = $validate;
+        static::$instance = $this;
+        $this->load = Load::getInstance();
+//        $this->request = Request::
     }
 
     /**
@@ -158,11 +80,19 @@ abstract class Controller
     public static function &getInstance()
     {
 
-        if (static::$instance === null) {
-            static::$instance = new static();
-        }
+        try {
 
-        return static::$instance;
+            if (static::$instance === null) {
+                throw new Exception('Unable to get an instance of the controller class. The class has not been instantiated yet.');
+            }
+
+            return static::$instance;
+
+        } catch(Exception $e) {
+
+            echo 'Message' . $e->getMessage();
+
+        }
 
     }
 }
