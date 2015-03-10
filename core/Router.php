@@ -15,7 +15,7 @@ class Router
      *
      * @var object
      */
-    private $_configuration;
+    private $configuration;
 
     /**
      * Instantiated load class pointer
@@ -54,16 +54,16 @@ class Router
      */
     public function __construct()
     {
-        $this->_configuration = Registry::get('_configuration');
+        $this->configuration = App::getConfiguration();
         $uri = self::uri();
         $this->load = Registry::get('_load');
 
-        if ($this->_configuration->routes) {
+        if ($this->configuration->routes) {
             if (!empty($this->_configuration->routes[$uri])) {
                 $uri = $this->_configuration->routes[$uri];
                 $uriChunks = $this->parseURI($uri);
-            } elseif (!empty(array_flip($this->_configuration->routes)[$uri])) {
-                Router::redirect(Router::baseURL(array_flip($this->_configuration->routes)[$uri]), 301);
+            } elseif (!empty(array_flip($this->configuration->routes)[$uri])) {
+                Router::redirect(Router::baseURL(array_flip($this->configuration->routes)[$uri]), 301);
             }
         }
 
@@ -257,9 +257,7 @@ class Router
 
         header('HTTP/1.1 404 Not Found');
 
-        $layout = Registry::get('_load')->view(
-            $layout
-        );
+        $layout = Registry::get('_load')->view($layout);
 
         return $layout;
 
