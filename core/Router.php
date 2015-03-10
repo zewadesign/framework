@@ -58,11 +58,11 @@ class Router
         $uri = self::uri();
 
         if ($this->configuration->routes) {
-            if (!empty($this->configuration->routes[$uri])) {
-                $uri = $this->configuration->routes[$uri];
+            if (!empty($this->configuration->routes->$uri)) {
+                $uri = $this->configuration->routes->$uri;
                 $uriChunks = $this->parseURI($uri);
-            } elseif (!empty(array_flip($this->configuration->routes)[$uri])) {
-                Router::redirect(Router::baseURL(array_flip($this->configuration->routes)[$uri]), 301);
+            } elseif (!empty(array_flip((array)$this->configuration->routes)[$uri])) {
+                Router::redirect(Router::baseURL(array_flip((array)$this->configuration->routes)[$uri]), 301);
             }
         }
 
@@ -158,10 +158,11 @@ class Router
     public static function uri()
     {
 
+        $load = Load::getInstance();
         $uri = self::normalizeURI();
-        $defaultModule = Load::getInstance()->config('core', 'modules')['defaultModule'];
-        $defaultController = Load::getInstance()->config('core', 'modules')[$defaultModule]['defaultController'];
-        $defaultMethod = Load::getInstance()->config('core', 'modules')[$defaultModule]['defaultMethod'];
+        $defaultModule = $load->config('core', 'modules')->defaultModule;
+        $defaultController = $load->config('core', 'modules')->$defaultModule->defaultController;
+        $defaultMethod = $load->config('core', 'modules')->$defaultModule->defaultMethod;
 
         if ($uri) {
             $uriChunks = explode('/', filter_var(trim(strtolower($uri)), FILTER_SANITIZE_URL));

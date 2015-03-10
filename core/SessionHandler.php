@@ -28,18 +28,8 @@ class SessionHandler
 
         $this->database = $db;
 
-        // **PREVENTING SESSION HIJACKING**
-        // Prevents javascript XSS attacks aimed to steal the session ID
         ini_set('session.cookie_httponly', 1);
-
-        // **PREVENTING SESSION FIXATION**
-        // Session ID cannot be passed through URLs
         ini_set('session.use_only_cookies', 1);
-
-        // Uses a secure connection (HTTPS) if possible
-//        ini_set('session.cookie_secure', 1);
-
-
         ini_set('session.cookie_lifetime', 0);
 
         if ($session_lifetime != '' && is_integer($session_lifetime)) {
@@ -64,16 +54,25 @@ class SessionHandler
         $this->tableName = $table_name;
         $this->lockTimeout = $lock_timeout;
 
-        session_set_save_handler(
-            array(&$this, 'open'),
-            array(&$this, 'close'),
-            array(&$this, 'read'),
-            array(&$this, 'write'),
-            array(&$this, 'destroy'),
-            array(&$this, 'gc')
-        );
+        if($this->database !== 'file') {
 
-        session_start();
+            session_set_save_handler(
+                array(&$this, 'open'),
+                array(&$this, 'close'),
+                array(&$this, 'read'),
+                array(&$this, 'write'),
+                array(&$this, 'destroy'),
+                array(&$this, 'gc')
+            );
+
+            session_start();
+
+        } else {
+            if (session_status() == PHP_SESSION_NONE) {
+                session_start();
+            }
+        }
+
     }
 
     public function getActiveSessions()
@@ -81,8 +80,8 @@ class SessionHandler
 
         $this->gc();
         $result = $this->database->select('COUNT(id) as count')
-                                 ->table($this->tableName)
-                                 ->fetch();
+             ->table($this->tableName)
+             ->fetch();
 
         return $result->count;
 

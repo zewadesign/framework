@@ -98,7 +98,8 @@ class Request
      * @TODO: move flashdata to sessionhandler, make available here with other request vars still
      */
 
-    private $flashdataIdentifier;
+
+    private $flashdataId = '_z_session_flashdata';
 
 
     /**
@@ -111,14 +112,12 @@ class Request
         self::$instance = $this;
         $this->configuration = App::getConfiguration();
 
-        if ($this->configuration->session) {
-            // assume no flashdata
-            $this->flashdata = [];
-            $this->flashdataIdentifier = '_session_flashdata_12971';
-            $this->prepareFlashdata();
-            $this->session = $this->_normalize($_SESSION);
+        if($this->configuration->session->flashdataId) {
+            $this->flashdataId = $this->configuration->session->flashdataId;
         }
 
+        $this->registerFlashdata();
+        $this->session = $this->_normalize($_SESSION);
         $this->get = $this->_normalize($_GET);
         $this->post = $this->_normalize($_POST);
         $this->cookie = $this->_normalize($_COOKIE);
@@ -132,16 +131,15 @@ class Request
      * Processes current requests flashdata, recycles old.
      * @access private
      */
-    private function prepareFlashdata()
+    private function registerFlashdata()
     {
 
 
-        if (isset($_SESSION[$this->flashdataIdentifier])) {
-            // store them
+        if ($this->session($this->flashdataId)) {
 
-            $this->flashdata = unserialize($_SESSION[$this->flashdataIdentifier]);
+            $this->flashdata = unserialize($this->session($this->flashdataId));
             // and destroy the temporary session variable
-            unset($_SESSION[$this->flashdataIdentifier]);
+            unset($_SESSION[$this->flashdataId]);
 
 
             if (!empty($this->flashdata)) {
@@ -165,7 +163,7 @@ class Request
                 // if there is any flashdata left to be handled
                 if (!empty($this->flashdata)) {
 // store data in a temporary session variable
-                    $_SESSION[$this->flashdataIdentifier] = serialize($this->flashdata);
+                    $_SESSION[$this->flashdataId] = serialize($this->flashdata);
                 }
             }
 
@@ -194,7 +192,7 @@ class Request
             'inc'   => 0
         );
 
-        $_SESSION[$this->flashdataIdentifier] = serialize($this->flashdata);
+        $_SESSION[$this->flashdataId] = serialize($this->flashdata);
 
     }
 

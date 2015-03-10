@@ -170,6 +170,8 @@ class App
         }
 
         $this->hook->call('preApplication');
+        $this->registerSession();
+        $this->registerDatabase();
 
         $this->router = new Router();
         $this->request = new Request();
@@ -179,41 +181,8 @@ class App
         $this->method = self::$configuration->router->method;
         $this->params = self::$configuration->router->params;
 
-
-        $this->initializeDependencies();
         $this->autoload();
         $this->class = '\\app\\modules\\' . self::$configuration->router->module . '\\controllers\\' . ucfirst($this->controller);
-
-    }
-
-    /**
-     * Initiates the dependencies
-     *
-     * @access private
-     */
-    private function initializeDependencies()
-    {
-
-        if (self::$configuration->database) {
-            $this->hook->call('preDatabase');
-            $this->register('database');
-            $this->hook->call('postDatabase');
-        }
-        if (self::$configuration->cache) {
-            $this->hook->call('preCache');
-            $this->register('cache');
-            $this->hook->call('postCache');
-        }
-        if (self::$configuration->session) {
-            $this->hook->call('preSession');
-            $this->register('session');
-            $this->hook->call('postSession');
-        }
-        if (self::$configuration->acl) {
-            $this->hook->call('preACL');
-            $this->register('acl');
-            $this->hook->call('postACL');
-        }
 
     }
 
@@ -279,30 +248,6 @@ class App
     }
 
     /**
-     * Registers core classes
-     *
-     * @access private
-     *
-     * @param string $resource
-     */
-    private function register($resource)
-    {
-
-        switch ($resource) {
-            case 'database':
-                $this->registerDatabase();
-                break;
-            case 'cache':
-                $this->registerCache();
-                break;
-            case 'session':
-                $this->registerSession();
-                break;
-        }
-
-    }
-
-    /**
      * Registers the database object
      *
      * @access private
@@ -310,10 +255,18 @@ class App
     private function registerDatabase()
     {
 
-        $this->database = new Database(
-            'default', // you can name your db, for switching between..
-            self::$configuration->database['default']
-        );
+        if (self::$configuration->database) {
+
+            $this->hook->call('preDatabase');
+            $this->database = new Database(
+                'default', // you can name your db, for switching between..
+                self::$configuration->database['default']
+            );
+            $this->hook->call('postDatabase');
+
+        }
+
+        return;
 
     }
 
@@ -322,12 +275,13 @@ class App
      *
      * @access private
      */
-    private function registerCache()
-    {
-        $memcached = new \Memcached();
-        $memcached->addServer(self::$configuration->cache->host, self::$configuration->cache->port);
-        Registry::add('_memcached', $memcached);
-    }
+//    private function registerCache()
+//    {
+//        $memcached = new \Memcached();
+//        $memcached->addServer(self::$configuration->cache->host, self::$configuration->cache->port);
+//        Registry::add('_memcached', $memcached);
+//        return;
+//    }
 
     /**
      * Registers the session object
@@ -337,11 +291,21 @@ class App
     private function registerSession()
     {
 
-        if (!self::$configuration->session['database']) {
-            throw new \Exception('Not supported yet..');
-        } else {
-            new SessionHandler(Registry::get('_database'), 'securitycode', 7200, true, false, 1, 100);
+        $this->hook->call('preSession');
+
+        $database = 'file';
+
+        if(self::$configuration->session->interface === 'database') {
+
+            $database = Database::getInstance();
+
         }
+
+        new SessionHandler($database, 'securitycode', 7200, true, false, 1, 100);
+
+        $this->hook->call('postSession');
+
+        return;
 
     }
 
