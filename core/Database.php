@@ -38,9 +38,12 @@ class Database
     public function __construct($name, $dbConfig)
     {
 
-        if (!empty($dbConfig['dsn']) && !empty($dbConfig['user']) && !empty($dbConfig['pass'])) {
+        self::$instance = $this;
+
+        if (!empty($dbConfig->dsn) && !empty($dbConfig->user) && !empty($dbConfig->pass)) {
+
             try {
-                $this->dbh = new PDO($dbConfig['dsn'], $dbConfig['user'], $dbConfig['pass']);
+                $this->dbh = new PDO($dbConfig->dsn, $dbConfig->user, $dbConfig->pass);
                 $this->dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
                 $this->dbhStore[$name] = $this->dbh;
 
@@ -49,8 +52,7 @@ class Database
             }
 
         } else {
-            throw new \Exception('No can do Jack, you need to provide valid connection details.');
-
+            throw new \Exception('No can do Jack, you must provide database details.');
         }
 
     }
@@ -683,6 +685,7 @@ if ($sth->rowCount() > 0) {
      *
      * @access public
      * @return object
+     * @throws exception when database hasn't been invoked.
      */
 
     public static function &getInstance()
@@ -691,7 +694,7 @@ if ($sth->rowCount() > 0) {
         try {
 
             if (self::$instance === null) {
-                throw new Exception('Unable to get an instance of the database class. The class has not been instantiated yet.');
+                throw new \Exception('Unable to get an instance of the database class. The class has not been instantiated yet.');
             }
 
             return self::$instance;

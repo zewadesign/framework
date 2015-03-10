@@ -170,8 +170,8 @@ class App
         }
 
         $this->hook->call('preApplication');
-        $this->registerSession();
         $this->registerDatabase();
+        $this->registerSession();
 
         $this->router = new Router();
         $this->request = new Request();
@@ -260,7 +260,7 @@ class App
             $this->hook->call('preDatabase');
             $this->database = new Database(
                 'default', // you can name your db, for switching between..
-                self::$configuration->database['default']
+                self::$configuration->database->default
             );
             $this->hook->call('postDatabase');
 
@@ -293,15 +293,14 @@ class App
 
         $this->hook->call('preSession');
 
-        $database = 'file';
+        $config = self::$configuration->session;
 
-        if(self::$configuration->session->interface === 'database') {
+        new SessionHandler(
+            $config->interface, $config->securityCode, $config->expiration,
+            $config->lockToUserAgent, $config->lockToIP, $config->gcProbability,
+            $config->gcDivisor, $config->tableName
+        );
 
-            $database = Database::getInstance();
-
-        }
-
-        new SessionHandler($database, 'securitycode', 7200, true, false, 1, 100);
 
         $this->hook->call('postSession');
 
