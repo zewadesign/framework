@@ -186,40 +186,16 @@ class App
     }
 
     /**
-     * Prepares the application registry, provides injection dependency.
-     *
-     * @access private
-     */
-    private function prepareRegistry()
-    {
-        Registry::add('_request', new Request());
-        Registry::add('_router', new Router());
-        Registry::add('_output', new Output($this->load));
-        Registry::add('_validate', new Validate());
-        Registry::add('_autoload', Registry::get('_load')->config('core', 'autoload'));
-
-        $this->module = Registry::get('_module');
-        $this->controller = Registry::get('_controller');
-        $this->method = Registry::get('_method');
-        $this->params = Registry::get('_params');
-
-        Registry::add('_module', $this->module);
-        Registry::add('_controller', $this->controller);
-        Registry::add('_method', $this->method);
-        Registry::add('_params', $this->params);
-
-    }
-
-    /**
      * Prepares the application core classes and dependencies
      *
      * @access private
      */
     private function prepareApplication()
     {
-        $this->hook->dispatch('preRegistry');
-        $this->prepareRegistry();
-        $this->hook->dispatch('postRegistry');
+        $this->module = Registry::get('_module');
+        $this->controller = Registry::get('_controller');
+        $this->method = Registry::get('_method');
+        $this->params = Registry::get('_params');
 
         Registry::add('lang', $this->load->lang($this->load->config('core', 'language')));
 
