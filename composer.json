@@ -1,13 +1,17 @@
 {
   "name": "zewa/framework",
-  "description": "A framework by Zech.",
-  "keywords": ["framework", "laravel"],
+  "description": "Light-wight module based MVC, with centralized models.",
+  "keywords": ["framework", "laravel", "mvc", "hmvc"],
   "minimum-stability": "stable",
   "license": "MIT",
   "authors": [
     {
       "name": "Zech Walden",
       "email": "zech@zewadesign.com"
+    },
+    {
+      "name": "Josh Houghtelin",
+      "email": "josh@findsomehelp.com
     }
   ],
   "autoload": {
