@@ -15,18 +15,16 @@ class SessionHandler
     private $sessionLock;
 
     function __construct(
-        &$db,
+        $interface,
         $security_code,
         $session_lifetime = '',
         $lock_to_user_agent = true,
         $lock_to_ip = false,
-        $gc_probability = '',
-        $gc_divisor = '',
+        $gc_probability = 1,
+        $gc_divisor = 100,
         $table_name = 'Session',
         $lock_timeout = 60
     ) {
-
-        $this->database = $db;
 
         ini_set('session.cookie_httponly', 1);
         ini_set('session.use_only_cookies', 1);
@@ -54,18 +52,24 @@ class SessionHandler
         $this->tableName = $table_name;
         $this->lockTimeout = $lock_timeout;
 
-        if($this->database !== 'file') {
+        if($interface !== 'file') {
 
-            session_set_save_handler(
-                array(&$this, 'open'),
-                array(&$this, 'close'),
-                array(&$this, 'read'),
-                array(&$this, 'write'),
-                array(&$this, 'destroy'),
-                array(&$this, 'gc')
-            );
+            try {
+                $this->database = Database::getInstance();
 
-            session_start();
+                session_set_save_handler(
+                    array(&$this, 'open'),
+                    array(&$this, 'close'),
+                    array(&$this, 'read'),
+                    array(&$this, 'write'),
+                    array(&$this, 'destroy'),
+                    array(&$this, 'gc')
+                );
+
+                session_start();
+            } catch(\Exception $e) {
+                throw new \Exception($e->getMessage());
+            }
 
         } else {
             if (session_status() == PHP_SESSION_NONE) {
@@ -124,8 +128,8 @@ class SessionHandler
     {
 
         $success = $this->database->where('id', $session_id)
-                                  ->table($this->tableName)// totally looks like you'd be deleting a table. lol
-                                  ->delete();
+              ->table($this->tableName)// totally looks like you'd be deleting a table. lol
+              ->delete();
 
         if ($success) {
             return true;
@@ -139,8 +143,8 @@ class SessionHandler
     {
 
         $this->database->where('session_expire <', time())
-                       ->table($this->tableName)
-                       ->delete();
+               ->table($this->tableName)
+               ->delete();
 
     }
 
