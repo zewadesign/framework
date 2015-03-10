@@ -74,7 +74,9 @@ class Router
             'module' => $uriChunks[0],
             'controller' => $uriChunks[1],
             'method' => $uriChunks[2],
-            'params' => array_slice($uriChunks, 3)
+            'params' => array_slice($uriChunks, 3),
+            'baseURL' => self::baseURL(),
+            'currentURL' => self::currentURL()
         ]);
 
     }

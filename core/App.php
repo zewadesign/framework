@@ -73,6 +73,27 @@ class App
     private $params;
 
     /**
+     * Instantiated load class
+     *
+     * @var object
+     */
+    private $load;
+
+    /**
+     * Instantiated router class
+     *
+     * @var object
+     */
+    private $router;
+
+    /**
+     * Instantiated request class
+     *
+     * @var object
+     */
+    private $request;
+
+    /**
      * Instiated hook class
      *
      * @var object
@@ -125,7 +146,13 @@ class App
         $this->prepare();
 
         if (self::$configuration->acl) {
-            $this->secureStart();
+
+            $acl = new \app\libraries\ACL(
+                $this->request->session('userId'),
+                $this->request->session('roleId')
+            );
+
+            $acl->secureStart($this->start());
         } else {
             $this->start();
         }
@@ -144,13 +171,14 @@ class App
 
         $this->hook->call('preApplication');
 
-        new Router();
-        new Request();
+        $this->router = new Router();
+        $this->request = new Request();
 
         $this->module = self::$configuration->router->module;
         $this->controller = self::$configuration->router->controller;
         $this->method = self::$configuration->router->method;
         $this->params = self::$configuration->router->params;
+
 
         $this->initializeDependencies();
         $this->autoload();
@@ -270,9 +298,6 @@ class App
             case 'session':
                 $this->registerSession();
                 break;
-            case 'acl':
-                $this->registerACL();
-                break;
         }
 
     }
@@ -317,18 +342,6 @@ class App
         } else {
             new SessionHandler(Registry::get('_database'), 'securitycode', 7200, true, false, 1, 100);
         }
-
-    }
-
-    /**
-     * Registers the ACL object
-     *
-     * @access private
-     */
-    private function registerACL()
-    {
-
-        Registry::add('_acl', self::$configuration->acl);
 
     }
 
@@ -378,72 +391,6 @@ class App
             array(&$this->instantiatedClass, $this->method),
             $this->params
         );
-    }
-
-    /**
-     * Handles client request within  ACL
-     *
-     * @access private
-     */
-    public function secureStart()
-    {
-
-        $request = Registry::get('_request');
-
-        $userId = $request['uid'];
-        $roleId = $request['roleId'];
-
-        $ACL = new Acl($userId, $roleId);
-
-        $authorizationCode = $ACL->hasAccessRights($this->module, $this->controller, $this->method);
-
-        //@TODO:store access rights in registry for dynamic menu display
-        switch ($authorizationCode) {
-
-            case '1':
-                $this->start();
-                break;
-            case '2':
-                $this->secureRedirect();
-                break;
-
-            case '3': //@TODO: setup module 404's.
-                $this->output = $this->noAccessRedirect();
-                break;
-        }
-    }
-
-    /**
-     * Redirect if guest and access is insufficient / protected
-     *
-     * @access private
-     */
-    private function secureRedirect()
-    {
-
-        Registry::get('_request')->setFlashdata('alert', (object) array('info' => 'Please login to continue!'));
-
-        $currentURL = currentURL();
-        $currentURL = str_replace(baseURL(), '', $currentURL);
-        $currentURL = base64_encode($currentURL);
-
-        $redirect = $this->load->config('core', 'modules')[$this->module]['aclRedirect'];
-
-        Router::redirect(baseURL($redirect . '?r=' . $currentURL));
-
-    }
-
-    /**
-     * Set 401 header, provide no access view if authenticated
-     * and access is insufficient / protected
-     *
-     * @access private
-     */
-    private function noAccessRedirect()
-    {
-
-        return Router::showNoAccess($this->module . '/noaccess');
-
     }
 
     /**
