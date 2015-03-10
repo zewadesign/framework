@@ -17,13 +17,11 @@ use \Exception as Exception;
  */
 class Output
 {
-
     /**
      * Instantiated load class pointer
      *
      * @var object
      */
-
     private $load;
 
     /**
@@ -38,7 +36,6 @@ class Output
      *
      * @var string
      */
-
     private $basictags = "<br><p><a><strong><b><i><em><img><blockquote><code><dd><dl><hr><h1><h2><h3><h4><h5><h6><label><ul><li><span><sub><sup>";
 
     /**
@@ -46,19 +43,15 @@ class Output
      *
      * @var string
      */
-
     private $blacklist = "ass,fuck,shit,damn,cunt,whore,bitch,fag,dick,cock";
 
     /**
      * Load up some basic configuration settings.
      */
-
-    public function __construct()
+    public function __construct($load)
     {
-
-        $this->load = Registry::get('_load');
+        $this->load = $load;
         $this->language = $this->load->lang($this->load->config('core', 'language'));
-
     }
 
     /**
@@ -69,7 +62,6 @@ class Output
      *
      * @return mixed sanitized data after scrub
      */
-
     public function lang($selection, $replace = false)
     {
 
@@ -97,7 +89,6 @@ class Output
      *
      * @return mixed sanitized data after scrub
      */
-
     public function prepare($data, $filters = [])
     {
         return $this->_filter($data, $filters);
@@ -114,7 +105,6 @@ class Output
      * @return mixed
      * @throws Exception When validation methods do not exist.
      */
-
     //@TODO: make sure all output is sanitized
     //@TODO: this needs to be rewrote
     private function _filter($data, array $filterset)
@@ -183,7 +173,6 @@ class Output
         return $data;
     }
 
-
     /**
      * Replace tidies html for valid html
      *
@@ -196,7 +185,6 @@ class Output
      *
      * @return string
      */
-
     private function _filterTidy($value, $params = false)
     {
 
@@ -214,7 +202,6 @@ class Output
         return $value;
 
     }
-
 
     /**
      * Truncates a string and appends elippsis
@@ -245,7 +232,6 @@ class Output
         }
         return $value;
     }
-
 
     /**
      * Replace blacklist in a string
@@ -297,7 +283,6 @@ class Output
 
         return preg_replace("/(?![.=$'€%-])\p{P}/u", '', $value);
     }
-
 
     /**
      * Sanitize the string by removing any script tags

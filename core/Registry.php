@@ -1,27 +1,18 @@
 <?php
-// I think this global registry might be getting confused for a DI container or something similar.
 namespace core;
 
-use \Exception as Exception;
-
 /**
- * Abstract class for static handling of key/value pairs
+ * Registry handling of key/value pairs
  *
  * @author Zechariah Walden<zech @ zewadesign.com>
  */
-// How does this even work?
-abstract class Registry
+class Registry
 {
-// You instantiate this class as a regular concrete class.
-// not how PHP is supposed to work. At least now how I understand it.
-// Sentence 2: http://php.net/manual/en/language.oop5.abstract.php
-
     /**
      * Reference to static registry array.
      *
      * @var object
      */
-
     private static $registry = [];
 
     /**
@@ -33,10 +24,8 @@ abstract class Registry
      *
      * @return mixed
      */
-
     public static function get($key)
     {
-
         if (self::exists($key)) {
             return self::$registry[$key];
         }
@@ -51,14 +40,11 @@ abstract class Registry
      *
      * @param  string $script path/to/script
      */
-
     public static function addJS($script)
     {
-        // hackish
         if (!array_search($script, self::$registry['_scripts'])) {
             self::$registry['_scripts'] = array_push(self::$registry['_scripts'], $script);
         }
-
     }
 
     /**
@@ -67,7 +53,6 @@ abstract class Registry
      * @access public
      * @return array
      */
-
     public static function getAll()
     {
         return self::$registry;
@@ -82,14 +67,12 @@ abstract class Registry
      * @param mixed $value
      * @param boolean $replace
      *
-     * @throws Exception when key is set and replace is false.
+     * @throws \Exception when key is set and replace is false.
      */
-
     public static function add($key, $value, $replace = true)
     {
         if (self::exists($key) && $replace === false) {
-            throw new Exception($key . ' already set. Use replace method.');
-//            trigger_error($key.' already set. Use replace method.', E_USER_WARNING);
+            throw new \Exception($key . ' already set. Use replace method.');
         }
 
         self::$registry[$key] = $value;
@@ -114,7 +97,6 @@ abstract class Registry
      *
      * @access public
      */
-
     public static function clear()
     {
         self::$registry = [];
@@ -129,7 +111,6 @@ abstract class Registry
      *
      * @return boolean
      */
-
     public static function exists($key)
     {
         return isset(self::$registry[$key]);

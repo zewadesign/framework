@@ -100,7 +100,6 @@ class Request
             $this->flashdataIdentifier = '_session_flashdata_12971';
             $this->prepareFlashdata();
             $this->session = $this->_normalize($_SESSION);
-
         }
 
         $this->get = $this->_normalize($_GET);
