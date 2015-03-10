@@ -11,6 +11,13 @@ use \Exception as Exception;
 class Request
 {
     /**
+     * Reference to instantiated controller object.
+     *
+     * @var object
+     */
+    protected static $instance;
+
+    /**
      * System configuration
      *
      * @var object
@@ -101,6 +108,7 @@ class Request
     public function __construct()
     {
 
+        self::$instance = $this;
         $this->configuration = App::getConfiguration();
 
         if ($this->configuration->session) {
@@ -394,5 +402,31 @@ class Request
         }
 
         return $data;
+    }
+
+    /**
+     * Returns a reference of object once instantiated
+     *
+     * @access public
+     * @return object
+     */
+
+    public static function &getInstance()
+    {
+
+        try {
+
+            if (self::$instance === null) {
+                throw new Exception('Unable to get an instance of the request class. The class has not been instantiated yet.');
+            }
+
+            return self::$instance;
+
+        } catch(Exception $e) {
+
+            echo 'Message' . $e->getMessage();
+
+        }
+
     }
 }
