@@ -24,6 +24,13 @@ use \Exception as Exception;
 class Load
 {
     /**
+     * Reference to instantiated controller object.
+     *
+     * @var object
+     */
+    public static $instance;
+
+    /**
      * Container for configured language
      *
      * @access private
@@ -127,7 +134,7 @@ class Load
             // I like how you use spaces here to concat a string
             $file = APP_PATH . DIRECTORY_SEPARATOR . 'modules' . DIRECTORY_SEPARATOR . $module . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . strtolower($view) . '.php';
             if (file_exists($file)) {
-                $data['view'] = $this->render($file, $data);
+                $data['view'] = $this->process($file, $data);
 
             } else {
                 throw new Exception('View: "' . $view . '" could not be found.');
@@ -140,7 +147,7 @@ class Load
             $file = APP_PATH . DIRECTORY_SEPARATOR . 'layouts' . DIRECTORY_SEPARATOR . $module . DIRECTORY_SEPARATOR . strtolower($layout) . '.php';
 
             if (file_exists($file)) {
-                return $this->render($file, $data);
+                return $this->process($file, $data);
             }
 
             throw new Exception('Layout: "' . $layout . '" could not be found.');
@@ -308,7 +315,7 @@ class Load
      * @return string processed content
      */
     //@TODO: come back and clean up this and the way the view receives stuff
-    private function render($file, $data = [])
+    private function process($file, $data = [])
     {
         // Why does the Load class also render?
         // make sure..
@@ -339,5 +346,22 @@ class Load
         ob_end_clean();
 
         return $return;
+    }
+
+    /**
+     * Returns a reference of object once instantiated
+     *
+     * @access public
+     * @return object
+     */
+    public static function &getInstance()
+    {
+
+        if (static::$instance === null) {
+            static::$instance = new static();
+        }
+
+        return static::$instance;
+
     }
 }

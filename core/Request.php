@@ -10,6 +10,13 @@ use \Exception as Exception;
  */
 class Request
 {
+    /**
+     * System configuration
+     *
+     * @var object
+     */
+    private $configuration;
+
 
     /**
      * normalized $_GET superglobal
@@ -94,7 +101,9 @@ class Request
     public function __construct()
     {
 
-        if (Registry::get('_configuration')->session) {
+        $this->configuration = App::getConfiguration();
+
+        if ($this->configuration->session) {
             // assume no flashdata
             $this->flashdata = [];
             $this->flashdataIdentifier = '_session_flashdata_12971';

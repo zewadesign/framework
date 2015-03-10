@@ -21,7 +21,7 @@ class App
      *
      * @var object
      */
-    private $_configuration;
+    private static $configuration;
 
     /**
      * Return value from application
@@ -87,9 +87,10 @@ class App
         //@TODO: system vars (_) need to be moved to an array called "system" in the registry, and write protected, _ is lame.
         try {
             // The whole app seems to rely on this global Registry...
-            Registry::add('_load', new Load());
-            $this->load = Registry::get('_load');
-            $this->_configuration = (object) array(
+            Registry::add('_load', Load::getInstance());
+            $this->load = Load::getInstance();
+
+            $configObject = (object) array(
                 'database' => $this->load->config('core', 'database'),
                 'session'  => $this->load->config('core', 'session'),
                 'cache'    => $this->load->config('core', 'cache'),
@@ -99,24 +100,65 @@ class App
                 'hooks'    => $this->load->config('core', 'hooks')
             );
 
-            Registry::add('_configuration', $this->_configuration);
+            self::setConfiguration($configObject);
 
-            $this->hook = new Hook($this->load);
-            $this->hook->dispatch('preApplication');
-            $this->prepareApplication();
-            $this->autoload();
-            $this->class = '\\app\\modules\\' . Registry::get('_module') . '\\controllers\\' . ucfirst($this->controller);
-
-            if ($this->_configuration->acl) {
-                $this->secureStart();
-            } else {
-                $this->start();
-            }
+            $this->initiateApplication();
 
         } catch (\Exception $e) {
             trigger_error($e->getMessage(), E_USER_ERROR);
         }
     }
+
+    /**
+     * App initiation cycle
+     */
+    private function initiateApplication()
+    {
+
+        $this->hook = new Hook($this->load);
+        $this->hook->dispatch('preApplication');
+        $this->prepareApplication();
+        $this->autoload();
+        $this->class = '\\app\\modules\\' . Registry::get('_module') . '\\controllers\\' . ucfirst($this->controller);
+
+        if (self::$configuration->acl) {
+            $this->secureStart();
+        } else {
+            $this->start();
+        }
+
+    }
+
+    /**
+     * @param mixed optional string with reference to config
+     * @return object
+     */
+    public static function getConfiguration($config = false)
+    {
+
+        if($config !== false) {
+            return (empty(self::$configuration[$config]) ? false : self::$configuration[$config]);
+        }
+
+        return self::$configuration;
+
+    }
+
+    /**
+     * @param mixed string or object
+     * @param mixed optional object of configuration data
+     */
+    public static function setConfiguration($config, $configObject = false)
+    {
+
+        if($configObject !== false) {
+            self::$configuration[$config] = $configObject;
+        } else {
+            self::$configuration = $config;
+        }
+
+    }
+
 
     /**
      * Autoloads configured resources
@@ -181,22 +223,22 @@ class App
 
         Registry::add('lang', $this->load->lang($this->load->config('core', 'language')));
 
-        if ($this->_configuration->database) {
+        if (self::$configuration->database) {
             $this->hook->dispatch('preDatabase');
             $this->register('database');
             $this->hook->dispatch('postDatabase');
         }
-        if ($this->_configuration->cache) {
+        if (self::$configuration->cache) {
             $this->hook->dispatch('preCache');
             $this->register('cache');
             $this->hook->dispatch('postCache');
         }
-        if ($this->_configuration->session) {
+        if (self::$configuration->session) {
             $this->hook->dispatch('preSession');
             $this->register('session');
             $this->hook->dispatch('postSession');
         }
-        if ($this->_configuration->acl) {
+        if (self::$configuration->acl) {
             $this->hook->dispatch('preACL');
             $this->register('acl');
             $this->hook->dispatch('postACL');
@@ -241,7 +283,7 @@ class App
 
         Registry::add('_database', new Database(
             'default', // you can name your db, for switching between..
-            $this->_configuration->database['default']
+            self::$configuration->database['default']
         ));
 
     }
@@ -254,7 +296,7 @@ class App
     private function registerCache()
     {
         $memcached = new \Memcached();
-        $memcached->addServer($this->_configuration->cache->host, $this->_configuration->cache->port);
+        $memcached->addServer(self::$configuration->cache->host, self::$configuration->cache->port);
         Registry::add('_memcached', $memcached);
     }
 
@@ -266,7 +308,7 @@ class App
     private function registerSession()
     {
 
-        if (!$this->_configuration->session['database']) {
+        if (!self::$configuration->session['database']) {
             throw new \Exception('Not supported yet..');
         } else {
             new SessionHandler(Registry::get('_database'), 'securitycode', 7200, true, false, 1, 100);
@@ -282,7 +324,7 @@ class App
     private function registerACL()
     {
 
-        Registry::add('_acl', $this->_configuration->acl);
+        Registry::add('_acl', self::$configuration->acl);
 
     }
 
@@ -299,7 +341,7 @@ class App
         $methodExist = method_exists($this->class, Registry::get('_method'));
 
         if (!$moduleExist) {
-            $this->output = Router::show404($this->_configuration->modules['defaultModule'] . '/404');
+            $this->output = Router::show404(self::$configuration->modules['defaultModule'] . '/404');
             return false;
         } elseif (!$classExist) {
             $this->output = Router::show404($this->module . '/404');
@@ -326,7 +368,6 @@ class App
 
         $this->hook->dispatch('preController');
         $this->instantiatedClass = new $this->class();
-        $this->instantiatedClass->setConfiguration(Registry::get('_configuration'));
         $this->instantiatedClass->setRouter(Registry::get('_router'));
         $this->instantiatedClass->setLoad(Registry::get('_load'));
         $this->instantiatedClass->setRequest(Registry::get('_request'));

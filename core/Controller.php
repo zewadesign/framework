@@ -72,22 +72,6 @@ abstract class Controller
     /**
      * @return object
      */
-    public function getConfiguration()
-    {
-        return $this->configuration;
-    }
-
-    /**
-     * @param object $configuration
-     */
-    public function setConfiguration($configuration)
-    {
-        $this->configuration = $configuration;
-    }
-
-    /**
-     * @return object
-     */
     public function getLoad()
     {
         return $this->load;
