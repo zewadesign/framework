@@ -415,37 +415,25 @@ class Database
 
     //typed queries?
     //dropped result manipulation.. you are querying your own stuff..
-    public function query($sqlQuery, $params = array())
+    public function query($sqlQuery, $params = [])
     {
-//        print_r($params);
-        $this->arguments = $params;
 
         try {
             $sth = $this->dbh->prepare($sqlQuery);
+            $sth->execute($params);
 
-            if (
-                strpos(mb_substr(trim($sqlQuery), 0, 6), 'SELECT') !== false ||
-                strpos(mb_substr(trim($sqlQuery), 0, 6), 'CALL') !== false
-            ) {
-                $sth->execute($this->arguments);
-
-                if ($sth->rowCount() > 0) {
-                    $result = $sth->rowCount() > 1 ? $sth->fetchAll(PDO::FETCH_OBJ) : $sth->fetch(PDO::FETCH_OBJ);
-
-                }
-
+            if($sth->columnCount() === 0) {
+                $result = $sth->rowCount();
             } else {
-                $result = $sth->execute($this->arguments);
-
+                $result = $sth->rowCount() > 1 ? $sth->fetchAll(PDO::FETCH_OBJ) : $sth->fetch(PDO::FETCH_OBJ);
             }
 
             $this->close($sth);
 
             return $result;
 
-        } catch (PDOException $e) {
-            echo '<pre>', $e->getMessage(), '</pre>';
-
+        } catch (\PDOException $e) {
+            throw new \Exception($e->getMessage());
         }
 
     }
@@ -462,28 +450,22 @@ class Database
             $sth = $this->dbh->prepare(
                 'SELECT ' . $this->columns . ' FROM ' . $this->table . $this->join . $prepWhere . $this->groupBy . $this->orderBy . $this->limit
             );
-
-//                echo "<PRE>";
-//                echo 'SELECT ' . $this->columns . ' FROM ' . $this->table . $this->join . $prepWhere . $this->groupBy . $this->orderBy . $this->limit;
-//                print_r($this->arguments);
-//                echo "</PRE>";
-
+//
 
             $sth->execute($this->arguments);
 
 
-if ($sth->rowCount() > 0) {
-    $result = ($sth->rowCount() > 1 || $resultSet ? $sth->fetchAll(PDO::FETCH_OBJ) : $sth->fetch(PDO::FETCH_OBJ));
+            if ($sth->rowCount() > 0) {
+                $result = ($sth->rowCount() > 1 || $resultSet ? $sth->fetchAll(PDO::FETCH_OBJ) : $sth->fetch(PDO::FETCH_OBJ));
 //                print_r($result);
-}
+            }
 
             $this->close($sth);
 
             return $result;
 
-        } catch (PDOException $e) {
-            echo '<pre>', $e->getMessage(), '</pre>';
-
+        } catch (\PDOException $e) {
+            throw new \Exception($e->getMessage());
         }
 
     }
@@ -509,9 +491,8 @@ if ($sth->rowCount() > 0) {
 
             return $result;
 
-        } catch (PDOException $e) {
-            echo '<pre>', $e->getMessage(), '</pre>';
-
+        } catch (\PDOException $e) {
+            throw new \Exception($e->getMessage());
         }
 
     }
@@ -520,11 +501,8 @@ if ($sth->rowCount() > 0) {
 
     public function delete()
     {
-
-
         try {
             $prepWhere = $this->prepareWhere();
-
             $sth = $this->dbh->prepare('DELETE FROM ' . $this->table . $prepWhere);
 
             $result = $sth->execute($this->arguments);
@@ -534,9 +512,8 @@ if ($sth->rowCount() > 0) {
             return $result;
 
 
-        } catch (PDOException $e) {
-            echo '<pre>', $e->getMessage(), '</pre>';
-
+        } catch (\PDOException $e) {
+            throw new \Exception($e->getMessage());
         }
 
     }
@@ -566,10 +543,8 @@ if ($sth->rowCount() > 0) {
             return $result;
 
 
-        } catch (PDOException $e) {
-            // How come you use throw exceptions in the rest of your app but here you just dump the text of the exception.?.
-            echo '<pre>', $e->getMessage(), '</pre>';
-
+        } catch (\PDOException $e) {
+            throw new \Exception($e->getMessage());
         }
 
     }
@@ -619,15 +594,14 @@ if ($sth->rowCount() > 0) {
             return $result;
 
         } catch (\PDOException $e) {
-            echo '<pre>', $e->getMessage(), '</pre>';
-
+            throw new \Exception($e->getMessage());
         }
 
     }
 
     public function updateBatch($batchData)
     {
- //@TODO: convert function to use placeholders ?
+        //@TODO: convert function to use placeholders ?
 
         try {
             $index = $batchData['_index'];
@@ -664,9 +638,8 @@ if ($sth->rowCount() > 0) {
 
             return $result;
 
-        } catch (PDOException $e) {
-            echo '<pre>', $e->getMessage(), '</pre>';
-
+        } catch (\PDOException $e) {
+            throw new \Exception($e->getMessage());
         }
 
     }
@@ -676,7 +649,7 @@ if ($sth->rowCount() > 0) {
      *
      * @access public
      * @return object
-     * @throws exception when database hasn't been invoked.
+     * @throws \Exception when database hasn't been invoked.
      */
 
     public static function &getInstance()
@@ -690,9 +663,9 @@ if ($sth->rowCount() > 0) {
 
             return self::$instance;
 
-        } catch(Exception $e) {
+        } catch(\Exception $e) {
 
-            echo 'Message' . $e->getMessage();
+            throw new \Exception($e->getMessage());
 
         }
 

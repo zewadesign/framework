@@ -68,7 +68,21 @@ class SessionHandler
 
                 session_start();
             } catch(\Exception $e) {
-                throw new \Exception($e->getMessage());
+
+                echo "<PRE>";
+                echo 'The Session table does not exist, we\'re going to try and do this for you! Please refresh.';
+                echo "</PRE>";
+                $sql = "CREATE TABLE `Session` ("
+                    . "`id` varchar(32) NOT NULL DEFAULT '',"
+                    . "`hash` varchar(32) NOT NULL DEFAULT '',"
+                    . "`session_data` blob NOT NULL,"
+                    . "`session_expire` int(11) NOT NULL DEFAULT '0',"
+                    . "PRIMARY KEY (`id`)"
+                    . ") ENGINE=InnoDB DEFAULT CHARSET=utf8";
+                $this->database->query($sql);
+
+                exit;
+
             }
 
         } else {
@@ -126,7 +140,6 @@ class SessionHandler
 
     public function destroy($session_id)
     {
-
         $success = $this->database->where('id', $session_id)
               ->table($this->tableName)// totally looks like you'd be deleting a table. lol
               ->delete();
@@ -178,14 +191,14 @@ class SessionHandler
         }
 
         $session = $this->database->select('session_data')
-                                  ->where(array(
-                                      'id'                => $session_id,
-                                      'session_expire > ' => time(),
-                                      'hash'              => md5($hash . $this->security_code)
-                                  ))
-                                  ->table($this->tableName)
-                                  ->limit(1)
-                                  ->fetch();
+                    ->where(array(
+                      'id'                => $session_id,
+                      'session_expire > ' => time(),
+                      'hash'              => md5($hash . $this->security_code)
+                    ))
+                    ->table($this->tableName)
+                    ->limit(1)
+                    ->fetch();
 
         if ($session) {
 //change to not empty?
@@ -227,7 +240,8 @@ class SessionHandler
         $command .= " session_expire = VALUES(session_expire)";
 
         $success = $this->database->table($this->tableName)
-                                  ->insert($session, $command);
+            ->insert($session, $command);
+
 
         if ($success) {
             return true;
