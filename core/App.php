@@ -240,10 +240,7 @@ class App
         if (self::$configuration->database) {
 
             $this->hook->call('preDatabase');
-            $this->database = new Database(
-                'default', // you can name your db, for switching between..
-                self::$configuration->database->default
-            );
+            $this->database = new Database();
             $this->hook->call('postDatabase');
 
         }
