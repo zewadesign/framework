@@ -53,55 +53,15 @@ abstract class Model
     public function __construct()
     {
         // This abstract is strictly to establish inheritance from a global registery.
-        $this->configuration = Registry::get('_configuration');
-        $this->database = Registry::get('_database');
+        $this->configuration = App::getConfiguration();
+        $this->database = Database::getInstance();
 
-        if ($this->_configuration->cache) {
-            $this->cache = Registry::get('_memcached');
-
+        if ($this->configuration->cache !== false) {
+            $this->cache = new \app\classes\Cache($this->configuration->cache->host, $this->configuration->cache->port);
         }
 
-        $this->load = Registry::get('_load');
-        $this->request = Registry::get('_request');
+        $this->load = Load::getInstance();
+        $this->request = Request::getInstance();
     }
 
-    /**
-     * @param object $configuration
-     */
-    public function setConfiguration($configuration)
-    {
-        $this->configuration = $configuration;
-    }
-
-    /**
-     * @param object $database
-     */
-    public function setDatabase($database)
-    {
-        $this->database = $database;
-    }
-
-    /**
-     * @param object $load
-     */
-    public function setLoad($load)
-    {
-        $this->load = $load;
-    }
-
-    /**
-     * @param object $request
-     */
-    public function setRequest($request)
-    {
-        $this->request = $request;
-    }
-
-    /**
-     * @param mixed $cache
-     */
-    public function setCache($cache)
-    {
-        $this->cache = $cache;
-    }
 }

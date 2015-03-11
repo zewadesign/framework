@@ -320,10 +320,8 @@ class Load
         }
 
         $app = (object) [
-            'request' => Registry::get('_request'),
-            'loader'  => Registry::get('_loader'),
-            'output'  => Registry::get('_output'),
-            'lang'    => Registry::get('_lang')
+            'request' => Request::getInstance(),
+            'loader'  => Load::getInstance()
         ];
 
         //should i set $this->data in abstract controller, and provide all access vars ? seems bad practice..

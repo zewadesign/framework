@@ -13,6 +13,7 @@ class Database
      *
      * @var object
      */
+    private $configuration;
     protected static $instance;
     private $dbh;
     private $dbhStore = array();
@@ -35,24 +36,17 @@ class Database
 
 //    public $tokenizedQuery = array();
 
-    public function __construct($name, $dbConfig)
+    public function __construct($name = false)
     {
+
+        $this->configuration = App::getConfiguration();
 
         self::$instance = $this;
 
-        if (!empty($dbConfig->dsn) && !empty($dbConfig->user) && !empty($dbConfig->pass)) {
-
-            try {
-                $this->dbh = new PDO($dbConfig->dsn, $dbConfig->user, $dbConfig->pass);
-                $this->dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-                $this->dbhStore[$name] = $this->dbh;
-
-            } catch (PDOException $e) {
-                echo $e->getMessage();
-            }
-
+        if($name !== false) {
+            $this->setDSN($name);
         } else {
-            throw new \Exception('No can do Jack, you must provide database details.');
+            $this->setDSN('default');
         }
 
     }
@@ -63,24 +57,21 @@ class Database
         try {
             if (!empty($this->dbhStore[$name])) {
                 $this->dbh = $this->dbhStore[$name];
-
             } else {
-                if (empty(Registry::get('_loader')->config('core', 'database')[$name])) {
-                    // Throw an exception here
+                if (empty($this->configuration->database->$name)) {
                     throw new \Exception('Please specify connection parameters for: ' . $name . ' in the configuration file.');
-
                 }
 
-                $dbConfig = Registry::get('_loader')->config('core', 'database')[$name];
+                $config = $this->configuration->database->$name;
 
-                $this->dbh = new PDO($dbConfig['dsn'], $dbConfig['user'], $dbConfig['pass']);
+                $this->dbh = new PDO($config->dsn, $config->user, $config->pass);
                 $this->dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
                 $this->dbhStore[$name] = $this->dbh;
 
             }
 
-        } catch (PDOException $e) {
+        } catch (\Exception $e) {
             // Echo a different exception here.
             echo $e->getMessage();
 
