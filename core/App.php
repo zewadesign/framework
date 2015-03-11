@@ -113,28 +113,23 @@ class App
         //@TODO: validation needs a second look, the required is screwing up on empty (the ol' isset/empty nonsense.. need to validate intent
         //@TODO: setup custom routing based on regex // (can't we get away without using regex tho?)!!!!!!! routesssssss!!!!!!!!
         //@TODO: system vars (_) need to be moved to an array called "system" in the registry, and write protected, _ is lame.
-        try {
 
-            $this->load = new Load();
+        $this->load = new Load();
 
-            $configObject = (object) array(
-                'database' => $this->load->config('core', 'database'),
-                'session'  => $this->load->config('core', 'session'),
-                'cache'    => $this->load->config('core', 'cache'),
-                'acl'      => $this->load->config('core', 'acl'),
-                'modules'  => $this->load->config('core', 'modules'),
-                'routes'   => $this->load->config('routes', 'override'),
-                'hooks'    => $this->load->config('core', 'hooks'),
-                'autoload' => $this->load->config('core', 'autoload')
-            );
+        $configObject = (object) array(
+            'database' => $this->load->config('core', 'database'),
+            'session'  => $this->load->config('core', 'session'),
+            'cache'    => $this->load->config('core', 'cache'),
+            'acl'      => $this->load->config('core', 'acl'),
+            'modules'  => $this->load->config('core', 'modules'),
+            'routes'   => $this->load->config('routes', 'override'),
+            'hooks'    => $this->load->config('core', 'hooks'),
+            'helpers' => $this->load->config('core', 'helpers')
+        );
 
-            self::setConfiguration($configObject);
+        self::setConfiguration($configObject);
 
-            $this->initialize();
-
-        } catch (\Exception $e) {
-            trigger_error($e->getMessage(), E_USER_ERROR);
-        }
+        $this->initialize();
     }
 
     /**
@@ -147,7 +142,7 @@ class App
 
         if (self::$configuration->acl) {
 
-            $acl = new \app\libraries\ACL(
+            $acl = new \app\classes\ACL(
                 $this->request->session('userId'),
                 $this->request->session('roleId')
             );
@@ -166,7 +161,7 @@ class App
     {
 
         if(self::$configuration->hooks !== false) {
-            $this->hook = new \app\libraries\Hook();
+            $this->hook = new \app\classes\Hook();
         }
 
         $this->hook->call('preApplication');
@@ -175,13 +170,11 @@ class App
 
         $this->router = new Router();
         $this->request = new Request();
-
         $this->module = self::$configuration->router->module;
         $this->controller = self::$configuration->router->controller;
         $this->method = self::$configuration->router->method;
         $this->params = self::$configuration->router->params;
-
-        $this->autoload();
+        $this->registerHelpers();
         $this->class = '\\app\\modules\\' . self::$configuration->router->module . '\\controllers\\' . ucfirst($this->controller);
 
     }
@@ -223,26 +216,15 @@ class App
 
 
     /**
-     * Autoloads configured resources
+     * Registers autoloaded helpers
      *
      * @access private
      */
-    private function autoload()
+    private function registerHelpers()
     {
-        if ($autoload = self::$configuration->autoload) {
-            foreach ($autoload as $type => $component) {
-                foreach ($component as $comp) {
-                    switch ($type) {
-                        case 'helpers':
-                            $this->load->helper($comp);
-                            break;
-                        case 'libraries':
-                            foreach ($comp as $lib => $args) {
-                                $this->load->library($lib, $args);
-                            }
-                            break;
-                    }
-                }
+        if ($helpers = self::$configuration->helpers) {
+            foreach ($helpers as $type => $component) {
+                $this->load->helper($component);
             }
         }
     }
@@ -269,19 +251,6 @@ class App
         return;
 
     }
-
-    /**
-     * Registers the cache object
-     *
-     * @access private
-     */
-//    private function registerCache()
-//    {
-//        $memcached = new \Memcached();
-//        $memcached->addServer(self::$configuration->cache->host, self::$configuration->cache->port);
-//        Registry::add('_memcached', $memcached);
-//        return;
-//    }
 
     /**
      * Registers the session object
@@ -313,7 +282,7 @@ class App
      *
      * @access private
      */
-    private function verifyApplicationRequest()
+    private function processRequest()
     {
 
         $moduleExist = file_exists(APP_PATH . '/modules/' . $this->module);
@@ -342,7 +311,7 @@ class App
      */
     private function start()
     {
-        if (!$this->verifyApplicationRequest()) {
+        if (!$this->processRequest()) {
             return false;
         }
 
