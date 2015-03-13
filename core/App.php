@@ -257,18 +257,17 @@ class App
     private function registerSession()
     {
 
-        $this->hook->call('preSession');
-
         $config = self::$configuration->session;
 
-        new SessionHandler(
-            $config->interface, $config->securityCode, $config->expiration,
-            $config->lockToUserAgent, $config->lockToIP, $config->gcProbability,
-            $config->gcDivisor, $config->tableName
-        );
-
-
-        $this->hook->call('postSession');
+        if($config !== false) {
+            $this->hook->call('preSession');
+            new \app\classes\SessionHandler(
+                $config->interface, $config->securityCode, $config->expiration,
+                $config->lockToUserAgent, $config->lockToIP, $config->gcProbability,
+                $config->gcDivisor, $config->tableName
+            );
+            $this->hook->call('postSession');
+        }
 
         return;
 
