@@ -287,7 +287,7 @@ class App
 
         if (!$moduleExist) {
             $this->output = Router::show404(
-                elf::$configuration->modules->defaultModule,
+                self::$configuration->modules->defaultModule,
                 ['errorMessage' => $this->module . ' module could not be found!']
             );
             return false;
