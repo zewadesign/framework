@@ -286,13 +286,22 @@ class App
         $methodExist = method_exists($this->class, $this->method);
 
         if (!$moduleExist) {
-            $this->output = Router::show404(self::$configuration->modules->defaultModule . '/404');
+            $this->output = Router::show404(
+                self::$configuration->modules->defaultModule,
+                ['errorMessage' => $this->module . ' module could not be found!']
+            );
             return false;
         } elseif (!$classExist) {
-            $this->output = Router::show404($this->module . '/404');
+            $this->output = Router::show404(
+                $this->module,
+                ['errorMessage' => $this->class . ' controller could not be found']
+            );
             return false;
         } elseif (!$methodExist) {
-            $this->output = Router::show404($this->module . '/404');
+            $this->output = Router::show404(
+                $this->module,
+                ['errorMessage' => $this->method . ' method in the ' . $this->class . ' controller could not be found']
+            );
             return false;
         }
 
