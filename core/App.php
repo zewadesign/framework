@@ -286,7 +286,7 @@ class App
         $methodExist = method_exists($this->class, $this->method);
 
         if (!$moduleExist) {
-            $this->output = Router::show404(self::$configuration->modules['defaultModule'] . '/404');
+            $this->output = Router::show404(self::$configuration->modules->defaultModule . '/404');
             return false;
         } elseif (!$classExist) {
             $this->output = Router::show404($this->module . '/404');
