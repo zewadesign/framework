@@ -1,7 +1,6 @@
 <?php
 
 namespace core;
-
 use app\modules as modules;
 
 /**
