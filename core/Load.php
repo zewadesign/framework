@@ -134,13 +134,13 @@ class Load
      * @throws Exception when a view can not be found
      * @throws Exception when a layout can not be found
      */
-    public function view($view = '', $data = [], $layout = 'layout')
+    public function view($view = '', $data = [], $layout = 'layout', $module = null)
     {
-        // This is the same as using globals.
-        $module = App::getConfiguration()->router->module;
+        if(is_null($module)) {
+            $module = App::getConfiguration()->router->module;
+        }
 
         if ($view != '') {
-            // I like how you use spaces here to concat a string
             $file = APP_PATH . DIRECTORY_SEPARATOR . 'modules' . DIRECTORY_SEPARATOR . $module . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . strtolower($view) . '.php';
             if (file_exists($file)) {
                 $data['view'] = $this->process($file, $data);
@@ -152,7 +152,6 @@ class Load
         }
 
         if ($layout != false) {
-            // but sometimes you don't space em all the same. code style standards are easy to adopt.
             $file = APP_PATH . DIRECTORY_SEPARATOR . 'layouts' . DIRECTORY_SEPARATOR . $module . DIRECTORY_SEPARATOR . strtolower($layout) . '.php';
 
             if (file_exists($file)) {

@@ -252,15 +252,14 @@ class Router
      * Set 404 header, and return 404 view contents
      *
      * @access public
+     * @param $module string
+     * @param $data array
      * @return string
      */
-    public static function show404($layout)
+    public static function show404($module, $data = [])
     {
-
         header('HTTP/1.1 404 Not Found');
-
-        return Load::getInstance()->view($layout);
-
+        return Load::getInstance()->view('',$data,'404',$module);
     }
 
     /**
