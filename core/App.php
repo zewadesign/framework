@@ -240,7 +240,7 @@ class App
         if (self::$configuration->database) {
 
             $this->hook->call('preDatabase');
-            $this->database = new \app\classes\Database();
+            $this->database = new Database();
             $this->hook->call('postDatabase');
 
         }

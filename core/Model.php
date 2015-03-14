@@ -54,7 +54,7 @@ abstract class Model
         // This abstract is strictly to establish inheritance from a global registery.
         $this->configuration = App::getConfiguration();
         if($this->configuration->database !== false) {
-            $this->database = \app\classes\Database::getInstance();
+            $this->database = Database::getInstance();
         }
         if ($this->configuration->cache !== false) {
             $this->cache = new \app\classes\Cache($this->configuration->cache->host, $this->configuration->cache->port);
