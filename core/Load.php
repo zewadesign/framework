@@ -31,6 +31,13 @@ class Load
     protected static $instance;
 
     /**
+     * System configuration
+     *
+     * @var object
+     */
+    protected $configuration;
+
+    /**
      * Container for configured language
      *
      * @access private
@@ -134,35 +141,34 @@ class Load
      * @throws Exception when a view can not be found
      * @throws Exception when a layout can not be found
      */
-    public function view($view = '', $data = [], $layout = 'layout', $module = null)
+    public function view($requestedView = FALSE, $data = [], $layout = null, $module = null)
     {
+        $this->configuration = App::getConfiguration();
         if(is_null($module)) {
-            $module = App::getConfiguration()->router->module;
+            $module = $this->configuration->router->module;
         }
 
-        if ($view != '') {
-            $file = APP_PATH . DIRECTORY_SEPARATOR . 'modules' . DIRECTORY_SEPARATOR . $module . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . strtolower($view) . '.php';
-            if (file_exists($file)) {
-                $data['view'] = $this->process($file, $data);
-
+        if ($requestedView !== FALSE) {
+            $view = APP_PATH . DIRECTORY_SEPARATOR . 'modules' . DIRECTORY_SEPARATOR . $module . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . strtolower($requestedView) . '.php';
+            if (file_exists($view)) {
+                $data['view'] = $this->process($view, $data);
             } else {
                 throw new Exception('View: "' . $view . '" could not be found.');
-
             }
         }
 
-        if ($layout != false) {
-            $file = APP_PATH . DIRECTORY_SEPARATOR . 'layouts' . DIRECTORY_SEPARATOR . $module . DIRECTORY_SEPARATOR . strtolower($layout) . '.php';
-
-            if (file_exists($file)) {
-                return $this->process($file, $data);
-            }
-
-            throw new Exception('Layout: "' . $layout . '" could not be found.');
+        if(is_null($layout) && $layout !== FALSE) {
+            $defaultLayout = $this->configuration->layouts->default;
+            $layout = APP_PATH . DIRECTORY_SEPARATOR . 'layouts' . DIRECTORY_SEPARATOR . strtolower($defaultLayout) . '.php';
+        } else {
+            $layout = APP_PATH . DIRECTORY_SEPARATOR . 'layouts' . DIRECTORY_SEPARATOR . $module . DIRECTORY_SEPARATOR . strtolower($layout) . '.php';
         }
 
-        throw new Exception('Invalid parameters for view loading.');
+        if (file_exists($layout)) {
+            return $this->process($layout, $data);
+        }
 
+        throw new Exception('Could not render: layout:"' . $layout . ' | view: ' . $view);
     }
 
     /**

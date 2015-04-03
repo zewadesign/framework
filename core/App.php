@@ -121,10 +121,11 @@ class App
             'session'  => $this->load->config('core', 'session'),
             'cache'    => $this->load->config('core', 'cache'),
             'acl'      => $this->load->config('core', 'acl'),
+            'layouts'  => $this->load->config('core', 'layouts'),
             'modules'  => $this->load->config('core', 'modules'),
             'routes'   => $this->load->config('routes', 'override'),
             'hooks'    => $this->load->config('core', 'hooks'),
-            'helpers' => $this->load->config('core', 'helpers')
+            'helpers'  => $this->load->config('core', 'helpers')
         );
 
         self::setConfiguration($configObject);
