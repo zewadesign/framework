@@ -196,8 +196,8 @@ class Database
 
                 $config = $this->configuration->database->$name;
 
-                $this->dbh = new PDO($config->dsn, $config->user, $config->pass);
-                $this->dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                $this->dbh = new \PDO($config->dsn, $config->user, $config->pass);
+                $this->dbh->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 
                 $this->dbhStore[$name] = $this->dbh;
 
@@ -683,7 +683,7 @@ class Database
             if($sth->columnCount() === 0) {
                 $result = $sth->rowCount();
             } else {
-                $result = $sth->rowCount() > 1 ? $sth->fetchAll(PDO::FETCH_OBJ) : $sth->fetch(PDO::FETCH_OBJ);
+                $result = $sth->rowCount() > 1 ? $sth->fetchAll(\PDO::FETCH_OBJ) : $sth->fetch(\PDO::FETCH_OBJ);
             }
 
             $this->close($sth);
@@ -719,7 +719,7 @@ class Database
 
 
             if ($sth->rowCount() > 0) {
-                $result = ($sth->rowCount() > 1 || $resultSet ? $sth->fetchAll(PDO::FETCH_OBJ) : $sth->fetch(PDO::FETCH_OBJ));
+                $result = ($sth->rowCount() > 1 || $resultSet ? $sth->fetchAll(\PDO::FETCH_OBJ) : $sth->fetch(\PDO::FETCH_OBJ));
 //                print_r($result);
             }
 

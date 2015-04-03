@@ -146,8 +146,9 @@ class App
                 $this->request->session('userId'),
                 $this->request->session('roleId')
             );
-
-            $acl->secureStart($this->start());
+            $acl->secureStart(function(){
+                return $this->start();
+            });
         } else {
             $this->start();
         }
@@ -160,12 +161,20 @@ class App
     private function prepare()
     {
 
-        if(self::$configuration->hooks !== false) {
-            $this->hook = new \app\classes\Hook();
-        }
+//        if(self::$configuration->hooks !== false) {
+        $this->hook = new \app\classes\Hook();
+//        }
 
         $this->hook->call('preApplication');
         $this->registerDatabase();
+
+        if(self::$configuration->cache !== false) {
+            $this->cache = new \app\classes\Cache(
+                self::$configuration->cache->host,
+                self::$configuration->cache->port
+            );
+        }
+
         $this->registerSession();
 
         $this->router = new Router();
