@@ -88,9 +88,15 @@ class SessionHandler
     {
 
         $this->gc();
-        $result = $this->database->select('COUNT(id) as count')
-            ->table($this->tableName)
-            ->fetch();
+
+        try {
+            $sth = $this->dbh->prepare('COUNT(id) as count FROM' . $this->tableName);
+            $sth->execute();
+            $result = $sth->fetch(\PDO::FETCH_OBJ);
+            $sth->closeCursor();
+        } catch (PDOException $e) {
+            echo '<pre>', $e->getMessage(), '</pre>';
+        }
 
         return $result->count;
 
@@ -123,7 +129,6 @@ class SessionHandler
 
     public function close()
     {
-
         try {
             $sth = $this->dbh->prepare('SELECT RELEASE_LOCK(?)');
             $sth->execute([$this->sessionLock]);
