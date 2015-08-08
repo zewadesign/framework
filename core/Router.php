@@ -239,13 +239,9 @@ class Router
      */
     public static function showNoAccess($layout)
     {
-
         header('HTTP/1.1 401 Access Denied');
-
         $layout = Load::getInstance()->view($layout);
-
         return $layout;
-
     }
 
     /**
@@ -256,10 +252,14 @@ class Router
      * @param $data array
      * @return string
      */
-    public static function show404($module, $data = [])
+    public static function show404($data = [], $module)
     {
+        $configuration = App::getConfiguration();
         header('HTTP/1.1 404 Not Found');
-        return Load::getInstance()->view('',$data,'404',$module);
+        $view = new View;
+        $view->setProperty($data);
+        $view->setLayout('404', $module);
+        return $view->render();
     }
 
     /**

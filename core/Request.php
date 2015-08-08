@@ -117,7 +117,9 @@ class Request
         }
 
         $this->registerFlashdata();
-        $this->session = $this->_normalize($_SESSION);
+        if(!empty($_SESSION)) {
+            $this->session = $this->_normalize($_SESSION);
+        }
         $this->get = $this->_normalize($_GET);
         $this->post = $this->_normalize($_POST);
         $this->cookie = $this->_normalize($_COOKIE);

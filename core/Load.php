@@ -128,50 +128,6 @@ class Load
     }
 
     /**
-     * Loads a view
-     *
-     * @access public
-     *
-     * @param string $view relative path for the view
-     * @param array $data array of data to expose to view
-     * @param string $layout relative path for the layout
-     *
-     * @return string processed view/layout
-     * @throws Exception when requires values are missing
-     * @throws Exception when a view can not be found
-     * @throws Exception when a layout can not be found
-     */
-    public function view($requestedView = FALSE, $data = [], $layout = null, $module = null)
-    {
-        $this->configuration = App::getConfiguration();
-        if(is_null($module)) {
-            $module = $this->configuration->router->module;
-        }
-
-        if ($requestedView !== FALSE) {
-            $view = APP_PATH . DIRECTORY_SEPARATOR . 'modules' . DIRECTORY_SEPARATOR . $module . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . strtolower($requestedView) . '.php';
-            if (file_exists($view)) {
-                $data['view'] = $this->process($view, $data);
-            } else {
-                throw new Exception('View: "' . $view . '" could not be found.');
-            }
-        }
-
-        if(is_null($layout) && $layout !== FALSE) {
-            $defaultLayout = $this->configuration->layouts->default;
-            $layout = APP_PATH . DIRECTORY_SEPARATOR . 'layouts' . DIRECTORY_SEPARATOR . strtolower($defaultLayout) . '.php';
-        } else {
-            $layout = APP_PATH . DIRECTORY_SEPARATOR . 'layouts' . DIRECTORY_SEPARATOR . $module . DIRECTORY_SEPARATOR . strtolower($layout) . '.php';
-        }
-
-        if (file_exists($layout)) {
-            return $this->process($layout, $data);
-        }
-
-        throw new Exception('Could not render: layout:"' . $layout . ' | view: ' . $view);
-    }
-
-    /**
      * Loads a helper
      *
      * @access public
@@ -187,16 +143,16 @@ class Load
         // Shouldn't helpers just be auto-loaded static class methods?
         $path = APP_PATH . DIRECTORY_SEPARATOR . 'helpers' . DIRECTORY_SEPARATOR . strtolower($file) . '.php';
 
-        if (isset($this->helpers[$path])) {
-            return $this->helpers[$path];
+        if (isset($this->helper[$path])) {
+            return $this->helper[$path];
         }
 
         if (!file_exists($path)) {
             throw new \Exception('Helper: "' . $file . '" could not be found.');
         }
-        $this->helpers[$path] = ($require ? require($path) : include($path));
+        $this->helper[$path] = ($require ? require($path) : include($path));
 
-        return $this->helpers[$path];
+        return $this->helper[$path];
 
     }
 
@@ -296,48 +252,6 @@ class Load
 
         return false;
 
-    }
-
-    /**
-     * Processes view/layouts and exposes variables to the view/layout
-     *
-     * @access private
-     *
-     * @param string $file file being rendered
-     * @param array $data data to load into view/layout
-     *
-     * @return string processed content
-     */
-    //@TODO: come back and clean up this and the way the view receives stuff
-    private function process($file, $data = [])
-    {
-        // Why does the Load class also render?
-        // make sure..
-        // INCLUDE SOME BASE STUFF HERE, BASE URL FOR ONE.
-        if (!file_exists($file)) {
-            return null;
-        }
-
-        ob_start();
-
-        if (is_array($data)) {
-            extract($data); // yuck. could produce undeclared errors. hmm..
-        }
-
-        $app = (object) [
-            'request' => Request::getInstance(),
-            'loader'  => Load::getInstance()
-        ];
-
-        //should i set $this->data in abstract controller, and provide all access vars ? seems bad practice..
-
-        include($file);
-
-        $return = ob_get_contents();
-
-        ob_end_clean();
-
-        return $return;
     }
 
     /**

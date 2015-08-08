@@ -129,8 +129,12 @@ class App
         );
 
         self::setConfiguration($configObject);
-
-        $this->initialize();
+        try {
+            $this->initialize();
+        } catch(\Exception $e) {
+            echo "<PRE>";
+            print_r($e->getMessage());
+        }
     }
 
     /**
@@ -167,6 +171,10 @@ class App
 //        }
 
         $this->hook->call('preApplication');
+
+        $this->router = new Router();
+        $this->request = new Request();
+
         $this->registerDatabase();
 
         if(self::$configuration->cache !== false) {
@@ -178,8 +186,6 @@ class App
 
         $this->registerSession();
 
-        $this->router = new Router();
-        $this->request = new Request();
         $this->module = self::$configuration->router->module;
         $this->controller = self::$configuration->router->controller;
         $this->method = self::$configuration->router->method;
@@ -195,13 +201,12 @@ class App
      */
     public static function getConfiguration($config = false)
     {
-
         if($config !== false) {
 
-            if( empty( self::$configuration[$config] ) ) {
+            if( empty( self::$configuration->$config ) ) {
                 return false;
             } else {
-                return self::$configuration[$config];
+                return self::$configuration->$config;
             }
 
         }
@@ -212,7 +217,7 @@ class App
 
     /**
      * @param mixed string or object
-     * @param mixed optional array of configuration data
+     * @param bool|object|array optional array of configuration data
      */
     public static function setConfiguration($config, $configObject = false)
     {
@@ -250,7 +255,7 @@ class App
         if (self::$configuration->database) {
 
             $this->hook->call('preDatabase');
-            $this->database = new Database();
+            $this->database = new Database(self::$configuration->database->default);
             $this->hook->call('postDatabase');
 
         }
@@ -271,7 +276,7 @@ class App
 
         if($config !== false) {
             $this->hook->call('preSession');
-            new \app\classes\SessionHandler(
+            new SessionHandler(
                 $config->interface, $config->securityCode, $config->expiration,
                 $config->lockToUserAgent, $config->lockToIP, $config->gcProbability,
                 $config->gcDivisor, $config->tableName
@@ -297,20 +302,20 @@ class App
 
         if (!$moduleExist) {
             $this->output = Router::show404(
-                self::$configuration->modules->defaultModule,
-                ['errorMessage' => $this->module . ' module could not be found!']
+                ['errorMessage' => $this->module . ' module could not be found!'],
+                self::$configuration->modules->defaultModule
             );
             return false;
         } elseif (!$classExist) {
             $this->output = Router::show404(
-                $this->module,
-                ['errorMessage' => $this->class . ' controller could not be found']
+                ['errorMessage' => $this->class . ' controller could not be found'],
+                $this->module
             );
             return false;
         } elseif (!$methodExist) {
             $this->output = Router::show404(
-                $this->module,
-                ['errorMessage' => $this->method . ' method in the ' . $this->class . ' controller could not be found']
+                ['errorMessage' => $this->method . ' method in the ' . $this->class . ' controller could not be found'],
+                $this->module
             );
             return false;
         }
@@ -348,7 +353,6 @@ class App
      */
     public function __toString()
     {
-
         if (!$this->output) {
             $this->output = '';
         }
