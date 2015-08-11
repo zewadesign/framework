@@ -10,6 +10,7 @@ class SessionHandler
     private $lockToUserAgent;
     private $tableName;
     private $sessionLock;
+    private $hash = "";
 
     function __construct(
         $interface,
@@ -47,8 +48,23 @@ class SessionHandler
         $this->tableName = $table_name;
         $this->lockTimeout = $lock_timeout;
 
+        $this->generateHash();
         $this->initializeHandler($interface);
 
+    }
+
+    private function generateHash()
+    {
+        $this->hash = '';
+
+        // You repeated the next 6 lines in the SessionHandler->write() method. DRY
+        if ($this->lockToUserAgent && isset($_SERVER['HTTP_USER_AGENT'])) {
+            $this->hash .= $_SERVER['HTTP_USER_AGENT'];
+        }
+
+        if ($this->lockToIp && isset($_SERVER['REMOTE_ADDR'])) {
+            $this->hash .= $_SERVER['REMOTE_ADDR'];
+        }
     }
 
     private function initializeHandler($interface)
@@ -57,7 +73,6 @@ class SessionHandler
         if($interface !== 'file') {
 
             try {
-
                 $this->dbh = Database::getInstance()->fetchConnection();
 
                 session_set_save_handler(
@@ -71,7 +86,7 @@ class SessionHandler
 
                 session_start();
 
-            } catch(\Exception $e) {
+            } catch(\PDOException $e) {
 
                 $this->createSessionTable();
 
@@ -93,8 +108,7 @@ class SessionHandler
             $sth = $this->dbh->prepare('COUNT(id) as count FROM' . $this->tableName);
             $sth->execute();
             $result = $sth->fetch(\PDO::FETCH_OBJ);
-            $sth->closeCursor();
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             echo '<pre>', $e->getMessage(), '</pre>';
         }
 
@@ -130,11 +144,9 @@ class SessionHandler
     public function close()
     {
         try {
-            $sth = $this->dbh->prepare('SELECT RELEASE_LOCK(?)');
-            $sth->execute([$this->sessionLock]);
-            $lock = $sth->fetch(\PDO::FETCH_OBJ);
-            $sth->closeCursor();
-        } catch (PDOException $e) {
+            $lock = $this->dbh->prepare('SELECT RELEASE_LOCK(?)')
+                ->execute([$this->sessionLock]);
+        } catch (\PDOException $e) {
             echo '<pre>', $e->getMessage(), '</pre>';
         }
 
@@ -153,9 +165,8 @@ class SessionHandler
             $query = "DELETE FROM ". $this->tableName
                 . "WHERE id < ?";
 
-            $sth = $this->dbh->prepare($query);
-            $success = $sth->execute([$sessionId]);
-            $sth->closeCursor();
+            $success = $this->dbh->prepare($query)
+                ->execute([$sessionId]);
         } catch (\PDOException $e) {
             echo '<pre>', $e->getMessage(), '</pre>';
         }
@@ -174,10 +185,8 @@ class SessionHandler
             $query = "DELETE FROM ". $this->tableName
                 . "WHERE session_expire < ?";
 
-            $sth = $this->dbh->prepare($query);
-            $result = $sth->execute([time()]);
-            $sth->closeCursor();
-            return $result;
+            return $this->dbh->prepare($query)
+                ->execute([time()]);
         } catch (\PDOException $e) {
             echo '<pre>', $e->getMessage(), '</pre>';
         }
@@ -210,20 +219,7 @@ class SessionHandler
 
     public function write($sessionId, $sessionData)
     {
-
-        $hash = '';
-
-        if ($this->lockToUserAgent && isset($_SERVER['HTTP_USER_AGENT'])) {
-            $hash .= $_SERVER['HTTP_USER_AGENT'];
-        }
-        // This doesn't work if you're forwarding traffic thru proxies or load balancers.
-        // and since you don't use cookies to validate sessions (and user agents are 100% spoofable)
-        // then this would be an obscure but potentially painful oversight.
-        if ($this->lockToIp && isset($_SERVER['REMOTE_ADDR'])) {
-            $hash .= $_SERVER['REMOTE_ADDR'];
-        }
-
-        $hash = md5($hash . $this->security_code);
+        $hash = md5($this->hash . $this->security_code);
 
         if ($this->insertSession($hash, $sessionId, $sessionData)) {
             return true;
@@ -255,9 +251,8 @@ class SessionHandler
                 . " session_data = VALUES(session_data),"
                 . " session_expire = VALUES(session_expire)";
 
-            $sth = $this->dbh->prepare($query);
-            $success = $sth->execute($arguments);
-            $sth->closeCursor();
+            $success = $this->dbh->prepare($query)
+                ->execute($arguments);
 
         } catch (\PDOException $e) {
             echo '<pre>', $e->getMessage(), '</pre>';
@@ -270,14 +265,12 @@ class SessionHandler
     private function fetchSessionLock()
     {
         try {
-            $sth = $this->dbh->prepare('SELECT GET_LOCK(?, ?)');
-            $sth->execute([
-                $this->sessionLock,
-                $this->lockTimeout
-            ]);
-            $lock = $sth->fetch(\PDO::FETCH_OBJ);
-            $sth->closeCursor();
-        } catch (PDOException $e) {
+            $lock = $this->dbh->prepare('SELECT GET_LOCK(?, ?)')
+                ->execute([
+                    $this->sessionLock,
+                    $this->lockTimeout
+                ]);
+        } catch (\PDOException $e) {
             echo '<pre>', $e->getMessage(), '</pre>';
         }
 
@@ -290,36 +283,17 @@ class SessionHandler
 
     private function fetchSessionData($sessionId)
     {
+        $query = "SELECT session_data FROM " . $this->tableName
+            . " WHERE id = ? AND session_expire > ? AND hash = ?"
+            . " LIMIT 1";
 
-        $hash = '';
-
-        // You repeated the next 6 lines in the SessionHandler->write() method. DRY
-        if ($this->lockToUserAgent && isset($_SERVER['HTTP_USER_AGENT'])) {
-            $hash .= $_SERVER['HTTP_USER_AGENT'];
-        }
-
-        if ($this->lockToIp && isset($_SERVER['REMOTE_ADDR'])) {
-            $hash .= $_SERVER['REMOTE_ADDR'];
-        }
-
-        try {
-            $query = "SELECT session_data FROM " . $this->tableName
-                . " WHERE id = ? AND session_expire > ? AND hash = ?"
-                . " LIMIT 1";
-            $sth = $this->dbh->prepare($query);
-            $sth->execute([
-                $sessionId,
-                time(),
-                md5($hash . $this->security_code)
-            ]);
-            $sessionData = $sth->fetch(\PDO::FETCH_OBJ);
-            $sth->closeCursor();
-
-            return $sessionData;
-        } catch (PDOException $e) {
-            echo '<pre>', $e->getMessage(), '</pre>';
-        }
-
+        $sth = $this->dbh->prepare($query);
+        $sth->execute([
+            $sessionId,
+            time(),
+            md5($this->hash . $this->security_code)
+        ]);
+        return $sth->fetch(\PDO::FETCH_OBJ);
     }
 
     private function createSessionTable()
@@ -337,10 +311,10 @@ class SessionHandler
                 . "PRIMARY KEY (`id`)"
                 . ") ENGINE=InnoDB DEFAULT CHARSET=utf8";
 
-            $sth = $this->dbh->prepare($query);
-            $result = $sth->execute();
-            $sth->closeCursor();
-        } catch (PDOException $e) {
+            $this->dbh->prepare($query)
+                ->execute();
+
+        } catch (\PDOException $e) {
             echo '<pre>', $e->getMessage(), '</pre>';
         }
 

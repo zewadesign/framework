@@ -146,8 +146,7 @@ class App
         $this->prepare();
 
         if (self::$configuration->acl) {
-
-            $acl = new \app\classes\ACL(
+            $acl = new ACL(
                 $this->request->session('userId'),
                 $this->request->session('roleId')
             );
