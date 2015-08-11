@@ -24,6 +24,11 @@ class App
     private static $configuration;
 
     /**
+     * Events
+     */
+    private static $events;
+
+    /**
      * Return value from application
      *
      * @var string
@@ -94,13 +99,6 @@ class App
     private $request;
 
     /**
-     * Instiated hook class
-     *
-     * @var object
-     */
-    private $hook;
-
-    /**
      * Application bootstrap process
      *
      * The application registers the configuration in the app/config/core.php
@@ -114,23 +112,23 @@ class App
         //@TODO: setup custom routing based on regex // (can't we get away without using regex tho?)!!!!!!! routesssssss!!!!!!!!
         //@TODO: system vars (_) need to be moved to an array called "system" in the registry, and write protected, _ is lame.
 
-        $this->load = new Load();
-
-        $configObject = (object) array(
-            'database' => $this->load->config('core', 'database'),
-            'session'  => $this->load->config('core', 'session'),
-            'cache'    => $this->load->config('core', 'cache'),
-            'acl'      => $this->load->config('core', 'acl'),
-            'layouts'  => $this->load->config('core', 'layouts'),
-            'modules'  => $this->load->config('core', 'modules'),
-            'routes'   => $this->load->config('routes', 'override'),
-            'hooks'    => $this->load->config('core', 'hooks'),
-            'helpers'  => $this->load->config('core', 'helpers')
-        );
-
-        self::setConfiguration($configObject);
         try {
-            $this->initialize();
+
+            $this->load = new Load();
+
+            $configObject = (object) array(
+                'database' => $this->load->config('core', 'database'),
+                'session'  => $this->load->config('core', 'session'),
+                'cache'    => $this->load->config('core', 'cache'),
+                'acl'      => $this->load->config('core', 'acl'),
+                'layouts'  => $this->load->config('core', 'layouts'),
+                'modules'  => $this->load->config('core', 'modules'),
+                'routes'   => $this->load->config('routes', 'override'),
+                'helpers'  => $this->load->config('core', 'helpers')
+            );
+
+            self::setConfiguration($configObject);
+
         } catch(\Exception $e) {
             echo "<PRE>";
             print_r($e->getMessage());
@@ -141,7 +139,7 @@ class App
      * Calls the proper shell for app execution
      * @access private
      */
-    private function initialize() {
+    public function initialize() {
 
         $this->prepare();
 
@@ -157,6 +155,8 @@ class App
             $this->start();
         }
 
+        return $this;
+
     }
 
     /**
@@ -164,12 +164,7 @@ class App
      */
     private function prepare()
     {
-
-//        if(self::$configuration->hooks !== false) {
-        $this->hook = new \app\classes\Hook();
-//        }
-
-        $this->hook->call('preApplication');
+        App::callEvent('preApplication');
 
         $this->router = new Router();
 
@@ -254,9 +249,9 @@ class App
 
         if (self::$configuration->database) {
 
-            $this->hook->call('preDatabase');
+            App::callEvent('preDatabase');
             $this->database = new Database(self::$configuration->database->default);
-            $this->hook->call('postDatabase');
+            App::callEvent('postDatabase');
 
         }
 
@@ -275,13 +270,13 @@ class App
         $config = self::$configuration->session;
 
         if($config !== false) {
-            $this->hook->call('preSession');
+            App::callEvent('preSession');
             new SessionHandler(
                 $config->interface, $config->securityCode, $config->expiration,
                 $config->lockToUserAgent, $config->lockToIP, $config->gcProbability,
                 $config->gcDivisor, $config->tableName
             );
-            $this->hook->call('postSession');
+            App::callEvent('postSession');
         }
 
         return;
@@ -334,15 +329,59 @@ class App
             return false;
         }
 
-        $this->hook->call('preController');
+        App::callEvent('preController');
         $this->instantiatedClass = new $this->class();
-        $this->hook->call('postController');
+        App::callEvent('postController');
 
         $this->output = call_user_func_array(
             array(&$this->instantiatedClass, $this->method),
             $this->params
         );
     }
+    /**
+     * Attach (or remove) multiple callbacks to an event and trigger those callbacks when that event is called.
+     *
+     * @param string $event name
+     * @param mixed $value the optional value to pass to each callback
+     * @param mixed $callback the method or function to call - FALSE to remove all callbacks for event
+     */
+
+    public static function addEvent($event, $callback = false)
+    {
+        // Adding or removing a callback?
+        if($callback !== false){
+            self::$events[$event][] = $callback;
+        } else {
+            unset(self::$events[$event]);
+        }
+
+    }
+
+    public function callEvent($event, $method = false, $arguments = [])
+    {
+        if(isset(self::$events[$event])) {
+            foreach (self::$events[$event] as $e) {
+
+                if($method !== false) { // class w/ method specified
+                    $object = new $e();
+                    $value = call_user_func_array(
+                        [&$object, $method],
+                        $arguments
+                    );
+                } else {
+                    if(class_exists($e)) {
+                        $value = new $e($arguments); // class w/o method specified
+                    } else {
+                        $value = call_user_func($e, $arguments); // function yuk
+                    }
+                }
+
+            }
+
+            return $value;
+        }
+    }
+
 
     /**
      * Prepare application return value into a string
@@ -356,7 +395,7 @@ class App
             $this->output = '';
         }
 
-        $this->hook->call('postApplication');
+        App::callEvent('postApplication');
 
         return $this->output;
     }

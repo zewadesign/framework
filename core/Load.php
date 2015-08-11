@@ -186,10 +186,10 @@ class Load
             if (!file_exists(APP_PATH . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . $file . '.php')) {
                 throw new \Exception($file . ' could not be found');
             }
-
             include(APP_PATH . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . $file . '.php');
 
             if (is_array($$file)) {
+
                 $this->config[$file] = $$file;
 
                 if (!is_null($item) and !isset($this->config[$file][$item])) {

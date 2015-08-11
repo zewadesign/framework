@@ -1,5 +1,6 @@
 <?php
 namespace core;
+use app\models\Example;
 use app\modules as modules;
 
 /**
@@ -104,10 +105,9 @@ class View
     {
         if( $value !== false) {
             $this->properties[$property] = $value;
-        } else if(is_array($property)) {
+        } else if(!empty($property)) {
             $this->properties = $property;
         }
-
         return false;
     }
 
@@ -139,6 +139,9 @@ class View
     {
         ob_start();
 
+        if (is_array($this->properties)) {
+            extract($this->properties); // yuck. could produce undeclared errors. hmm..
+        }
         //should i set $this->data in abstract controller, and provide all access vars ? seems bad practice..
 
         include($file);
@@ -170,7 +173,7 @@ class View
         }
 
         foreach($sheets as $sheet) {
-            $string .= '<link rel="stylesheet" href="' . baseURL($sheet) .'">';
+            $string .= '<link rel="stylesheet" href="' . baseURL($sheet) .'">' . "\r\n";
         }
 
         return $string;
@@ -187,56 +190,73 @@ class View
         }
 
         foreach($scripts as $script) {
-            $string .= '<script src="' . baseURL($script) .'"></script>';
+            $string .= '<script src="' . baseURL($script) .'"></script>' . "\r\n";
         }
 
         return $string;
 
     }
 
-    protected function addCSS($sheets = []) {
+    public function addCSS($sheets = [], $place = 'append') {
 
         $existingCSS = App::getConfiguration('view::css');
 
-        if(empty($existingCSS)) {
+        if($existingCSS === false) {
             $existingCSS = [];
+        } else {
+            $existingCSS = (array) $existingCSS;
         }
-
         if(empty($sheets)) {
             throw new \Exception('You must provide a valid CSS Resource.');
         }
 
+        $files = [];
+
         foreach($sheets as $file) {
             if($this->verifyResource($file)) {
-                array_push($existingCSS, $file);
+                $files[] = $file;
             } else {
                 throw new \Exception('The CSS Resource you\'ve specified does not exist.');
             }
         }
 
+        if($place === 'prepend') {
+            $existingCSS = array_merge($files, $existingCSS);
+        } else {
+            $existingCSS = array_merge($existingCSS, $files);
+        }
+
         App::setConfiguration('view::css', (object)$existingCSS);
     }
 
-    protected function addJS($scripts = []) {
-
+    public function addJS($scripts = [], $place = 'append') {
         $existingJS = App::getConfiguration('view::js');
 
-        if(empty($existingJS)) {
+        if($existingJS === false) {
             $existingJS = [];
+        } else {
+            $existingJS = (array) $existingJS;
         }
 
         if(empty($scripts)) {
             throw new \Exception('You must provide a valid JS Resource.');
         }
 
+        $files = [];
+
         foreach($scripts as $file) {
             if($this->verifyResource($file)) {
-                array_push($existingJS, $file);
+                $files[] = $file;
             } else {
-                throw new \Exception('The JS Resource you\'ve specified does not exist.');
+                throw new \Exception('The JS Resource you\'ve specified does not exist: ' . $file);
             }
         }
 
+        if($place === 'prepend') {
+            $existingJS = array_merge($files, $existingJS);
+        } else {
+            $existingJS = array_merge($existingJS, $files);
+        }
         App::setConfiguration('view::js', (object)$existingJS);
     }
 }
