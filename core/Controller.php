@@ -76,12 +76,12 @@ abstract class Controller
         try {
 
             if (static::$instance === null) {
-                throw new Exception('Unable to get an instance of the controller class. The class has not been instantiated yet.');
+                throw new \Exception('Unable to get an instance of the controller class. The class has not been instantiated yet.');
             }
 
             return static::$instance;
 
-        } catch(Exception $e) {
+        } catch(\Exception $e) {
 
             echo 'Message' . $e->getMessage();
 

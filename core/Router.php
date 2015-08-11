@@ -18,12 +18,11 @@ class Router
     private $configuration;
 
     /**
-     * Instantiated load class pointer
+     * Reference to instantiated controller object.
      *
      * @var object
-     * @access private
      */
-    private $load;
+    protected static $baseURL = false;
 
     /**
      * The active module
@@ -210,12 +209,14 @@ class Router
      */
     public static function baseURL($path = '')
     {
+        if(self::$baseURL !== false) {
+            return self::$baseURL;
+        }
 
         $self = $_SERVER['PHP_SELF'];
         $server = $_SERVER['HTTP_HOST'] . rtrim(str_replace(strstr($self, 'index.php'), '', $self), '/');
         if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') {
             $protocol = 'https://';
-
         } else {
             $protocol = 'http://';
 
@@ -237,11 +238,13 @@ class Router
      * @access public
      * @return string
      */
-    public static function showNoAccess($layout)
+    public static function showNoAccess($data)
     {
         header('HTTP/1.1 401 Access Denied');
-        $layout = Load::getInstance()->view($layout);
-        return $layout;
+        $view = new View;
+        $view->setProperty($data);
+        $view->setLayout('no-access');
+        return $view->render();
     }
 
     /**
@@ -252,13 +255,12 @@ class Router
      * @param $data array
      * @return string
      */
-    public static function show404($data = [], $module)
+    public static function show404($data = [])
     {
-        $configuration = App::getConfiguration();
         header('HTTP/1.1 404 Not Found');
         $view = new View;
         $view->setProperty($data);
-        $view->setLayout('404', $module);
+        $view->setLayout('404');
         return $view->render();
     }
 

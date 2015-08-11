@@ -108,7 +108,6 @@ class Request
 
     public function __construct()
     {
-
         self::$instance = $this;
         $this->configuration = App::getConfiguration();
 
@@ -315,7 +314,6 @@ class Request
 
     public function setSession($index = false, $value = false)
     {
-
         if ((!is_array($index) && $value !== false)
             || (!is_object($index) && $value !== false)
         ) {
@@ -371,7 +369,6 @@ class Request
      */
     private function _normalize($data)
     {
-
         if (is_array($data)) {
             foreach ($data as $key => $value) {
                 unset($data[$key]);
@@ -417,12 +414,12 @@ class Request
         try {
 
             if (self::$instance === null) {
-                throw new Exception('Unable to get an instance of the request class. The class has not been instantiated yet.');
+                throw new \Exception('Unable to get an instance of the request class. The class has not been instantiated yet.');
             }
 
             return self::$instance;
 
-        } catch(Exception $e) {
+        } catch(\Exception $e) {
 
             echo 'Message' . $e->getMessage();
 

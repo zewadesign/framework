@@ -111,13 +111,10 @@ class View
         return false;
     }
 
-    public function setLayout($layout, $module = false)
+    public function setLayout($layout)
     {
-        if($module === false) {
-            $module = $this->configuration->router->module;
-        }
 
-        $layout = APP_PATH . DIRECTORY_SEPARATOR . 'layouts' . DIRECTORY_SEPARATOR . $module . DIRECTORY_SEPARATOR . strtolower($layout) . '.php';
+        $layout = APP_PATH . DIRECTORY_SEPARATOR . 'layouts' . DIRECTORY_SEPARATOR . strtolower($layout) . '.php';
 
         if(!file_exists($layout)) {
             throw new \Exception('Layout: "' . $layout . '" could not be found.');

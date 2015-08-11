@@ -147,8 +147,8 @@ class App
 
         if (self::$configuration->acl) {
             $acl = new ACL(
-                $this->request->session('userId'),
-                $this->request->session('roleId')
+                $this->request->session('uid'),
+                $this->request->session('role_id')
             );
             $acl->secureStart(function(){
                 return $this->start();
@@ -172,9 +172,11 @@ class App
         $this->hook->call('preApplication');
 
         $this->router = new Router();
-        $this->request = new Request();
 
         $this->registerDatabase();
+        $this->registerSession();
+
+        $this->request = new Request();
 
         if(self::$configuration->cache !== false) {
             $this->cache = new \app\classes\Cache(
@@ -183,7 +185,6 @@ class App
             );
         }
 
-        $this->registerSession();
 
         $this->module = self::$configuration->router->module;
         $this->controller = self::$configuration->router->controller;
@@ -298,7 +299,6 @@ class App
         $moduleExist = file_exists(APP_PATH . '/modules/' . $this->module);
         $classExist = class_exists($this->class);
         $methodExist = method_exists($this->class, $this->method);
-
         if (!$moduleExist) {
             $this->output = Router::show404(
                 ['errorMessage' => $this->module . ' module could not be found!'],

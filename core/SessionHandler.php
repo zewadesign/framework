@@ -65,6 +65,8 @@ class SessionHandler
         if ($this->lockToIp && isset($_SERVER['REMOTE_ADDR'])) {
             $this->hash .= $_SERVER['REMOTE_ADDR'];
         }
+
+        $this->hash = md5($this->hash . $this->security_code);
     }
 
     private function initializeHandler($interface)
@@ -163,7 +165,7 @@ class SessionHandler
         $success = false;
         try {
             $query = "DELETE FROM ". $this->tableName
-                . "WHERE id < ?";
+                . " WHERE id < ?";
 
             $success = $this->dbh->prepare($query)
                 ->execute([$sessionId]);
@@ -183,7 +185,7 @@ class SessionHandler
 
         try {
             $query = "DELETE FROM ". $this->tableName
-                . "WHERE session_expire < ?";
+                . " WHERE session_expire < ?";
 
             return $this->dbh->prepare($query)
                 ->execute([time()]);
@@ -208,7 +210,7 @@ class SessionHandler
         $session = $this->fetchSessionData($sessionId);
 
         if ($session) {
-            return $session;
+            return $session->session_data;
         }
 
         $this->regenerateId();
@@ -219,9 +221,7 @@ class SessionHandler
 
     public function write($sessionId, $sessionData)
     {
-        $hash = md5($this->hash . $this->security_code);
-
-        if ($this->insertSession($hash, $sessionId, $sessionData)) {
+        if ($this->insertSession($sessionId, $sessionData)) {
             return true;
         }
 
@@ -229,14 +229,14 @@ class SessionHandler
 
     }
 
-    private function insertSession($hash, $sessionId, $sessionData)
+    private function insertSession($sessionId, $sessionData)
     {
         $success = false;
 
         try {
             $session = [
                 'id'             => $sessionId,
-                'hash'           => $hash,
+                'hash'           => $this->hash,
                 'session_data'   => $sessionData,
                 'session_expire' => (time() + $this->sessionLifetime)
             ];
@@ -287,13 +287,17 @@ class SessionHandler
             . " WHERE id = ? AND session_expire > ? AND hash = ?"
             . " LIMIT 1";
 
-        $sth = $this->dbh->prepare($query);
-        $sth->execute([
+        $arguments = [
             $sessionId,
             time(),
-            md5($this->hash . $this->security_code)
-        ]);
-        return $sth->fetch(\PDO::FETCH_OBJ);
+            $this->hash
+        ];
+
+        $sth = $this->dbh->prepare($query);
+        $sth->execute($arguments);
+        $result = $sth->fetch(\PDO::FETCH_OBJ);
+
+        return $result;
     }
 
     private function createSessionTable()

@@ -84,7 +84,6 @@ class ACL
 
     public function __construct($userId = false, $roleId = false)
     {
-
         $this->configuration = App::getConfiguration();
         $this->dbh = Database::getInstance()->fetchConnection();
 
@@ -114,7 +113,7 @@ class ACL
             $this->configuration->router->controller,
             $this->configuration->router->method
         );
-        print_r($authorizationCode);die();
+
         switch ($authorizationCode) {
             case '1':
                 $initiateApp();
@@ -138,7 +137,7 @@ class ACL
     private function noAccessRedirect()
     {
 
-        return Router::showNoAccess($this->module . '/noaccess');
+        return Router::showNoAccess(['errorMessage' => 'No access']);
 
     }
 
@@ -153,11 +152,12 @@ class ACL
         //@TODO:: add flash message to login?
         $currentURL = $this->configuration->router->currentURL;
         $baseURL = $this->configuration->router->baseURL;
+        $aclRedirect = $this->configuration->acl->redirect;
 
         $redirect = base64_encode(str_replace($baseURL, '', $currentURL));
 
-        $authenticationURL = $this->baseURL . '/';
-        $authenticationURL .= $this->configuration->modules[$this->module]['aclRedirect'] . '?' . $this->returnQueryString . '=' . $redirect;
+        $authenticationURL = $baseURL . '/';
+        $authenticationURL .= $aclRedirect . '?' . $this->returnQueryString . '=' . $redirect;
 
         $this->redirect($authenticationURL);
 
@@ -206,23 +206,14 @@ class ACL
         $access = false;
         try {
             $query = "SELECT UserRole.user_id, UserRole.role_id FROM UserRole"
-                . " WHERE UserRole.user_id = ? AND RoleAccess.role_id = ?"
-                . " AND ( RoleAccess.role_module = ? OR RoleAccess.role_module = ? )"
-                . " AND ( RoleAccess.role_controller = ? OR RoleAccess.role_controller = ? )"
-                . " AND ( RoleAccess.role_method = ? OR RoleAccess.role_method = ? )"
                 . " LEFT JOIN RoleAccess ON UserRole.role_id = RoleAccess.role_id"
+                . " WHERE UserRole.user_id = ? AND RoleAccess.role_id = ?"
+                . " AND ( RoleAccess.role_module = ? OR RoleAccess.role_module = '%' )"
+                . " AND ( RoleAccess.role_controller = ? OR RoleAccess.role_controller = '%' )"
+                . " AND ( RoleAccess.role_method = ? OR RoleAccess.role_method = '%' )"
                 . " LIMIT 1";
             $sth = $this->dbh->prepare($query);
-            $sth->execute([
-                'userid'       => $this->userId,
-                'roleid'       => $this->roleId,
-                'module'       => $module,
-                'ormodule'     => '%',
-                'controller'   => $controller,
-                'orcontroller' => '%',
-                'method'       => $method,
-                'ormethod'     => '%'
-            ]);
+            $sth->execute([$this->userId, $this->roleId, $module, $controller, $method]);
             $access = $sth->fetch(\PDO::FETCH_OBJ);
         } catch (\PDOException $e) {
             echo '<pre>', $e->getMessage(), '</pre>';
