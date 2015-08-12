@@ -56,14 +56,15 @@ class Router
         $this->configuration = App::getConfiguration();
         $uri = self::uri();
 
-        if ($this->configuration->routes) {
-            if (!empty($this->configuration->routes->$uri)) {
-                $uri = $this->configuration->routes->$uri;
-                $uriChunks = $this->parseURI($uri);
-            } elseif (!empty(array_flip((array)$this->configuration->routes)[$uri])) {
-                Router::redirect(Router::baseURL(array_flip((array)$this->configuration->routes)[$uri]), 301);
-            }
-        }
+        //@TODO: fix routes..
+//        if ($this->configuration->routes) {
+//            if (!empty($this->configuration->routes->$uri)) {
+//                $uri = $this->configuration->routes->$uri;
+//                $uriChunks = $this->parseURI($uri);
+//            } elseif (!empty(array_flip((array)$this->configuration->routes)[$uri])) {
+//                Router::redirect(Router::baseURL(array_flip((array)$this->configuration->routes)[$uri]), 301);
+//            }
+//        }
 
         if (empty($uriChunks)) {
             $uriChunks = $this->parseURI($uri);
@@ -94,7 +95,6 @@ class Router
     {
 
         $uriFragments = explode('/', $uri);
-
         $uriChunks = array();
 
         foreach ($uriFragments as $location => $fragment) {
@@ -106,9 +106,9 @@ class Router
             array_filter(
                 $uriChunks,
                 function ($uriChunk) {
-                if (strpos($uriChunk, '__') !== false) { { { {
-                return true; } } }
-                }
+                    if (strpos($uriChunk, '__') !== false) {
+                        return true;
+                    }
                 }
             )
         ) {
@@ -142,7 +142,6 @@ class Router
             $normalizedURI = false;
         }
 
-
         $normalizedURI = ltrim(preg_replace('/\?.*/', '', $normalizedURI), '/');
 
         return $normalizedURI;
@@ -159,31 +158,50 @@ class Router
 
         $load = Load::getInstance();
         $uri = self::normalizeURI();
+
         $defaultModule = $load->config('core', 'modules')->defaultModule;
         $defaultController = $load->config('core', 'modules')->$defaultModule->defaultController;
         $defaultMethod = $load->config('core', 'modules')->$defaultModule->defaultMethod;
 
+        $module = $defaultModule;
+        $controller = $defaultController;
+        $method = $defaultMethod;
+        $arguments = [];
+
         if ($uri) {
             $uriChunks = explode('/', filter_var(trim(strtolower($uri)), FILTER_SANITIZE_URL));
 
+            if(!empty($uriChunks)) {
+                $module = $uriChunks[0];
+                $moduleConfig = $load->config('core', 'modules');
 
-            if (!empty($uriChunks[0]) && !empty($uriChunks[1]) && empty($uriChunks[2])) {
-                $uriChunks[2] = $defaultMethod;
+                if (!empty($uriChunks[1])) { // && !empty($moduleConfig[$module]['defaultController'])) {
+                    $controller = $uriChunks[1];
+                } else if (!empty($moduleConfig->$module->defaultController)) {
+                    $controller = $moduleConfig->$module->defaultController;
+                }
+
+                if(!empty($uriChunks[2])) {
+                    $method = $uriChunks[2];
+                } else if(!empty($moduleConfig->$module->defaultMethod)) {
+                    $method = $moduleConfig->$module->defaultMethod;
+                }
+
+                unset($uriChunks[0]); unset($uriChunks[1]); unset($uriChunks[2]);
+
+                if(!empty($uriChunks[3])) {
+                    foreach($uriChunks as $c) {
+                        $arguments[] = $c;
+                    }
+                }
             }
-
-            if (!empty($uriChunks[0]) && empty($uriChunks[1])) {
-                $uriChunks[1] = $defaultController;
-                $uriChunks[2] = $defaultMethod;
-            }
-
-
-        } else {
-            $uriChunks = array($defaultModule, $defaultController, $defaultMethod);
-
         }
 
-        $uri = ltrim(implode('/', $uriChunks), '/');
-
+        $chunks = [$module, $controller, $method];
+        if(!empty($arguments)) {
+            $chunks = array_merge($chunks, $arguments);
+        }
+        $uri = ltrim(implode('/', $chunks), '/');
         return $uri;
 
     }

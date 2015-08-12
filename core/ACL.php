@@ -22,15 +22,6 @@ class ACL
     private $dbh;
 
     /**
-     * Cache object reference
-     *
-     * @access private
-     * @var mixed
-     */
-
-    private $cache = false;
-
-    /**
      * Requesting user id
      *
      * @var int
@@ -86,10 +77,6 @@ class ACL
     {
         $this->configuration = App::getConfiguration();
         $this->dbh = Database::getInstance()->fetchConnection();
-
-        if ($this->configuration->cache) {
-            $this->cache = Cache::getInstance();
-        }
 
         if (!$userId) {
             $guest = array_search('guest', (array) $this->configuration->acl->roles);
