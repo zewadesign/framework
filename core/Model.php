@@ -32,14 +32,6 @@ class Model
     protected $configuration;
 
     /**
-     * Cache object reference
-     *
-     * @access protected
-     * @var mixed
-     */
-    protected $cache = false;
-
-    /**
      * Load up some basic configuration settings.
      */
     public function __construct()
@@ -47,9 +39,6 @@ class Model
         self::$instance = $this;
         // This abstract is strictly to establish inheritance from a global registery.
         $this->configuration = App::getConfiguration();
-        if ($this->configuration->cache !== false) {
-            $this->cache = new \app\classes\Cache($this->configuration->cache->host, $this->configuration->cache->port);
-        }
 
         $this->dbh = Database::getInstance()->fetchConnection();
     }

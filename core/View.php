@@ -86,19 +86,27 @@ class View
     {
         $module = $this->configuration->router->module;
 
-        if ($requestedView !== false) {
-            $view = APP_PATH . DIRECTORY_SEPARATOR . 'modules' . DIRECTORY_SEPARATOR . $module . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . strtolower($requestedView) . '.php';
-            if (!file_exists($view)) {
-                throw new \Exception('View: "' . $view . '" could not be found.');
-            }
-            if($renderName !== false) {
-                $this->$renderName = $this->process($view);
+        try {
+
+            if ($requestedView !== false) {
+                $view = APP_PATH . DIRECTORY_SEPARATOR . 'modules' . DIRECTORY_SEPARATOR . $module . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . strtolower($requestedView) . '.php';
+                if (!file_exists($view)) {
+                    throw new \Exception('View: "' . $view . '" could not be found.');
+                }
+                if($renderName !== false) {
+                    $this->$renderName = $this->process($view);
+                } else {
+                    $this->view = $this->process($view);
+                }
             } else {
-                $this->view = $this->process($view);
+                throw new \Exception('Please provide a view for setView.');
             }
-        } else {
-            throw new \Exception('Please provide a view for setView.');
+
+        } catch (\Exception $e) {
+            echo 'Caught exception:' . $e->getMessage();
+            exit;
         }
+
     }
 
     public function setProperty($property, $value = false)
@@ -183,7 +191,7 @@ class View
     protected function fetchJS()
     {
         $scripts = App::getConfiguration('view::js');
-        $string = "<script>baseURL = '".baseURL()."'</script>";
+        $string = "<script>baseURL = '".baseURL()."/'</script>";
 
         if(empty($scripts)) {
             return $string;
@@ -201,62 +209,73 @@ class View
 
         $existingCSS = App::getConfiguration('view::css');
 
-        if($existingCSS === false) {
-            $existingCSS = [];
-        } else {
-            $existingCSS = (array) $existingCSS;
-        }
-        if(empty($sheets)) {
-            throw new \Exception('You must provide a valid CSS Resource.');
-        }
-
-        $files = [];
-
-        foreach($sheets as $file) {
-            if($this->verifyResource($file)) {
-                $files[] = $file;
+        try {
+            if ($existingCSS === false) {
+                $existingCSS = [];
             } else {
-                throw new \Exception('The CSS Resource you\'ve specified does not exist.');
+                $existingCSS = (array)$existingCSS;
             }
-        }
+            if (empty($sheets)) {
+                throw new \Exception('You must provide a valid CSS Resource.');
+            }
 
-        if($place === 'prepend') {
-            $existingCSS = array_merge($files, $existingCSS);
-        } else {
-            $existingCSS = array_merge($existingCSS, $files);
-        }
+            $files = [];
 
-        App::setConfiguration('view::css', (object)$existingCSS);
+            foreach ($sheets as $file) {
+                if ($this->verifyResource($file)) {
+                    $files[] = $file;
+                } else {
+                    throw new \Exception('The CSS Resource you\'ve specified does not exist.');
+                }
+            }
+
+            if ($place === 'prepend') {
+                $existingCSS = array_merge($files, $existingCSS);
+            } else {
+                $existingCSS = array_merge($existingCSS, $files);
+            }
+
+            App::setConfiguration('view::css', (object)$existingCSS);
+        } catch (\Exception $e) {
+            echo 'Caught exception:' . $e->getMessage();
+            exit;
+        }
     }
 
     public function addJS($scripts = [], $place = 'append') {
         $existingJS = App::getConfiguration('view::js');
 
-        if($existingJS === false) {
-            $existingJS = [];
-        } else {
-            $existingJS = (array) $existingJS;
-        }
-
-        if(empty($scripts)) {
-            throw new \Exception('You must provide a valid JS Resource.');
-        }
-
-        $files = [];
-
-        foreach($scripts as $file) {
-            if($this->verifyResource($file)) {
-                $files[] = $file;
+        try {
+            if ($existingJS === false) {
+                $existingJS = [];
             } else {
-                throw new \Exception('The JS Resource you\'ve specified does not exist: ' . $file);
+                $existingJS = (array)$existingJS;
             }
-        }
 
-        if($place === 'prepend') {
-            $existingJS = array_merge($files, $existingJS);
-        } else {
-            $existingJS = array_merge($existingJS, $files);
+            if (empty($scripts)) {
+                throw new \Exception('You must provide a valid JS Resource.');
+            }
+
+            $files = [];
+
+            foreach ($scripts as $file) {
+                if ($this->verifyResource($file)) {
+                    $files[] = $file;
+                } else {
+                    throw new \Exception('The JS Resource you\'ve specified does not exist: ' . $file);
+                }
+            }
+
+            if ($place === 'prepend') {
+                $existingJS = array_merge($files, $existingJS);
+            } else {
+                $existingJS = array_merge($existingJS, $files);
+            }
+            App::setConfiguration('view::js', (object)$existingJS);
+
+        } catch (\Exception $e) {
+            echo 'Caught exception:' . $e->getMessage();
+            exit;
         }
-        App::setConfiguration('view::js', (object)$existingJS);
     }
 }

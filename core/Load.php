@@ -171,39 +171,44 @@ class Load
     public function config($file = '', $item = '')
     {
 
-        if (isset($this->config[$file])) {
-            // you know we throw an exception later if the $item doesn't exist.
-            $config = (isset($this->config[$file][$item]) ? $this->config[$file][$item] : $this->config[$file]);
-            return json_decode(json_encode($config));
-        }
+        try {
 
-        if (is_null($file)) {
-            // This will never happen unless you intentionally Load->config(null);
-            return json_decode(json_encode($this->config));
-        }
-
-        if ($file != '' and file_exists(APP_PATH . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . $file . '.php')) {
-            if (!file_exists(APP_PATH . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . $file . '.php')) {
-                throw new \Exception($file . ' could not be found');
+            if (isset($this->config[$file])) {
+                // you know we throw an exception later if the $item doesn't exist.
+                $config = (isset($this->config[$file][$item]) ? $this->config[$file][$item] : $this->config[$file]);
+                return json_decode(json_encode($config));
             }
-            include(APP_PATH . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . $file . '.php');
 
-            if (is_array($$file)) {
+            if (is_null($file)) {
+                // This will never happen unless you intentionally Load->config(null);
+                return json_decode(json_encode($this->config));
+            }
 
-                $this->config[$file] = $$file;
+            if ($file != '' and file_exists(APP_PATH . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . $file . '.php')) {
+                if (!file_exists(APP_PATH . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . $file . '.php')) {
+                    throw new \Exception($file . ' could not be found');
+                }
+                include(APP_PATH . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . $file . '.php');
 
-                if (!is_null($item) and !isset($this->config[$file][$item])) {
-                    // Why do we throw an exception down here if the $item can't be found
-                    // but up above if the config[$file] exists but the $item doesn't we just return the config[$file]
-                    throw new \Exception($item . ' could not be found in ' . $file);
+                if (is_array($$file)) {
+
+                    $this->config[$file] = $$file;
+
+                    if (!is_null($item) and !isset($this->config[$file][$item])) {
+                        // Why do we throw an exception down here if the $item can't be found
+                        // but up above if the config[$file] exists but the $item doesn't we just return the config[$file]
+                        throw new \Exception($item . ' could not be found in ' . $file);
+
+                    }
+
+                    $config = (isset($this->config[$file][$item]) ? $this->config[$file][$item] : $this->config[$file]);
+                    return json_decode(json_encode($config));
 
                 }
 
-                $config = (isset($this->config[$file][$item]) ? $this->config[$file][$item] : $this->config[$file]);
-                return json_decode(json_encode($config));
-
             }
-
+        } catch(\Exception $e) {
+            echo "Caught exception: " . $e->getMessage() . "\n";
         }
 
         // Why does this return an empty array when we request Loader->config() but

@@ -119,7 +119,6 @@ class App
             $configObject = (object) array(
                 'database' => $this->load->config('core', 'database'),
                 'session'  => $this->load->config('core', 'session'),
-                'cache'    => $this->load->config('core', 'cache'),
                 'acl'      => $this->load->config('core', 'acl'),
                 'layouts'  => $this->load->config('core', 'layouts'),
                 'modules'  => $this->load->config('core', 'modules'),
@@ -172,14 +171,6 @@ class App
         $this->registerSession();
 
         $this->request = new Request();
-
-        if(self::$configuration->cache !== false) {
-            $this->cache = new \app\classes\Cache(
-                self::$configuration->cache->host,
-                self::$configuration->cache->port
-            );
-        }
-
 
         $this->module = self::$configuration->router->module;
         $this->controller = self::$configuration->router->controller;
