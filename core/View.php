@@ -43,7 +43,7 @@ class View
      *
      * @var string
      */
-    protected $view;
+    protected $view = false;
 
     /**
      * Data object for view
@@ -75,10 +75,12 @@ class View
      */
     public function render()
     {
+        if($this->view !== false) {
+            $this->view = $this->process($this->view);
+        }
         if($this->layout === false) {
             $this->setLayout($this->configuration->layouts->default);
         }
-
         return $this->process($this->layout, $this->properties);
     }
 
@@ -93,11 +95,7 @@ class View
                 if (!file_exists($view)) {
                     throw new \Exception('View: "' . $view . '" could not be found.');
                 }
-                if($renderName !== false) {
-                    $this->$renderName = $this->process($view);
-                } else {
-                    $this->view = $this->process($view);
-                }
+                $this->view = $view;
             } else {
                 throw new \Exception('Please provide a view for setView.');
             }

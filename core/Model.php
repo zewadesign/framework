@@ -44,32 +44,35 @@ class Model
     }
 
     protected function fetch($sql, $params = [], $returnResultSet = 'result') {
+        $result = false;
 
         try {
-            $result = false;
             $sth = $this->dbh->prepare($sql);
             $sth->execute($params);
             if($sth->rowCount() > 0) {
                 $result = ($sth->rowCount() > 1 || $returnResultSet === 'result' ? $sth->fetchAll(\PDO::FETCH_OBJ) : $sth->fetch(\PDO::FETCH_OBJ));
             }
             $sth->closeCursor();
-            return $result;
 
         } catch (PDOException $e) {
             echo '<pre>', $e->getMessage(), '</pre>';
         }
 
+        return $result;
     }
 
     protected function modify($sql, $params) {
+        $result = false;
+
         try {
             $sth = $this->dbh->prepare($sql);
             $result = $sth->execute($params);
             $sth->closeCursor();
-            return $result;
         } catch (\PDOException $e) {
             echo '<pre>', $e->getMessage(), '</pre>';
         }
+
+        return $result;
     }
 
     /**
