@@ -32,7 +32,7 @@ class Request
      * @access private
      */
 
-    private $get = false;
+    private $get = [];
 
     /**
      * normalized $_POST superglobal
@@ -41,7 +41,7 @@ class Request
      * @access private
      */
 
-    private $post = false;
+    private $post = [];
 
     /**
      * normalized $_SESSION superglobal
@@ -50,7 +50,7 @@ class Request
      * @access private
      */
 
-    private $session = false;
+    private $session = [];
 
     /**
      * normalized $_COOKIE superglobal
@@ -59,7 +59,7 @@ class Request
      * @access private
      */
 
-    private $cookie = false;
+    private $cookie = [];
 
     /**
      * normalized $_FILES superglobal
@@ -68,7 +68,7 @@ class Request
      * @access private
      */
 
-    private $files = false;
+    private $files = [];
 
     /**
      * normalized $_SERVER superglobal
@@ -77,7 +77,7 @@ class Request
      * @access private
      */
 
-    private $server = false;
+    private $server = [];
 
 
     /**
@@ -85,10 +85,9 @@ class Request
      *
      * @var array
      * @access private
-     * @TODO: move flashdata to sessionhandler, make available here with other request vars still
      */
 
-    private $flashdata;
+    private $flashdata = [];
 
     /**
      * Flashdata identifier
@@ -204,17 +203,18 @@ class Request
      * @params string $name
      */
 
-    public function getFlashdata($name = false)
+    public function getFlashdata($name = false, $default = false)
     {
-
-        if ($name) {
-            return (!empty($this->flashdata[$name]) ? $this->flashdata[$name]['value'] : false);
-
-        } else {
+        if ($name === false && !empty($this->flashdata)) {
             return $this->flashdata;
-
+        }
+        if($name !== false) {
+            if(!empty($this->flashdata[$name])) {
+                return $this->flashdata[$name];
+            }
         }
 
+        return $default;
     }
 
     /**
@@ -226,10 +226,10 @@ class Request
      * @return mixed
      */
 
-    public function post($index = false)
+    public function post($index = false, $default = false)
     {
 
-        if ($index === false && isset($this->post)) {
+        if ($index === false && !empty($this->post)) {
             return $this->post;
         }
 
@@ -237,7 +237,7 @@ class Request
             return $this->post[$index];
         }
 
-        return false;
+        return $default;
 
     }
 
@@ -250,10 +250,10 @@ class Request
      *
      * @return mixed
      */
-    public function get($index = false)
+    public function get($index = false, $default = false)
     {
 
-        if ($index === false && isset($this->get)) {
+        if ($index === false && !empty($this->get)) {
             return $this->get;
         }
 
@@ -261,7 +261,7 @@ class Request
             return $this->get[$index];
         }
 
-        return false;
+        return $default;
 
     }
 
@@ -274,10 +274,10 @@ class Request
      *
      * @return mixed
      */
-    public function session($index = false)
+    public function session($index = false, $default = false)
     {
 
-        if ($index === false && isset($this->session)) {
+        if ($index === false && !empty($this->session)) {
             return $this->session;
         }
 
@@ -285,7 +285,7 @@ class Request
             return $this->session[$index];
         }
 
-        return false;
+        return $default;
 
     }
 
