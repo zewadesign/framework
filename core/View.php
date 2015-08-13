@@ -84,22 +84,16 @@ class View
         return $this->process($this->layout, $this->properties);
     }
 
-    public function setView($requestedView = false, $renderName = false)
+    public function setView($requestedView)
     {
         $module = $this->configuration->router->module;
 
         try {
-
-            if ($requestedView !== false) {
-                $view = APP_PATH . DIRECTORY_SEPARATOR . 'modules' . DIRECTORY_SEPARATOR . $module . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . strtolower($requestedView) . '.php';
-                if (!file_exists($view)) {
-                    throw new \Exception('View: "' . $view . '" could not be found.');
-                }
-                $this->view = $view;
-            } else {
-                throw new \Exception('Please provide a view for setView.');
+            $view = APP_PATH . DIRECTORY_SEPARATOR . 'modules' . DIRECTORY_SEPARATOR . $module . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . strtolower($requestedView) . '.php';
+            if (!file_exists($view)) {
+                throw new \Exception('View: "' . $view . '" could not be found.');
             }
-
+            $this->view = $view;
         } catch (\Exception $e) {
             echo 'Caught exception:' . $e->getMessage();
             exit;
