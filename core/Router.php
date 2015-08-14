@@ -94,6 +94,7 @@ class Router
     private function parseURI($uri)
     {
 
+        //@TODO: update so that types are properly casted to the parameters.
         $uriFragments = explode('/', $uri);
         $uriChunks = array();
 
