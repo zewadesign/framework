@@ -75,6 +75,11 @@ class Model
         return $result;
     }
 
+    protected function lastInsertId()
+    {
+        return $this->dbh->lastInsertId();
+    }
+
     /**
      * Returns a reference of object once instantiated
      *

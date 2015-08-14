@@ -233,12 +233,11 @@ class Request
             return $this->post;
         }
 
-        if (isset($this->post[$index])) {
-            return $this->post[$index];
+        if (!isset($this->post[$index]) || strlen($this->post[$index]) < 1 && $default !== false) {
+            return $default;
         }
 
-        return $default;
-
+        return $this->post[$index];
     }
 
 
@@ -376,26 +375,25 @@ class Request
                 $data[$this->_normalize($key)] = $this->_normalize($value);
             }
         } else {
-            if (is_string($data)) {
-//                if(strpos($data, "\r") !== FALSE) {
-                $data = trim($data);
-//                }
+            $data = trim($data);
+            if (function_exists('iconv') && function_exists('mb_detect_encoding')) {
+                $current_encoding = mb_detect_encoding($data);
 
-                if (function_exists('iconv') && function_exists('mb_detect_encoding')) {
-                    $current_encoding = mb_detect_encoding($data);
-
-                    if ($current_encoding != 'UTF-8' && $current_encoding != 'UTF-16') {
-                        $data = iconv($current_encoding, 'UTF-8', $data);
-                    }
+                if ($current_encoding != 'UTF-8' && $current_encoding != 'UTF-16') {
+                    $data = iconv($current_encoding, 'UTF-8', $data);
                 }
-                //Global XXS?
-                // This is not sanitary.  FILTER_SANITIZE_STRING doesn't do much.
-                $data = filter_var($data, FILTER_SANITIZE_STRING);
-
-            } elseif (is_numeric($data)) {
-                $data = (int) $data;
             }
+            //Global XXS?
+            // This is not sanitary.  FILTER_SANITIZE_STRING doesn't do much.
+            $data = filter_var($data, FILTER_SANITIZE_STRING);
 
+            if (is_numeric($data)) {
+                if(is_int($data) || ctype_digit(trim($data, '-'))) {
+                    $data = (int) $data;
+                } else if($data == (string)(float)$data) {
+                    $data = (float) $data;
+                }
+            }
         }
 
         return $data;
