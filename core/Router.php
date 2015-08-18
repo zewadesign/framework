@@ -81,6 +81,34 @@ class Router
 
     }
 
+
+    private function isURIClean($uri, $uriChunks)
+    {
+        if (!preg_match("/^[a-z0-9:_\/\.\[\]-]+$/i", $uri)
+            || array_filter($uriChunks, function ($uriChunk) {
+                if (strpos($uriChunk, '__') !== false) {
+                    return true;
+                }
+            })
+        ) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    private function normalize($data)
+    {
+        if (is_numeric($data)) {
+            if (is_int($data) || ctype_digit(trim($data, '-'))) {
+                $data = (int)$data;
+            } else if ($data == (string)(float)$data) {
+                $data = (float)$data;
+            }
+        }
+        return $data;
+    }
+
     /**
      * Parse and explode URI segments into chunks
      *
@@ -93,30 +121,26 @@ class Router
      */
     private function parseURI($uri)
     {
-
-        //@TODO: update so that types are properly casted to the parameters.
         $uriFragments = explode('/', $uri);
-        $uriChunks = array();
-
+        $uriChunks = [];
+        $params = [];
+        $iteration = 0;
         foreach ($uriFragments as $location => $fragment) {
-            $uriChunks[] = $fragment;
-
+            if ($iteration > 2) {
+                $params[] = $this->normalize(trim($fragment));
+            } else {
+                $uriChunks[] = trim($fragment);
+            }
+            $iteration++;
         }
 
-        if (!preg_match("/^[a-z0-9:_\/\.\[\]-]+$/i", $uri) ||
-            array_filter(
-                $uriChunks,
-                function ($uriChunk) {
-                    if (strpos($uriChunk, '__') !== false) {
-                        return true;
-                    }
-                }
-            )
-        ) {
-            throw new Exception('Disallowed key characters.');
+        $result = array_merge($uriChunks, $params);
+
+        if ($this->isURIClean($uri, $result) === false) {
+            die('Invalid key characters.');
         }
 
-        return $uriChunks;
+        return $result;
     }
 
     /**
@@ -172,7 +196,7 @@ class Router
         if ($uri) {
             $uriChunks = explode('/', filter_var(trim(strtolower($uri)), FILTER_SANITIZE_URL));
 
-            if(!empty($uriChunks)) {
+            if (!empty($uriChunks)) {
                 $module = $uriChunks[0];
                 $moduleConfig = $load->config('core', 'modules');
 
@@ -182,16 +206,18 @@ class Router
                     $controller = $moduleConfig->$module->defaultController;
                 }
 
-                if(!empty($uriChunks[2])) {
+                if (!empty($uriChunks[2])) {
                     $method = $uriChunks[2];
-                } else if(!empty($moduleConfig->$module->defaultMethod)) {
+                } else if (!empty($moduleConfig->$module->defaultMethod)) {
                     $method = $moduleConfig->$module->defaultMethod;
                 }
 
-                unset($uriChunks[0]); unset($uriChunks[1]); unset($uriChunks[2]);
+                unset($uriChunks[0]);
+                unset($uriChunks[1]);
+                unset($uriChunks[2]);
 
-                if(!empty($uriChunks[3])) {
-                    foreach($uriChunks as $c) {
+                if (!empty($uriChunks[3])) {
+                    foreach ($uriChunks as $c) {
                         $arguments[] = $c;
                     }
                 }
@@ -199,7 +225,7 @@ class Router
         }
 
         $chunks = [$module, $controller, $method];
-        if(!empty($arguments)) {
+        if (!empty($arguments)) {
             $chunks = array_merge($chunks, $arguments);
         }
         $uri = ltrim(implode('/', $chunks), '/');
@@ -228,7 +254,7 @@ class Router
      */
     public static function baseURL($path = '')
     {
-        if(self::$baseURL !== false) {
+        if (self::$baseURL !== false) {
             return self::$baseURL;
         }
 
@@ -305,7 +331,7 @@ class Router
         }
 
         // push a status to the browser if necessary
-        if ((int) $status > 0) {
+        if ((int)$status > 0) {
             switch ($status) {
                 case '301':
                     $msg = '301 Moved Permanently';
