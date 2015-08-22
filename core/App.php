@@ -117,7 +117,7 @@ class App
             $this->load = new Load();
 
             $configObject = (object) array(
-                'database' => $this->load->config('core', 'database'),
+                'database' => $this->load->config('database', 'config'),
                 'session'  => $this->load->config('core', 'session'),
                 'acl'      => $this->load->config('core', 'acl'),
                 'layouts'  => $this->load->config('core', 'layouts'),
@@ -176,7 +176,6 @@ class App
         $this->controller = self::$configuration->router->controller;
         $this->method = self::$configuration->router->method;
         $this->params = self::$configuration->router->params;
-        $this->registerHelpers();
         $this->class = '\\app\\modules\\' . self::$configuration->router->module . '\\controllers\\' . ucfirst($this->controller);
 
     }
@@ -215,21 +214,6 @@ class App
 
     }
 
-
-    /**
-     * Registers autoloaded helpers
-     *
-     * @access private
-     */
-    private function registerHelpers()
-    {
-        if ($helpers = self::$configuration->helpers) {
-            foreach ($helpers as $type => $component) {
-                $this->load->helper($component);
-            }
-        }
-    }
-
     /**
      * Registers the database object
      *
@@ -241,7 +225,7 @@ class App
         if (self::$configuration->database) {
 
             App::callEvent('preDatabase');
-            $this->database = new Database(self::$configuration->database->default);
+            $this->database = new Database(self::$configuration->database);
             App::callEvent('postDatabase');
 
         }

@@ -25,12 +25,23 @@ class Database
     protected $dbh = [];
 
     /**
+     * Database configurations
+     *
+     * @access private
+     * @var object
+     */
+    private $config;
+
+
+
+    /**
      * Load up some basic configuration settings.
      */
     public function __construct($config)
     {
         self::$instance = $this;
-        $this->establishConnection($config);
+        $this->config = $config;
+        $this->establishConnection($config->default);
     }
 
     public function establishConnection($config, $name = 'default')
@@ -52,6 +63,9 @@ class Database
     public function fetchConnection($name = 'default')
     {
         if( ! empty($this->dbh[$name]) ) {
+            return $this->dbh[$name];
+        } else if( ! empty($this->config->$name) ){
+            $this->establishConnection($this->config->$name, $name);
             return $this->dbh[$name];
         }
 

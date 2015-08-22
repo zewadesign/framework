@@ -63,6 +63,18 @@ class View
         $this->request = Request::getInstance();
     }
 
+    private function baseURL($path = '') {
+        return Router::baseURL($path);
+    }
+
+    private function currentURL() {
+        return Router::currentURL();
+    }
+
+
+    private function currentURI() {
+        return Router::uri();
+    }
     /**
      * Loads a view
      *
@@ -173,7 +185,7 @@ class View
         }
 
         foreach($sheets as $sheet) {
-            $string .= '<link rel="stylesheet" href="' . baseURL($sheet) .'">' . "\r\n";
+            $string .= '<link rel="stylesheet" href="' . $this->baseURL($sheet) .'">' . "\r\n";
         }
 
         return $string;
@@ -183,14 +195,14 @@ class View
     protected function fetchJS()
     {
         $scripts = App::getConfiguration('view::js');
-        $string = "<script>baseURL = '".baseURL()."/'</script>";
+        $string = "<script>baseURL = '" . $this->baseURL() . "/'</script>";
 
         if(empty($scripts)) {
             return $string;
         }
 
         foreach($scripts as $script) {
-            $string .= '<script src="' . baseURL($script) .'"></script>' . "\r\n";
+            $string .= '<script src="' . $this->baseURL($script) . '"></script>' . "\r\n";
         }
 
         return $string;
