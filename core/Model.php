@@ -10,13 +10,6 @@ use app\modules as modules;
 class Model
 {
     /**
-     * Reference to instantiated controller object.
-     *
-     * @var object
-     */
-    protected static $instance;
-
-    /**
      * Database object reference
      *
      * @access private
@@ -34,13 +27,18 @@ class Model
     /**
      * Load up some basic configuration settings.
      */
-    public function __construct()
+    public function __construct($name = 'default')
     {
-        self::$instance = $this;
         // This abstract is strictly to establish inheritance from a global registery.
         $this->configuration = App::getConfiguration();
 
-        $this->dbh = Database::getInstance()->fetchConnection();
+        $this->dbh = Database::getInstance()->fetchConnection($name);
+    }
+
+    //@TODO: add these to Database, and then set a $this->db here,
+    protected function preparePlaceHolders($arguments)
+    {
+        return str_pad('', count($arguments) * 2 - 1, '?,');
     }
 
     protected function fetch($sql, $params = [], $returnResultSet = 'result') {
@@ -54,7 +52,7 @@ class Model
             }
             $sth->closeCursor();
 
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             echo '<pre>', $e->getMessage(), '</pre>';
         }
 
