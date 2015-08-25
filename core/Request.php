@@ -233,7 +233,11 @@ class Request
             return $this->post;
         }
 
-        if (!isset($this->post[$index]) || strlen($this->post[$index]) < 1 && $default !== false) {
+        if(isset($this->post[$index]) && is_array($this->post[$index])) {
+            return $this->post[$index];
+        }
+
+        if (!isset($this->post[$index]) || strlen($this->post[$index]) <= 0) {
             return $default;
         }
 
@@ -256,11 +260,15 @@ class Request
             return $this->get;
         }
 
-        if (isset($this->get[$index])) {
+        if(isset($this->get[$index]) && is_array($this->get[$index])) {
             return $this->get[$index];
         }
 
-        return $default;
+        if (!isset($this->get[$index]) || strlen($this->get[$index]) <= 0) {
+            return $default;
+        }
+
+        return $this->get[$index];
 
     }
 
@@ -280,12 +288,15 @@ class Request
             return $this->session;
         }
 
-        if (isset($this->session[$index])) {
+        if(isset($this->session[$index]) && is_array($this->session[$index])) {
             return $this->session[$index];
         }
 
-        return $default;
+        if (!isset($this->session[$index]) || strlen($this->session[$index]) <= 0) {
+            return $default;
+        }
 
+        return $this->session[$index];
     }
 
 

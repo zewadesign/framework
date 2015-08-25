@@ -69,7 +69,7 @@ class Router
         if (empty($uriChunks)) {
             $uriChunks = $this->parseURI($uri);
         }
-
+        
         App::setConfiguration('router', (object)[
             'module' => $uriChunks[0],
             'controller' => $uriChunks[1],
@@ -229,6 +229,7 @@ class Router
             $chunks = array_merge($chunks, $arguments);
         }
         $uri = ltrim(implode('/', $chunks), '/');
+        
         return $uri;
 
     }

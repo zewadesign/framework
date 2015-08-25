@@ -167,7 +167,7 @@ class View
 
     private function verifyResource($resource) {
 
-        $path = PUBLIC_PATH . DIRECTORY_SEPARATOR . strtolower($resource);
+        $path = PUBLIC_PATH . DIRECTORY_SEPARATOR . $resource;
         if (!file_exists($path)) {
             return false;
         }
