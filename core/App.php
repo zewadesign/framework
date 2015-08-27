@@ -117,6 +117,7 @@ class App
             $this->load = new Load();
 
             $configObject = (object) array(
+                'environment'      => $this->load->config('core', 'environment'),
                 'database' => $this->load->config('database', 'config'),
                 'session'  => $this->load->config('core', 'session'),
                 'acl'      => $this->load->config('core', 'acl'),
