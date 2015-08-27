@@ -44,6 +44,24 @@ class Request
     private $post = [];
 
     /**
+     * normalized $_DELETE superglobal
+     *
+     * @var array
+     * @access private
+     */
+
+    private $delete = [];
+
+    /**
+     * normalized $_PUT superglobal
+     *
+     * @var array
+     * @access private
+     */
+
+    private $put = [];
+
+    /**
      * normalized $_SESSION superglobal
      *
      * @var array
@@ -123,7 +141,13 @@ class Request
         $this->cookie = $this->_normalize($_COOKIE);
         $this->files = $this->_normalize($_FILES);
         $this->server = $this->_normalize($_SERVER);
-
+        if($this->server('REQUEST_METHOD') === 'PUT') {
+            parse_str(file_get_contents('php://input', "r"), $this->put);
+            $this->put = $this->_normalize($this->put);
+        } else if($this->server('REQUEST_METHOD') === 'DELETE') {
+            parse_str(file_get_contents('php://input', "r"), $this->delete);
+            $this->delete = $this->_normalize($this->delete);
+        }
     }
 
 
@@ -242,6 +266,60 @@ class Request
         }
 
         return $this->post[$index];
+    }
+
+    public function delete($index = false, $default = false)
+    {
+
+        if ($index === false && !empty($this->delete)) {
+            return $this->delete;
+        }
+
+        if(isset($this->delete[$index]) && is_array($this->delete[$index])) {
+            return $this->delete[$index];
+        }
+
+        if (!isset($this->delete[$index]) || strlen($this->delete[$index]) <= 0) {
+            return $default;
+        }
+
+        return $this->delete[$index];
+    }
+
+    public function put($index = false, $default = false)
+    {
+
+        if ($index === false && !empty($this->put)) {
+            return $this->put;
+        }
+
+        if(isset($this->put[$index]) && is_array($this->put[$index])) {
+            return $this->put[$index];
+        }
+
+        if (!isset($this->put[$index]) || strlen($this->put[$index]) <= 0) {
+            return $default;
+        }
+
+        return $this->put[$index];
+    }
+
+    public function server($index = false, $default = false)
+    {
+
+        if ($index === false && !empty($this->server)) {
+            return $this->server;
+        }
+
+        if(isset($this->server[$index]) && is_array($this->server[$index])) {
+            return $this->server[$index];
+        }
+
+        if (!isset($this->server[$index]) || strlen($this->server[$index]) <= 0) {
+            return $default;
+        }
+
+        return $this->server[$index];
     }
 
 

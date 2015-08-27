@@ -208,6 +208,13 @@ class Router
 
                 if (!empty($uriChunks[2])) {
                     $method = $uriChunks[2];
+                    $methodExist = method_exists($controller, $method);
+                    if($methodExist === false) {
+                        if (!empty($moduleConfig->$module->defaultMethod)) {
+                            $method = $moduleConfig->$module->defaultMethod;
+                            array_unshift($uriChunks, null);
+                        }
+                    }
                 } else if (!empty($moduleConfig->$module->defaultMethod)) {
                     $method = $moduleConfig->$module->defaultMethod;
                 }
