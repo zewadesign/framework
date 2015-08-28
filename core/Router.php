@@ -56,6 +56,33 @@ class Router
     public $baseURL;
 
     /**
+     * Default module
+     * @var string
+     * @access public
+     */
+    public $defaultModule;
+
+    /**
+     * Default controller
+     * @var string
+     * @access public
+     */
+    public $defaultController;
+
+    /**
+     * Default method
+     * @var string
+     * @access public
+     */
+    public $defaultMethod;
+
+    /**
+     * Default uri
+     * @var string
+     * @access public
+     */
+    public $uri;
+    /**
      * Load up some basic configuration settings.
      */
     public function __construct()
@@ -63,13 +90,19 @@ class Router
         self::$instance = $this;
 
         $this->configuration = App::getConfiguration();
-        $this->uri = $this->uri();
+
+        $this->defaultModule = $this->configuration->modules->defaultModule;
+        $defaultModule = $this->defaultModule;
+        $this->defaultController = $this->configuration->modules->$defaultModule->defaultController;
+        $this->defaultMethod = $this->configuration->modules->$defaultModule->defaultMethod;
+
+        $normalizedURI = $this->normalizeURI();
+        $this->uri = $this->uri($normalizedURI);
         $this->baseURL = $this->baseURL();
         $this->currentURL = $this->currentURL();
 
         //@TODO: routing
         $uriChunks = $this->parseURI($this->uri);
-
         App::setConfiguration('router', (object)[
             'module' => $uriChunks[0],
             'controller' => $uriChunks[1],
@@ -180,68 +213,57 @@ class Router
      * @access public
      * @return string formatted/u/r/l
      */
-    private function uri()
+    private function uri($uri)
     {
-
-        $load = Load::getInstance();
-        $uri = $this->normalizeURI();
-
-        $defaultModule = $load->config('core', 'modules')->defaultModule;
-        $defaultController = $load->config('core', 'modules')->$defaultModule->defaultController;
-        $defaultMethod = $load->config('core', 'modules')->$defaultModule->defaultMethod;
-
-        $module = $defaultModule;
-        $controller = $defaultController;
-        $method = $defaultMethod;
-        $arguments = [];
-
-        if ($uri) {
+        if($uri !== '') {
             $uriChunks = explode('/', filter_var(trim(strtolower($uri)), FILTER_SANITIZE_URL));
-
-            if (!empty($uriChunks)) {
-                $module = $uriChunks[0];
-                $moduleConfig = $load->config('core', 'modules');
-
-                if (!empty($uriChunks[1])) { // && !empty($moduleConfig[$module]['defaultController'])) {
-                    $controller = $uriChunks[1];
-                } else if (!empty($moduleConfig->$module->defaultController)) {
-                    $controller = $moduleConfig->$module->defaultController;
-                }
-
-                if (!empty($uriChunks[2])) {
-                    $method = $uriChunks[2];
-                    $class = '\\app\\modules\\' . $module . '\\controllers\\' . ucfirst($controller);
-                    $methodExist = method_exists($class, $method);
-                    if($methodExist === false) {
-                        if (!empty($moduleConfig->$module->defaultMethod)) {
-                            $method = $moduleConfig->$module->defaultMethod;
-                            array_unshift($uriChunks, null);
-                        }
-                    }
-                } else if (!empty($moduleConfig->$module->defaultMethod)) {
-                    $method = $moduleConfig->$module->defaultMethod;
-                }
-
-                unset($uriChunks[0]);
-                unset($uriChunks[1]);
-                unset($uriChunks[2]);
-
-                if (!empty($uriChunks[3])) {
-                    foreach ($uriChunks as $c) {
-                        $arguments[] = $c;
-                    }
-                }
-            }
+            $chunks = $this->sortURISegments($uriChunks);
+        } else {
+            $chunks = $this->sortURISegments();
         }
-
-        $chunks = [$module, $controller, $method];
         if (!empty($arguments)) {
             $chunks = array_merge($chunks, $arguments);
         }
         $uri = ltrim(implode('/', $chunks), '/');
-        
+
         return $uri;
 
+    }
+
+    private function sortURISegments($uriChunks = [])
+    {
+        $module = $this->defaultModule;
+        $controller = $this->defaultController;
+        $method = $this->defaultMethod;
+
+        if (!empty($uriChunks)) {
+            $module = $uriChunks[0];
+            if (!empty($uriChunks[1])) { // && !empty($moduleConfig[$module]['defaultController'])) {
+                $controller = $uriChunks[1];
+            } else if (!empty($this->configuration->modules->$module->defaultController)) {
+                $controller = $this->configuration->modules->$module->defaultController;
+            }
+
+            if (!empty($uriChunks[2])) {
+                $method = $uriChunks[2];
+                $class = '\\app\\modules\\' . $module . '\\controllers\\' . ucfirst($controller);
+                $methodExist = method_exists($class, $method);
+                if($methodExist === false) {
+                    if (!empty($this->configuration->modules->$module->defaultMethod)) {
+                        $method = $this->configuration->modules->$module->defaultMethod;
+                        array_unshift($uriChunks, null);
+                    }
+                }
+            } else if (!empty($this->configuration->modules->$module->defaultMethod)) {
+                $method = $this->configuration->modules->$module->defaultMethod;
+            }
+
+            unset($uriChunks[0], $uriChunks[1], $uriChunks[2]);
+
+        }
+
+        $return = [$module, $controller, $method];
+        return array_merge($return, array_values($uriChunks));
     }
 
     /**
@@ -253,7 +275,7 @@ class Router
     public function currentURL()
     {
 
-        return $this->baseURL($this->uri()) . (!empty($_SERVER['QUERY_STRING']) ? '?' . $_SERVER['QUERY_STRING'] : '');
+        return $this->baseURL($this->uri) . (!empty($_SERVER['QUERY_STRING']) ? '?' . $_SERVER['QUERY_STRING'] : '');
 
     }
 
