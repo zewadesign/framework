@@ -32,7 +32,7 @@ class Request
      * @access private
      */
 
-    private $get = [];
+    private $getContainer = [];
 
     /**
      * normalized $_POST superglobal
@@ -41,7 +41,7 @@ class Request
      * @access private
      */
 
-    private $post = [];
+    private $postContainer = [];
 
     /**
      * normalized $_DELETE superglobal
@@ -50,7 +50,7 @@ class Request
      * @access private
      */
 
-    private $delete = [];
+    private $deleteContainer = [];
 
     /**
      * normalized $_PUT superglobal
@@ -59,7 +59,7 @@ class Request
      * @access private
      */
 
-    private $put = [];
+    private $putContainer = [];
 
     /**
      * normalized $_SESSION superglobal
@@ -68,7 +68,7 @@ class Request
      * @access private
      */
 
-    private $session = [];
+    private $sessionContainer = [];
 
     /**
      * normalized $_COOKIE superglobal
@@ -77,7 +77,7 @@ class Request
      * @access private
      */
 
-    private $cookie = [];
+    private $cookieContainer = [];
 
     /**
      * normalized $_FILES superglobal
@@ -86,7 +86,7 @@ class Request
      * @access private
      */
 
-    private $files = [];
+    private $filesContainer = [];
 
     /**
      * normalized $_SERVER superglobal
@@ -95,7 +95,7 @@ class Request
      * @access private
      */
 
-    private $server = [];
+    private $serverContainer = [];
 
 
     /**
@@ -127,26 +127,26 @@ class Request
     {
         self::$instance = $this;
         $this->configuration = App::getConfiguration();
-
         if($this->configuration->session->flashdataId) {
             $this->flashdataId = $this->configuration->session->flashdataId;
         }
 
-        $this->registerFlashdata();
         if(!empty($_SESSION)) {
-            $this->session = $this->_normalize($_SESSION);
+            $this->sessionContainer = $this->_normalize($_SESSION);
         }
-        $this->get = $this->_normalize($_GET);
-        $this->post = $this->_normalize($_POST);
-        $this->cookie = $this->_normalize($_COOKIE);
-        $this->files = $this->_normalize($_FILES);
-        $this->server = $this->_normalize($_SERVER);
+        $this->registerFlashdata();
+
+        $this->getContainer = $this->_normalize($_GET);
+        $this->postContainer = $this->_normalize($_POST);
+        $this->cookieContainer = $this->_normalize($_COOKIE);
+        $this->filesContainer = $this->_normalize($_FILES);
+        $this->serverContainer = $this->_normalize($_SERVER);
         if($this->server('REQUEST_METHOD') === 'PUT') {
             parse_str(file_get_contents('php://input', "r"), $this->put);
-            $this->put = $this->_normalize($this->put);
+            $this->putContainer = $this->_normalize($this->put);
         } else if($this->server('REQUEST_METHOD') === 'DELETE') {
             parse_str(file_get_contents('php://input', "r"), $this->delete);
-            $this->delete = $this->_normalize($this->delete);
+            $this->deleteContainer = $this->_normalize($this->delete);
         }
     }
 
@@ -158,8 +158,7 @@ class Request
     private function registerFlashdata()
     {
 
-
-        if ($this->session($this->flashdataId)) {
+        if (!empty($this->sessionContainer[$this->flashdataId])) {
 
             $this->flashdata = unserialize($this->session($this->flashdataId));
             // and destroy the temporary session variable
@@ -208,7 +207,7 @@ class Request
     {
 
         // set session variable
-        $this->session[$name] = $value;
+        $this->sessionContainer[$name] = $value;
 
         // initialize the counter for this flashdata
         $this->flashdata[$name] = array(
@@ -242,143 +241,6 @@ class Request
     }
 
     /**
-     * Get normalized $_POST data
-     * @access public
-     *
-     * @params string $index
-     *
-     * @return mixed
-     */
-
-    public function post($index = false, $default = false)
-    {
-
-        if ($index === false && !empty($this->post)) {
-            return $this->post;
-        }
-
-        if(isset($this->post[$index]) && is_array($this->post[$index])) {
-            return $this->post[$index];
-        }
-
-        if (!isset($this->post[$index]) || strlen($this->post[$index]) <= 0) {
-            return $default;
-        }
-
-        return $this->post[$index];
-    }
-
-    public function delete($index = false, $default = false)
-    {
-
-        if ($index === false && !empty($this->delete)) {
-            return $this->delete;
-        }
-
-        if(isset($this->delete[$index]) && is_array($this->delete[$index])) {
-            return $this->delete[$index];
-        }
-
-        if (!isset($this->delete[$index]) || strlen($this->delete[$index]) <= 0) {
-            return $default;
-        }
-
-        return $this->delete[$index];
-    }
-
-    public function put($index = false, $default = false)
-    {
-
-        if ($index === false && !empty($this->put)) {
-            return $this->put;
-        }
-
-        if(isset($this->put[$index]) && is_array($this->put[$index])) {
-            return $this->put[$index];
-        }
-
-        if (!isset($this->put[$index]) || strlen($this->put[$index]) <= 0) {
-            return $default;
-        }
-
-        return $this->put[$index];
-    }
-
-    public function server($index = false, $default = false)
-    {
-
-        if ($index === false && !empty($this->server)) {
-            return $this->server;
-        }
-
-        if(isset($this->server[$index]) && is_array($this->server[$index])) {
-            return $this->server[$index];
-        }
-
-        if (!isset($this->server[$index]) || strlen($this->server[$index]) <= 0) {
-            return $default;
-        }
-
-        return $this->server[$index];
-    }
-
-
-    /**
-     * Get normalized $_GET data
-     * @access public
-     *
-     * @params string $index
-     *
-     * @return mixed
-     */
-    public function get($index = false, $default = false)
-    {
-
-        if ($index === false && !empty($this->get)) {
-            return $this->get;
-        }
-
-        if(isset($this->get[$index]) && is_array($this->get[$index])) {
-            return $this->get[$index];
-        }
-
-        if (!isset($this->get[$index]) || strlen($this->get[$index]) <= 0) {
-            return $default;
-        }
-
-        return $this->get[$index];
-
-    }
-
-
-    /**
-     * Get normalized $_SESSION data
-     * @access public
-     *
-     * @params string $index
-     *
-     * @return mixed
-     */
-    public function session($index = false, $default = false)
-    {
-
-        if ($index === false && !empty($this->session)) {
-            return $this->session;
-        }
-
-        if(isset($this->session[$index]) && is_array($this->session[$index])) {
-            return $this->session[$index];
-        }
-
-        if (!isset($this->session[$index]) || strlen($this->session[$index]) <= 0) {
-            return $default;
-        }
-
-        return $this->session[$index];
-    }
-
-
-    /**
      * Remove session data
      * @access public
      *
@@ -387,7 +249,7 @@ class Request
     public function removeSession($index)
     {
 
-        unset($this->session[$index]);
+        unset($this->sessionContainer[$index]);
         unset($_SESSION[$index]);
 
     }
@@ -419,7 +281,7 @@ class Request
 
         foreach ($index as $k => $v) {
             $_SESSION[$k] = $v;
-            $this->session = $this->_normalize($_SESSION);
+            $this->sessionContainer = $this->_normalize($_SESSION);
         }
 
     }
@@ -512,5 +374,31 @@ class Request
 
         }
 
+    }
+
+    public function __call($name, $arguments)
+    {
+        $accepted = ['post', 'put', 'delete', 'get', 'server', 'session'];
+
+        if(in_array($name, $accepted)) {
+            $container = $name . 'Container';
+            $container = $this->$container;
+
+            $argument = !empty($arguments[0]) ? $arguments[0] : false;
+            if($argument === false && !empty($container)) {
+                return $container;
+            }
+
+            if(isset($container[$argument]) && is_array($container[$argument])) {
+                return $container[$argument];
+            }
+            if(!isset($container[$argument]) || strlen($container[$argument]) <= 0) {
+                return !empty($arguments[1]) ? $arguments[1] : false;
+            }
+
+            return $container[$argument];
+        }
+
+        throw new \Exception('Method ' . $name . ' does not exist.');
     }
 }
