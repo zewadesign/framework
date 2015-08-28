@@ -60,6 +60,8 @@ class Router
      */
     public function __construct()
     {
+        self::$instance = $this;
+
         $this->configuration = App::getConfiguration();
         $this->uri = $this->uri();
         $this->baseURL = $this->baseURL();
@@ -255,20 +257,22 @@ class Router
      */
     public function baseURL($path = '')
     {
-        if ($this->baseURL !== false) {
-            return $this->baseURL;
+        if (is_null($this->baseURL)) {
+
+            $self = $_SERVER['PHP_SELF'];
+            $server = $_SERVER['HTTP_HOST'] . rtrim(str_replace(strstr($self, 'index.php'), '', $self), '/');
+            if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') {
+                $protocol = 'https://';
+            } else {
+                $protocol = 'http://';
+
+            }
+
+            $this->baseURL = $protocol . $server;
+
         }
 
-        $self = $_SERVER['PHP_SELF'];
-        $server = $_SERVER['HTTP_HOST'] . rtrim(str_replace(strstr($self, 'index.php'), '', $self), '/');
-        if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') {
-            $protocol = 'https://';
-        } else {
-            $protocol = 'http://';
-
-        }
-
-        $url = $protocol . $server;
+        $url = $this->baseURL;
 
         if ($path !== '') {
             $url .= '/' . $path;
@@ -338,6 +342,31 @@ class Router
         $url = preg_replace('!^/*!', '', $url);
         header("Location: " . $this->baseURL($url));
         exit;
+
+    }
+
+    /**
+     * Returns a reference of object once instantiated
+     *
+     * @access public
+     * @return object
+     */
+    public static function &getInstance()
+    {
+
+        try {
+
+            if (self::$instance === null) {
+                throw new \Exception('Unable to get an instance of the database class. The class has not been instantiated yet.');
+            }
+
+            return self::$instance;
+
+        } catch(\Exception $e) {
+
+            echo '<strong>Message:</strong> ' . $e->getMessage();
+
+        }
 
     }
 }

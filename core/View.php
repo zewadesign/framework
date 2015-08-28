@@ -53,6 +53,13 @@ class View
     protected $properties;
 
     /**
+     * Router object for view injection
+     *
+     * @var object
+     */
+    protected $router;
+
+    /**
      * Load up some basic configuration settings.
      */
     public function __construct()
@@ -61,6 +68,7 @@ class View
         $this->configuration = App::getConfiguration();
         $this->load = Load::getInstance();
         $this->request = Request::getInstance();
+        $this->router = Router::getInstance();
     }
 
     private function baseURL($path = '') {
