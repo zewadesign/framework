@@ -64,16 +64,16 @@ class View
     }
 
     private function baseURL($path = '') {
-        return Router::baseURL($path);
+        return $this->router->baseURL($path);
     }
 
     private function currentURL() {
-        return Router::currentURL();
+        return $this->router->currentURL();
     }
 
 
     private function currentURI() {
-        return Router::uri();
+        return $this->router->uri();
     }
     /**
      * Loads a view
@@ -282,4 +282,36 @@ class View
             exit;
         }
     }
+
+
+    /**
+     * Set 401 header, and return noaccess view contents
+     *
+     * @access public
+     * @return string
+     */
+    public function renderNoAccess($data)
+    {
+        header('HTTP/1.1 401 Access Denied');
+        $this->setProperty($data);
+        $this->setLayout('no-access');
+        return $this->render();
+    }
+
+    /**
+     * Set 404 header, and return 404 view contents
+     *
+     * @access public
+     * @param $module string
+     * @param $data array
+     * @return string
+     */
+    public function render404($data = [])
+    {
+        header('HTTP/1.1 404 Not Found');
+        $this->setProperty($data);
+        $this->setLayout('404');
+        return $this->render();
+    }
+
 }

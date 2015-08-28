@@ -140,7 +140,7 @@ class ACL
         $currentURL = $this->configuration->router->currentURL;
         $baseURL = $this->configuration->router->baseURL;
         $aclRedirect = $this->configuration->acl->redirect;
-
+        $currentURL = str_replace('/index','',$currentURL);
         $redirect = base64_encode(str_replace($baseURL, '', $currentURL));
 
         $authenticationURL = $baseURL . '/';
