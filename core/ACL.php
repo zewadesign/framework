@@ -77,6 +77,7 @@ class ACL
     {
         $this->configuration = App::getConfiguration();
         $this->dbh = Database::getInstance()->fetchConnection();
+        $this->router = Router::getInstance();
 
         if (!$userId) {
             $guest = array_search('guest', (array) $this->configuration->acl->roles);
@@ -123,8 +124,8 @@ class ACL
      */
     private function noAccessRedirect()
     {
-
-        return Router::showNoAccess(['errorMessage' => 'No access']);
+        $view = new View();
+        return $view->renderNoAccess('No access');
 
     }
 
@@ -135,16 +136,14 @@ class ACL
      */
     private function secureRedirect()
     {
-
         //@TODO:: add flash message to login?
-        $currentURL = $this->configuration->router->currentURL;
-        $baseURL = $this->configuration->router->baseURL;
+        $currentURL = $this->router->currentURL();
+        $baseURL = $this->router->baseURL();
         $aclRedirect = $this->configuration->acl->redirect;
 
         $redirect = base64_encode(str_replace($baseURL, '', $currentURL));
 
-        $authenticationURL = $baseURL . '/';
-        $authenticationURL .= $aclRedirect . '?' . $this->returnQueryString . '=' . $redirect;
+        $authenticationURL = $this->router->baseURL($aclRedirect . '?' . $this->returnQueryString . '=' . $redirect);
 
         $this->redirect($authenticationURL);
 
