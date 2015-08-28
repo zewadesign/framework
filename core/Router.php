@@ -11,18 +11,18 @@ use \Exception as Exception;
 class Router
 {
     /**
+     * Reference to instantiated controller object.
+     *
+     * @var object
+     */
+    protected static $instance = false;
+
+    /**
      * System configuration
      *
      * @var object
      */
     private $configuration;
-
-    /**
-     * Reference to instantiated controller object.
-     *
-     * @var object
-     */
-    protected static $baseURL = false;
 
     /**
      * The active module
@@ -49,34 +49,34 @@ class Router
     public $method;
 
     /**
+     * The base URL
+     * @var string
+     * @access public
+     */
+    public $baseURL;
+
+    /**
      * Load up some basic configuration settings.
      */
     public function __construct()
     {
+        self::$instance = $this;
+
         $this->configuration = App::getConfiguration();
-        $uri = self::uri();
+        $this->uri = $this->uri();
+        $this->baseURL = $this->baseURL();
+        $this->currentURL = $this->currentURL();
 
-        //@TODO: fix routes..
-//        if ($this->configuration->routes) {
-//            if (!empty($this->configuration->routes->$uri)) {
-//                $uri = $this->configuration->routes->$uri;
-//                $uriChunks = $this->parseURI($uri);
-//            } elseif (!empty(array_flip((array)$this->configuration->routes)[$uri])) {
-//                Router::redirect(Router::baseURL(array_flip((array)$this->configuration->routes)[$uri]), 301);
-//            }
-//        }
+        //@TODO: routing
+        $uriChunks = $this->parseURI($this->uri);
 
-        if (empty($uriChunks)) {
-            $uriChunks = $this->parseURI($uri);
-        }
-        
         App::setConfiguration('router', (object)[
             'module' => $uriChunks[0],
             'controller' => $uriChunks[1],
             'method' => $uriChunks[2],
             'params' => array_slice($uriChunks, 3),
-            'baseURL' => self::baseURL(),
-            'currentURL' => self::currentURL()
+            'baseURL' => $this->baseURL,
+            'currentURL' => $this->currentURL
         ]);
 
     }
@@ -97,6 +97,7 @@ class Router
         }
     }
 
+    //@TODO add Security class.
     private function normalize($data)
     {
         if (is_numeric($data)) {
@@ -137,6 +138,7 @@ class Router
         $result = array_merge($uriChunks, $params);
 
         if ($this->isURIClean($uri, $result) === false) {
+            //@TODO: throw exceptions here..
             die('Invalid key characters.');
         }
 
@@ -149,7 +151,7 @@ class Router
      * @access private
      * @return string formatted/u/r/l
      */
-    private static function normalizeURI()
+    private function normalizeURI()
     {
 
         if (!empty($_SERVER['PATH_INFO'])) {
@@ -178,11 +180,11 @@ class Router
      * @access public
      * @return string formatted/u/r/l
      */
-    public static function uri()
+    private function uri()
     {
 
         $load = Load::getInstance();
-        $uri = self::normalizeURI();
+        $uri = $this->normalizeURI();
 
         $defaultModule = $load->config('core', 'modules')->defaultModule;
         $defaultController = $load->config('core', 'modules')->$defaultModule->defaultController;
@@ -247,10 +249,10 @@ class Router
      * @access public
      * @return string http://tld.com/formatted/u/r/l?q=bingo
      */
-    public static function currentURL()
+    public function currentURL()
     {
 
-        return self::baseURL() . '/' . self::uri() . (!empty($_SERVER['QUERY_STRING']) ? '?' . $_SERVER['QUERY_STRING'] : '');
+        return $this->baseURL($this->uri()) . (!empty($_SERVER['QUERY_STRING']) ? '?' . $_SERVER['QUERY_STRING'] : '');
 
     }
 
@@ -260,22 +262,24 @@ class Router
      * @access public
      * @return string http://tld.com
      */
-    public static function baseURL($path = '')
+    public function baseURL($path = '')
     {
-        if (self::$baseURL !== false) {
-            return self::$baseURL;
+        if (is_null($this->baseURL)) {
+
+            $self = $_SERVER['PHP_SELF'];
+            $server = $_SERVER['HTTP_HOST'] . rtrim(str_replace(strstr($self, 'index.php'), '', $self), '/');
+            if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') {
+                $protocol = 'https://';
+            } else {
+                $protocol = 'http://';
+
+            }
+
+            $this->baseURL = $protocol . $server;
+
         }
 
-        $self = $_SERVER['PHP_SELF'];
-        $server = $_SERVER['HTTP_HOST'] . rtrim(str_replace(strstr($self, 'index.php'), '', $self), '/');
-        if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') {
-            $protocol = 'https://';
-        } else {
-            $protocol = 'http://';
-
-        }
-
-        $url = $protocol . $server;
+        $url = $this->baseURL;
 
         if ($path !== '') {
             $url .= '/' . $path;
@@ -286,44 +290,12 @@ class Router
     }
 
     /**
-     * Set 401 header, and return noaccess view contents
-     *
-     * @access public
-     * @return string
-     */
-    public static function showNoAccess($data)
-    {
-        header('HTTP/1.1 401 Access Denied');
-        $view = new View;
-        $view->setProperty($data);
-        $view->setLayout('no-access');
-        return $view->render();
-    }
-
-    /**
-     * Set 404 header, and return 404 view contents
-     *
-     * @access public
-     * @param $module string
-     * @param $data array
-     * @return string
-     */
-    public static function show404($data = [])
-    {
-        header('HTTP/1.1 404 Not Found');
-        $view = new View;
-        $view->setProperty($data);
-        $view->setLayout('404');
-        return $view->render();
-    }
-
-    /**
      * Set optional status header, and redirect to provided URL
      *
      * @access public
      * @return bool
      */
-    public static function redirect($url = '/', $status = null)
+    public function redirect($url = '/', $status = null)
     {
         $url = str_replace(array('\r', '\n', '%0d', '%0a'), '', $url);
 
@@ -375,8 +347,33 @@ class Router
         }
         // strip leading slashies
         $url = preg_replace('!^/*!', '', $url);
-        header("Location: " . self::baseURL($url));
+        header("Location: " . $this->baseURL($url));
         exit;
+
+    }
+
+    /**
+     * Returns a reference of object once instantiated
+     *
+     * @access public
+     * @return object
+     */
+    public static function &getInstance()
+    {
+
+        try {
+
+            if (self::$instance === null) {
+                throw new \Exception('Unable to get an instance of the database class. The class has not been instantiated yet.');
+            }
+
+            return self::$instance;
+
+        } catch(\Exception $e) {
+
+            echo '<strong>Message:</strong> ' . $e->getMessage();
+
+        }
 
     }
 }

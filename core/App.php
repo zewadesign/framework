@@ -202,7 +202,7 @@ class App
     }
 
     /**
-     * @param mixed string or object
+     * @param mixed bool|object
      * @param bool|object|array optional array of configuration data
      */
     public static function setConfiguration($config, $configObject = false)
@@ -270,23 +270,9 @@ class App
         $moduleExist = file_exists(APP_PATH . '/modules/' . $this->module);
         $classExist = class_exists($this->class);
         $methodExist = method_exists($this->class, $this->method);
-        if (!$moduleExist) {
-            $this->output = Router::show404(
-                ['errorMessage' => $this->module . ' module could not be found!'],
-                self::$configuration->modules->defaultModule
-            );
-            return false;
-        } elseif (!$classExist) {
-            $this->output = Router::show404(
-                ['errorMessage' => $this->class . ' controller could not be found'],
-                $this->module
-            );
-            return false;
-        } elseif (!$methodExist) {
-            $this->output = Router::show404(
-                ['errorMessage' => $this->method . ' method in the ' . $this->class . ' controller could not be found'],
-                $this->module
-            );
+        if (!$moduleExist || !$classExist || !$methodExist) {
+            $view = new View();
+            $this->output = $view->render404(['Invalid method requests']); //Router::show404(
             return false;
         }
 

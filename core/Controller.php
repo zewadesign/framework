@@ -62,6 +62,7 @@ abstract class Controller
         $this->configuration = App::getConfiguration();
         $this->load = Load::getInstance();
         $this->request = Request::getInstance();
+        $this->router = Router::getInstance();
     }
 
     /**
