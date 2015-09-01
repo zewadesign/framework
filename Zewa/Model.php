@@ -1,6 +1,5 @@
 <?php
-namespace core;
-use app\modules as modules;
+namespace Zewa;
 
 /**
  * Abstract class for model extension

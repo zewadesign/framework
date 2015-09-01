@@ -1,8 +1,6 @@
 <?php
 
-namespace core;
-
-use \Exception as Exception;
+namespace Zewa;
 
 /**
  * This class handles loading of resources
@@ -38,28 +36,12 @@ class Load
     protected $configuration;
 
     /**
-     * Container for configured language
-     *
-     * @access private
-     * @var mixed false if not loaded, array if loaded
-     */
-    private $lang = false;
-
-    /**
      * Container for configured settings
      *
      * @access private
      * @var array
      */
     private $config = [];
-
-    /**
-     * Container for loaded helper references
-     *
-     * @access private
-     * @var array
-     */
-    private $helper = [];
 
     /**
      * Create instance
@@ -131,67 +113,24 @@ class Load
     }
 
     /**
-     * Loads a language item
-     *
-     * @access public
-     *
-     * @param string $file file name of configuration
-     * @param string $item reference to index in configuration
-     *
-     * @return array|string
-     * @throws Exception when a language path isn't provided.
-     * @throws Exception when a language item can not be found
-     */
-    public function lang($file = '', $item = '')
-    {
-
-        if ($this->lang !== false) {
-            return $this->lang;
-        }
-
-        if ($file == '') {
-            throw new Exception('The language path can not be empty.');
-        }
-        // Not using brackets makes this stuff harder to read.
-        // Pick any code style standard and try it out
-
-        if (file_exists(APP_PATH . DIRECTORY_SEPARATOR . 'lang' . DIRECTORY_SEPARATOR . $file . '.php')) {
-            include(APP_PATH . DIRECTORY_SEPARATOR . 'lang' . DIRECTORY_SEPARATOR . $file . '.php');
-
-            if (is_array($$file)) {
-                $this->lang = $$file;
-
-                return $this->lang;
-            } // So if I have a lang file that's got the right filename but not the right content, $$file
-            // we get "Notice: Undefined variable:" instead of a fancy exception.
-
-        } else {
-            throw new Exception('Language file: ' . $file . ' could not be found');
-        }
-
-        return false;
-
-    }
-
-    /**
      * Returns a reference of object once instantiated
      *
      * @access public
      * @return object
      */
 
-    public static function &getInstance()
+    public static function getInstance()
     {
 
         try {
 
             if (self::$instance === null) {
-                throw new Exception('Unable to get an instance of the load class. The class has not been instantiated yet.');
+                throw new \Exception('Unable to get an instance of the load class. The class has not been instantiated yet.');
             }
 
             return self::$instance;
 
-        } catch(Exception $e) {
+        } catch(\Exception $e) {
 
             echo 'Message' . $e->getMessage();
 
