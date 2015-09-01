@@ -116,16 +116,14 @@ class App
 
             $this->load = new Load();
 
-            $configObject = (object) array(
-                'environment'      => $this->load->config('core', 'environment'),
+            $configObject = (object) [
+                'environment'      => $this->load->config('app', 'config')->environment,
                 'database' => $this->load->config('database', 'config'),
-                'session'  => $this->load->config('core', 'session'),
-                'acl'      => $this->load->config('core', 'acl'),
-                'layouts'  => $this->load->config('core', 'layouts'),
-                'modules'  => $this->load->config('core', 'modules'),
-                'routes'   => $this->load->config('routes', 'override'),
-                'helpers'  => $this->load->config('core', 'helpers')
-            );
+                'session'  => $this->load->config('session', 'config'),
+                'acl'      => $this->load->config('acl', 'config'),
+                'layouts'  => $this->load->config('layouts', 'config'),
+                'modules'  => $this->load->config('modules', 'config')
+            ];
 
             self::setConfiguration($configObject);
 

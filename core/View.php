@@ -135,14 +135,19 @@ class View
     {
 
         $layout = APP_PATH . DIRECTORY_SEPARATOR . 'layouts' . DIRECTORY_SEPARATOR . strtolower($layout) . '.php';
+        try {
 
-        if(!file_exists($layout)) {
-            throw new \Exception('Layout: "' . $layout . '" could not be found.');
+            if(!file_exists($layout)) {
+                throw new \Exception('Layout: "' . $layout . '" could not be found.');
+            }
+
+            $this->layout = $layout;
+
+            return true;
+
+        } catch (\Exception $e) {
+            echo '<pre>', $e->getMessage(), '</pre>';
         }
-
-        $this->layout = $layout;
-
-        return true;
     }
 
     /**
