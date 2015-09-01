@@ -244,7 +244,7 @@ class Router
 
             if (!empty($uriChunks[2])) {
                 $method = $uriChunks[2];
-                $class = '\\app\\modules\\' . $module . '\\controllers\\' . ucfirst($controller);
+                $class = '\\App\\Module\\' . $module . '\\Controllers\\' . ucfirst($controller);
                 $methodExist = method_exists($class, $method);
                 if($methodExist === false) {
                     if (!empty($this->configuration->modules->$module->defaultMethod)) {
@@ -260,7 +260,7 @@ class Router
 
         }
 
-        $return = [$module, $controller, $method];
+        $return = [ucfirst($module), ucfirst($controller), ucfirst($method)];
         return array_merge($return, array_values($uriChunks));
     }
 
