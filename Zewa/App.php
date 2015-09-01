@@ -171,12 +171,11 @@ class App
 
         $this->request = new Request();
 
-        $this->module = self::$configuration->router->module;
-        $this->controller = self::$configuration->router->controller;
+        $this->module = ucfirst(self::$configuration->router->module);
+        $this->controller = ucfirst(self::$configuration->router->controller);
         $this->method = self::$configuration->router->method;
         $this->params = self::$configuration->router->params;
-        $this->class = '\\app\\modules\\' . self::$configuration->router->module . '\\controllers\\' . ucfirst($this->controller);
-
+        $this->class = '\\App\\Module\\' . self::$configuration->router->module . '\\Controllers\\' . ucfirst($this->controller);
     }
 
     /**
@@ -264,10 +263,10 @@ class App
      */
     private function processRequest()
     {
-
         $moduleExist = file_exists(APP_PATH . '/modules/' . $this->module);
         $classExist = class_exists($this->class);
         $methodExist = method_exists($this->class, $this->method);
+
         if (!$moduleExist || !$classExist || !$methodExist) {
             $view = new View();
             $this->output = $view->render404(['Invalid method requests']); //Router::show404(
