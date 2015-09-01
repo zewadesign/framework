@@ -31,10 +31,10 @@ class Model
     {
         // This abstract is strictly to establish inheritance from a global registery.
         $this->configuration = App::getConfiguration();
-
-        $this->dbh = Database::getInstance()->fetchConnection($name);
+        if ($this->configuration->database !== false) {
+            $this->dbh = Database::getInstance()->fetchConnection($name);
+        }
     }
-
     //@TODO: add these to Database, and then set a $this->db here,
     protected function preparePlaceHolders($arguments)
     {
@@ -45,6 +45,9 @@ class Model
         $result = false;
 
         try {
+            if(is_null($this->dbh)) {
+                throw new \PDOException('Database handler is not available');
+            }
             $sth = $this->dbh->prepare($sql);
             $sth->execute($params);
             if($sth->rowCount() > 0) {
@@ -63,6 +66,9 @@ class Model
         $result = false;
 
         try {
+            if(is_null($this->dbh)) {
+                throw new \PDOException('Database handler is not available');
+            }
             $sth = $this->dbh->prepare($sql);
             $result = $sth->execute($params);
             $sth->closeCursor();
@@ -75,7 +81,14 @@ class Model
 
     protected function lastInsertId()
     {
-        return $this->dbh->lastInsertId();
+        try {
+            if(is_null($this->dbh)) {
+                throw new \PDOException('Database handler is not available');
+            }
+            return $this->dbh->lastInsertId();
+        } catch (\PDOException $e) {
+            echo '<pre>', $e->getMessage(), '</pre>';
+        }
     }
 
     /**
@@ -85,7 +98,7 @@ class Model
      * @return object
      */
 
-    public static function &getInstance()
+    public static function getInstance()
     {
 
         try {
