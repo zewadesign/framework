@@ -1,6 +1,6 @@
 <?php
 
-namespace core;
+namespace Zewa;
 
 /**
  * This class is the starting point for application

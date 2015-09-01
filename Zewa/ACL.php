@@ -1,6 +1,5 @@
 <?php
-namespace core;
-use app\modules as modules;
+namespace Zewa;
 
 class ACL
 {
@@ -255,7 +254,7 @@ class ACL
      * @return object
      */
 
-    public static function &getInstance()
+    public static function getInstance()
     {
 
         try {

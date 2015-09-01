@@ -1,7 +1,5 @@
 <?php
-namespace core;
-
-use \Exception as Exception;
+namespace Zewa;
 
 /**
  * Handles everything relating to request variables/globals/properties
