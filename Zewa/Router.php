@@ -289,7 +289,7 @@ class Router
 
             $self = $_SERVER['PHP_SELF'];
             $server = $_SERVER['HTTP_HOST'] . rtrim(str_replace(strstr($self, 'index.php'), '', $self), '/');
-            if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') {
+            if ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') || !empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
                 $protocol = 'https://';
             } else {
                 $protocol = 'http://';
