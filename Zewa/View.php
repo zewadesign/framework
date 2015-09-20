@@ -107,7 +107,7 @@ class View
         $module = $this->configuration->router->module;
 
         try {
-            $view = APP_PATH . DIRECTORY_SEPARATOR . 'modules' . DIRECTORY_SEPARATOR . $module . DIRECTORY_SEPARATOR . 'Views' . DIRECTORY_SEPARATOR . strtolower($requestedView) . '.php';
+            $view = APP_PATH . DIRECTORY_SEPARATOR . 'Modules' . DIRECTORY_SEPARATOR . $module . DIRECTORY_SEPARATOR . 'Views' . DIRECTORY_SEPARATOR . strtolower($requestedView) . '.php';
             if (!file_exists($view)) {
                 throw new \Exception('View: "' . $view . '" could not be found.');
             }
@@ -132,7 +132,7 @@ class View
     public function setLayout($layout)
     {
 
-        $layout = APP_PATH . DIRECTORY_SEPARATOR . 'layouts' . DIRECTORY_SEPARATOR . strtolower($layout) . '.php';
+        $layout = APP_PATH . DIRECTORY_SEPARATOR . 'Layouts' . DIRECTORY_SEPARATOR . strtolower($layout) . '.php';
         try {
 
             if(!file_exists($layout)) {

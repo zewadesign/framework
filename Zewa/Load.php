@@ -5,18 +5,6 @@ namespace Zewa;
 /**
  * This class handles loading of resources
  *
- * <code>
- *
- * $this->load->model('model');
- * $controller = $this->load->controller('module','controller',['optional','parameters']);
- * $view = $this->load->view('relative/to/module',['some'=>'data'],'optional/layout');
- * $library = $this->load->library('relative/to/library',['constructor','arguments']);
- * $this->load->helper('relative/to/helpers',required = (true|false));
- * $config = $this->load->config('file', 'reference');
- * $lang = $this->load->lang('file', 'reference');
- *
- * </code>
- *
  * @author Zechariah Walden<zech @ zewadesign.com>
  */
 class Load
@@ -80,11 +68,11 @@ class Load
                 return json_decode(json_encode($this->config));
             }
 
-            if ($file != '' and file_exists(APP_PATH . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . $file . '.php')) {
-                if (!file_exists(APP_PATH . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . $file . '.php')) {
+            if ($file != '' and file_exists(APP_PATH . DIRECTORY_SEPARATOR . 'Config' . DIRECTORY_SEPARATOR . $file . '.php')) {
+                if (!file_exists(APP_PATH . DIRECTORY_SEPARATOR . 'Config' . DIRECTORY_SEPARATOR . $file . '.php')) {
                     throw new \Exception($file . ' could not be found');
                 }
-                include(APP_PATH . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . $file . '.php');
+                include(APP_PATH . DIRECTORY_SEPARATOR . 'Config' . DIRECTORY_SEPARATOR . $file . '.php');
 
                 if (is_array($$file)) {
 
