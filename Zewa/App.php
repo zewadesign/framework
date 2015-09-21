@@ -266,6 +266,7 @@ class App
         $moduleExist = file_exists(APP_PATH . '/Modules/' . $this->module);
         $classExist = class_exists($this->class);
         $methodExist = method_exists($this->class, $this->method);
+        
         if (!$moduleExist || !$classExist || !$methodExist) {
             $view = new View();
             $this->output = $view->render404(['Invalid method requests']); //Router::show404(

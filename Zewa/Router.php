@@ -235,17 +235,18 @@ class Router
         $method = $this->defaultMethod;
 
         if (!empty($uriChunks)) {
-            $module = $uriChunks[0];
+            $module = ucfirst($uriChunks[0]);
             if (!empty($uriChunks[1])) { // && !empty($moduleConfig[$module]['defaultController'])) {
-                $controller = $uriChunks[1];
+                $controller = ucfirst($uriChunks[1]);
             } else if (!empty($this->configuration->modules->$module->defaultController)) {
-                $controller = $this->configuration->modules->$module->defaultController;
+                $controller = ucfirst($this->configuration->modules->$module->defaultController);
             }
 
             if (!empty($uriChunks[2])) {
                 $method = $uriChunks[2];
                 $class = '\\App\\Modules\\' . $module . '\\Controllers\\' . ucfirst($controller);
                 $methodExist = method_exists($class, $method);
+                
                 if($methodExist === false) {
                     if (!empty($this->configuration->modules->$module->defaultMethod)) {
                         $method = $this->configuration->modules->$module->defaultMethod;
