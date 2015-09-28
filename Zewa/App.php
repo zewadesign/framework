@@ -24,6 +24,13 @@ class App
     private static $configuration;
 
     /**
+     * System service management
+     *
+     * @var object
+     */
+    private static $services;
+
+    /**
      * Events
      */
     private static $events;
@@ -78,13 +85,6 @@ class App
     private $params;
 
     /**
-     * Instantiated load class
-     *
-     * @var object
-     */
-    private $load;
-
-    /**
      * Instantiated router class
      *
      * @var object
@@ -108,28 +108,16 @@ class App
     {
         //@TODO: unset unnececessary vars/profile/unit testing..? how?
         //@TODO: better try/catch usage
-        //@TODO: validation needs a second look, the required is screwing up on empty (the ol' isset/empty nonsense.. need to validate intent
         //@TODO: setup custom routing based on regex // (can't we get away without using regex tho?)!!!!!!! routesssssss!!!!!!!!
-        //@TODO: system vars (_) need to be moved to an array called "system" in the registry, and write protected, _ is lame.
-
         try {
 
-            $this->load = new Load();
+            self::$configuration = new \stdClass();
+            self::setConfiguration();
 
-            $configObject = (object) [
-                'environment'      => $this->load->config('app', 'config')->environment,
-                'database' => $this->load->config('database', 'config'),
-                'session'  => $this->load->config('session', 'config'),
-                'acl'      => $this->load->config('acl', 'config'),
-                'layouts'  => $this->load->config('layouts', 'config'),
-                'modules'  => $this->load->config('modules', 'config')
-            ];
-
-            self::setConfiguration($configObject);
-
-        } catch(\Exception $e) {
-            echo "<PRE>";
-            print_r($e->getMessage());
+        } catch(\RuntimeException $e) {
+            echo "<strong>RuntimeException:</strong> <br/>";
+            echo $e->getMessage();
+            exit;
         }
     }
 
@@ -164,12 +152,13 @@ class App
     {
         App::callEvent('preApplication');
 
-        $this->router = new Router();
-
-        $this->registerDatabase();
         $this->registerSession();
 
-        $this->request = new Request();
+        self::$services = new ServiceManager();
+
+        $this->router = App::getService('router');
+        $this->request = App::getService('request');
+        $this->database = App::getService('database');
 
         $this->module = ucfirst(self::$configuration->router->module);
         $this->controller = ucfirst(self::$configuration->router->controller);
@@ -178,20 +167,29 @@ class App
         $this->class = '\\App\\Modules\\' . self::$configuration->router->module . '\\Controllers\\' . ucfirst($this->controller);
     }
 
+    public static function getService($service = null, $new = false, $options = []) {
+        if ($service !== null) {
+            if($new === false ) {
+                return self::$services->$service;
+            } else if($new === true || empty ( self::$services->$service ) ) {
+                self::$services->$service = call_user_func_array(self::$services->$service, $options);
+                return self::$services->$service;
+            }
+        }
+    }
+
     /**
-     * @param mixed optional string with reference to config
+     * @param mixed string with reference to config
      * @return mixed bool or config values
      */
-    public static function getConfiguration($config = false)
+    public static function getConfiguration($config = null)
     {
-        if($config !== false) {
-
-            if( empty( self::$configuration->$config ) ) {
-                return false;
-            } else {
+        if($config !== null) {
+            if( ! empty ( self::$configuration->$config ) ) {
                 return self::$configuration->$config;
             }
 
+            return false;
         }
 
         return self::$configuration;
@@ -199,37 +197,47 @@ class App
     }
 
     /**
-     * @param mixed bool|object
-     * @param bool|object|array optional array of configuration data
-     */
-    public static function setConfiguration($config, $configObject = false)
-    {
-        if( !empty( $configObject ) ) {
-            self::$configuration->$config = $configObject;
-        } else {
-            self::$configuration = $config;
-        }
-
-    }
-
-    /**
-     * Registers the database object
+     * @param $config mixed null|string
+     * @param null|object|array optional array of configuration data
      *
-     * @access private
+     * @return bool
+     * @throws StateException
      */
-    private function registerDatabase()
+    public static function setConfiguration($config = null, $configObject = null)
     {
+        try {
+            if( $config !== null && $configObject !== null && !empty( $configObject ) ) {
+                self::$configuration->$config = $configObject;
+                return true;
+            } else if($config === null && $configObject === null) {
 
-        if (self::$configuration->database) {
+                $files = glob(APP_PATH . DIRECTORY_SEPARATOR . 'Config' . DIRECTORY_SEPARATOR . '*.php');
+                foreach ($files as $index => $filename){
+                    $pieces = explode('/', $filename);
+                    $file = $pieces[count($pieces) - 1];
+                    $fileProperties = explode('.', $file);
 
-            App::callEvent('preDatabase');
-            $this->database = new Database(self::$configuration->database);
-            App::callEvent('postDatabase');
+                    $vars = include($filename);
+                    if($vars === 1) {
+                        throw new Exception\StateException('No configuration values found in: ' . $fileProperties[0]);
+                    }
 
+                    if($fileProperties[0] === 'services') {
+                        self::$configuration->$fileProperties[0] = $vars;
+                    } else {
+                        self::$configuration->$fileProperties[0] = json_decode(json_encode($vars));
+                    }
+                }
+
+                return true;
+            }
+
+            throw new Exception\StateException('You must provide the configuration key, and its value.');
+        } catch(Exception\StateException $e) {
+            echo "<strong>StateException:</strong> <br/>";
+            echo $e->getMessage();
+            exit;
         }
-
-        return;
-
     }
 
     /**

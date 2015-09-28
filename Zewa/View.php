@@ -16,13 +16,6 @@ class View
     protected $configuration;
 
     /**
-     * Instantiated load class pointer
-     *
-     * @var object
-     */
-    protected $load;
-
-    /**
      * Instantiated request class pointer
      *
      * @var object
@@ -64,9 +57,8 @@ class View
     {
         // This abstract is strictly to establish inheritance from a global registery.
         $this->configuration = App::getConfiguration();
-        $this->load = Load::getInstance();
-        $this->request = Request::getInstance();
-        $this->router = Router::getInstance();
+        $this->request = App::getService('request');
+        $this->router = App::getService('router');
     }
 
     private function baseURL($path = '') {
@@ -109,11 +101,12 @@ class View
         try {
             $view = APP_PATH . DIRECTORY_SEPARATOR . 'Modules' . DIRECTORY_SEPARATOR . $module . DIRECTORY_SEPARATOR . 'Views' . DIRECTORY_SEPARATOR . strtolower($requestedView) . '.php';
             if (!file_exists($view)) {
-                throw new \Exception('View: "' . $view . '" could not be found.');
+                throw new Exception\LookupException('View: "' . $view . '" could not be found.');
             }
             $this->view = $view;
-        } catch (\Exception $e) {
-            echo 'Caught exception:' . $e->getMessage();
+        } catch (Exception\LookupException $e) {
+            echo "<strong>LookupException:</strong> <br/>";
+            echo $e->getMessage();
             exit;
         }
 
@@ -136,15 +129,17 @@ class View
         try {
 
             if(!file_exists($layout)) {
-                throw new \Exception('Layout: "' . $layout . '" could not be found.');
+                throw new Exception\LookupException('Layout: "' . $layout . '" could not be found.');
             }
 
             $this->layout = $layout;
 
             return true;
 
-        } catch (\Exception $e) {
-            echo '<pre>', $e->getMessage(), '</pre>';
+        } catch (Exception\LookupException $e) {
+            echo "<strong>LookupException:</strong> <br/>";
+            echo $e->getMessage();
+            exit;
         }
     }
 
@@ -231,7 +226,7 @@ class View
                 $existingCSS = (array)$existingCSS;
             }
             if (empty($sheets)) {
-                throw new \Exception('You must provide a valid CSS Resource.');
+                throw new Exception\LookupException('You must provide a valid CSS Resource.');
             }
 
             $files = [];
@@ -240,7 +235,7 @@ class View
                 if ($this->verifyResource($file)) {
                     $files[] = $file;
                 } else {
-                    throw new \Exception('The CSS Resource you\'ve specified does not exist.');
+                    throw new Exception\LookupException('The CSS Resource you\'ve specified does not exist.');
                 }
             }
 
@@ -251,8 +246,9 @@ class View
             }
 
             App::setConfiguration('view::css', (object)$existingCSS);
-        } catch (\Exception $e) {
-            echo 'Caught exception:' . $e->getMessage();
+        } catch (Exception\LookupException $e) {
+            echo "<strong>LookupException:</strong> <br/>";
+            echo $e->getMessage();
             exit;
         }
     }
@@ -268,7 +264,7 @@ class View
             }
 
             if (empty($scripts)) {
-                throw new \Exception('You must provide a valid JS Resource.');
+                throw new Exception\LookupException('You must provide a valid JS Resource.');
             }
 
             $files = [];
@@ -277,7 +273,7 @@ class View
                 if ($this->verifyResource($file)) {
                     $files[] = $file;
                 } else {
-                    throw new \Exception('The JS Resource you\'ve specified does not exist: ' . $file);
+                    throw new Exception\LookupException('The JS Resource you\'ve specified does not exist: ' . $file);
                 }
             }
 
@@ -288,8 +284,9 @@ class View
             }
             App::setConfiguration('view::js', (object)$existingJS);
 
-        } catch (\Exception $e) {
-            echo 'Caught exception:' . $e->getMessage();
+        } catch (Exception\LookupException $e) {
+            echo "<strong>LookupException:</strong> <br/>";
+            echo $e->getMessage();
             exit;
         }
     }

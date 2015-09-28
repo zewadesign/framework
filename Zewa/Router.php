@@ -86,7 +86,6 @@ class Router
     public function __construct()
     {
         self::$instance = $this;
-
         $this->configuration = App::getConfiguration();
 
         $this->defaultModule = $this->configuration->modules->defaultModule;
@@ -95,12 +94,17 @@ class Router
         $this->defaultMethod = $this->configuration->modules->$defaultModule->defaultMethod;
 
         $normalizedURI = $this->normalizeURI();
+
+        //check routes
+
+
         $this->uri = $this->uri($normalizedURI);
         $this->baseURL = $this->baseURL();
         $this->currentURL = $this->currentURL();
 
         //@TODO: routing
         $uriChunks = $this->parseURI($this->uri);
+
         App::setConfiguration('router', (object)[
             'module' => $uriChunks[0],
             'controller' => $uriChunks[1],
@@ -202,7 +206,36 @@ class Router
 
         $normalizedURI = ltrim(preg_replace('/\?.*/', '', $normalizedURI), '/');
 
+        $normalizedURI = $this->discoverRoute($normalizedURI);
+
         return $normalizedURI;
+    }
+
+    private function discoverRoute($uri)
+    {
+        $routes = $this->configuration->routes;
+
+        foreach($routes as $route => $reroute) {
+            $pattern = '/^' . str_replace('/', '\/', $route) . '$/';
+
+            if (preg_match($pattern, $uri, $params)) {
+                array_shift($params);
+
+                $uri = $reroute;
+
+                if( ! empty ( $params ) ) {
+                    $pat = '/(\$\d+)/';
+                    $uri = preg_replace_callback($pat, function() use (&$params){
+                        $first = $params[0];
+                        array_shift($params);
+                        return $first;
+                    }, $reroute);
+                }
+
+            }
+        }
+
+        return $uri;
     }
 
     /**
@@ -371,31 +404,6 @@ class Router
         $url = preg_replace('!^/*!', '', $url);
         header("Location: " . $this->baseURL($url));
         exit;
-
-    }
-
-    /**
-     * Returns a reference of object once instantiated
-     *
-     * @access public
-     * @return object
-     */
-    public static function &getInstance()
-    {
-
-        try {
-
-            if (self::$instance === null) {
-                throw new \Exception('Unable to get an instance of the database class. The class has not been instantiated yet.');
-            }
-
-            return self::$instance;
-
-        } catch(\Exception $e) {
-
-            echo '<strong>Message:</strong> ' . $e->getMessage();
-
-        }
 
     }
 }

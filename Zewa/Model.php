@@ -31,7 +31,8 @@ class Model
         // This abstract is strictly to establish inheritance from a global registery.
         $this->configuration = App::getConfiguration();
         if ($this->configuration->database !== false) {
-            $this->dbh = Database::getInstance()->fetchConnection($name);
+            $database = App::getService('database');
+            $this->dbh = $database->fetchConnection($name);
         }
     }
     //@TODO: add these to Database, and then set a $this->db here,
@@ -55,7 +56,11 @@ class Model
             $sth->closeCursor();
 
         } catch (\PDOException $e) {
-            echo '<pre>', $e->getMessage(), '</pre>';
+
+            echo "<strong>PDOException:</strong> <br/>";
+            echo $e->getMessage();
+            exit;
+
         }
 
         return $result;
@@ -72,7 +77,11 @@ class Model
             $result = $sth->execute($params);
             $sth->closeCursor();
         } catch (\PDOException $e) {
-            echo '<pre>', $e->getMessage(), '</pre>';
+
+            echo "<strong>PDOException:</strong> <br/>";
+            echo $e->getMessage();
+            exit;
+
         }
 
         return $result;
@@ -86,7 +95,11 @@ class Model
             }
             return $this->dbh->lastInsertId();
         } catch (\PDOException $e) {
-            echo '<pre>', $e->getMessage(), '</pre>';
+
+            echo "<strong>PDOException:</strong> <br/>";
+            echo $e->getMessage();
+            exit;
+
         }
     }
 
@@ -103,15 +116,15 @@ class Model
         try {
 
             if (self::$instance === null) {
-                throw new \Exception('Unable to get an instance of the Model class. The class has not been instantiated yet.');
+                throw new Exception\TypeException('There is no instance of Model available.');
             }
 
             return self::$instance;
 
-        } catch(\Exception $e) {
-
-            echo 'Message' . $e->getMessage();
-
+        } catch(Exception\TypeException $e) {
+            echo "<strong>TypeException:</strong> <br/>";
+            echo $e->getMessage();
+            exit;
         }
 
     }

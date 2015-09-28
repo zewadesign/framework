@@ -75,7 +75,9 @@ class SessionHandler
         if($interface !== 'file') {
 
             try {
-                $this->dbh = Database::getInstance()->fetchConnection();
+
+                $database = new Database();//App::getService('database')->fetchConnection();
+                $this->dbh = $database->fetchConnection('default');
 
                 session_set_save_handler(
                     [&$this, 'open'],
@@ -90,7 +92,10 @@ class SessionHandler
 
             } catch(\PDOException $e) {
 
+                echo "<strong>PDOException:</strong> <br/>";
+                echo 'We can\'t find the Session table... hold on.. we\'re going to recreate! Alright! Give it a refresh.';
                 $this->createSessionTable();
+                exit;
 
             }
 
@@ -111,7 +116,9 @@ class SessionHandler
             $sth->execute();
             $result = $sth->fetch(\PDO::FETCH_OBJ);
         } catch (\PDOException $e) {
-            echo '<pre>', $e->getMessage(), '</pre>';
+            echo "<strong>PDOException:</strong> <br/>";
+            echo $e->getMessage();
+            exit;
         }
 
         return $result->count;
@@ -136,7 +143,6 @@ class SessionHandler
 
     public function regenerateId()
     {
-
         $old_session_id = session_id();
         session_regenerate_id();
         $this->destroy($old_session_id);
@@ -148,12 +154,19 @@ class SessionHandler
         try {
             $lock = $this->dbh->prepare('SELECT RELEASE_LOCK(?)')
                 ->execute([$this->sessionLock]);
-        } catch (\PDOException $e) {
-            echo '<pre>', $e->getMessage(), '</pre>';
-        }
 
-        if (!$lock) {
-            throw new \Exception('Session: Could not release session lock!');
+            if (!$lock) {
+                throw new Exception\StateException('Session: Could not release session lock!');
+            }
+
+        } catch (\PDOException $e) {
+            echo "<strong>PDOException:</strong> <br/>";
+            echo $e->getMessage();
+            exit;
+        } catch(Exception\StateException $e) {
+            echo "<strong>StateException:</strong> <br/>";
+            echo $e->getMessage();
+            exit;
         }
 
         return true;
@@ -170,7 +183,9 @@ class SessionHandler
             $success = $this->dbh->prepare($query)
                 ->execute([$sessionId]);
         } catch (\PDOException $e) {
-            echo '<pre>', $e->getMessage(), '</pre>';
+            echo "<strong>PDOException:</strong> <br/>";
+            echo $e->getMessage();
+            exit;
         }
 
         if ($success) {
@@ -190,7 +205,9 @@ class SessionHandler
             return $this->dbh->prepare($query)
                 ->execute([time()]);
         } catch (\PDOException $e) {
-            echo '<pre>', $e->getMessage(), '</pre>';
+            echo "<strong>PDOException:</strong> <br/>";
+            echo $e->getMessage();
+            exit;
         }
 
     }
@@ -255,7 +272,9 @@ class SessionHandler
                 ->execute($arguments);
 
         } catch (\PDOException $e) {
-            echo '<pre>', $e->getMessage(), '</pre>';
+            echo "<strong>PDOException:</strong> <br/>";
+            echo $e->getMessage();
+            exit;
         }
 
         return $success;
@@ -270,15 +289,24 @@ class SessionHandler
                     $this->sessionLock,
                     $this->lockTimeout
                 ]);
+
+            if (!$lock) {
+                throw new Exception\StateException('Session: Could not obtain session lock!');
+            }
+
+            return $lock;
+
         } catch (\PDOException $e) {
-            echo '<pre>', $e->getMessage(), '</pre>';
+            echo "<strong>PDOException:</strong> <br/>";
+            echo $e->getMessage();
+            exit;
+        } catch(Exception\StateException $e) {
+            echo "<strong>StateException:</strong> <br/>";
+            echo $e->getMessage();
+            exit;
         }
 
-        if (!$lock) {
-            throw new \Exception('Session: Could not obtain session lock!');
-        }
 
-        return $lock;
     }
 
     private function fetchSessionData($sessionId)
@@ -294,9 +322,9 @@ class SessionHandler
         ];
 
         $sth = $this->dbh->prepare($query);
+
         $sth->execute($arguments);
         $result = $sth->fetch(\PDO::FETCH_OBJ);
-
         return $result;
     }
 
@@ -319,7 +347,9 @@ class SessionHandler
                 ->execute();
 
         } catch (\PDOException $e) {
-            echo '<pre>', $e->getMessage(), '</pre>';
+            echo "<strong>PDOException:</strong> <br/>";
+            echo $e->getMessage();
+            exit;
         }
 
         exit;

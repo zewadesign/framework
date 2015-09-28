@@ -262,26 +262,36 @@ class Request
 
     public function setSession($index = false, $value = false)
     {
-        if ((!is_array($index) && $value !== false)
-            || (!is_object($index) && $value !== false)
-        ) {
-            $index = array($index => $value);
+        try {
 
-        } elseif (is_object($index)) {
-            $index = (array) $index;
+            if ((!is_array($index) && $value !== false)
+                || (!is_object($index) && $value !== false)
+            ) {
+                $index = array($index => $value);
 
-        } else {
-            if (!is_array($index)) {
-                throw new \Exception("Invalid where parameters");
+            } elseif (is_object($index)) {
+
+                $index = (array) $index;
+
+            } else {
+                if (!is_array($index)) {
+                    throw new Exception\TypeException("Invalid where parameters");
+                }
+
             }
 
-        }
+            foreach ($index as $k => $v) {
+                $_SESSION[$k] = $v;
+                $this->sessionContainer = $this->_normalize($_SESSION);
+            }
 
-        foreach ($index as $k => $v) {
-            $_SESSION[$k] = $v;
-            $this->sessionContainer = $this->_normalize($_SESSION);
-        }
+        } catch (Exception\TypeException $e) {
 
+            echo "<strong>TypeException:</strong> <br/>";
+            echo $e->getMessage();
+            exit;
+
+        }
     }
 
     /**
@@ -291,7 +301,7 @@ class Request
     public function destroySession()
     {
 
-        $_SESSION = array();
+        $_SESSION = [];
 
         if (ini_get("session.use_cookies")) {
             $params = session_get_cookie_params();
@@ -348,55 +358,37 @@ class Request
         return $data;
     }
 
-    /**
-     * Returns a reference of object once instantiated
-     *
-     * @access public
-     * @return object
-     */
-
-    public static function &getInstance()
-    {
-
-        try {
-
-            if (self::$instance === null) {
-                throw new \Exception('Unable to get an instance of the request class. The class has not been instantiated yet.');
-            }
-
-            return self::$instance;
-
-        } catch(\Exception $e) {
-
-            echo 'Message' . $e->getMessage();
-
-        }
-
-    }
-
     public function __call($name, $arguments)
     {
         $accepted = ['post', 'put', 'delete', 'get', 'server', 'session'];
 
-        if(in_array($name, $accepted)) {
-            $container = $name . 'Container';
-            $container = $this->$container;
+        try {
+            if(in_array($name, $accepted)) {
 
-            $argument = !empty($arguments[0]) ? $arguments[0] : false;
-            if($argument === false && !empty($container)) {
-                return $container;
+                $container = $name . 'Container';
+                $container = $this->$container;
+
+                $argument = ! empty( $arguments[0] ) ? $arguments[0] : false;
+
+                if($argument === false && !empty($container)) {
+                    return $container;
+                }
+                if( ! empty ( $container[$argument] ) ) {
+                    if(!is_array($container[$argument]) && strlen($container[$argument]) > 0 || is_array($container[$argument])) {
+                        return $container[$argument];
+                    }
+                }
+
+                return ! empty ( $arguments[1] ) ? $arguments[1] : false;
             }
 
-            if(isset($container[$argument]) && is_array($container[$argument])) {
-                return $container[$argument];
-            }
-            if(!isset($container[$argument]) || strlen($container[$argument]) <= 0) {
-                return !empty($arguments[1]) ? $arguments[1] : false;
-            }
+            throw new Exception\FunctionException('Method ' . $name . ' does not exist.');
+        } catch(Exception\FunctionException $e) {
 
-            return $container[$argument];
+            echo "<strong>FunctionException:</strong> <br/>";
+            echo $e->getMessage();
+            exit;
+
         }
-
-        throw new \Exception('Method ' . $name . ' does not exist.');
     }
 }

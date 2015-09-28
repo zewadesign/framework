@@ -1,4 +1,5 @@
 <?php
+
 namespace Zewa;
 
 class ACL
@@ -75,8 +76,9 @@ class ACL
     public function __construct($userId = false, $roleId = false)
     {
         $this->configuration = App::getConfiguration();
-        $this->dbh = Database::getInstance()->fetchConnection();
-        $this->router = Router::getInstance();
+
+        $this->dbh = App::getService('database')->fetchConnection();
+        $this->router = App::getService('router');
 
         if (!$userId) {
             $guest = array_search('guest', (array) $this->configuration->acl->roles);
@@ -201,7 +203,9 @@ class ACL
             $sth->execute([$this->userId, $this->roleId, $module, $controller, $method]);
             $access = $sth->fetch(\PDO::FETCH_OBJ);
         } catch (\PDOException $e) {
-            echo '<pre>', $e->getMessage(), '</pre>';
+            echo "<strong>PDOException:</strong> <br/>";
+            echo $e->getMessage();
+            exit;
         }
 
         if (!$access) {
@@ -236,7 +240,10 @@ class ACL
             $access = $sth->fetch(\PDO::FETCH_OBJ);
 
         } catch (\PDOException $e) {
+            echo "<strong>PDOException:</strong> <br/>";
+            echo "We are unable to locate the ACL tables, we are going to generate these for you!";
             $this->createACLTables();
+            exit;
         }
 
         if (!$access) {
@@ -260,15 +267,15 @@ class ACL
         try {
 
             if (self::$instance === null) {
-                throw new \Exception('Unable to get an instance of the load class. The class has not been instantiated yet.');
+                throw new Exception\TypeException('There is no instance of ACL available.');
             }
 
             return self::$instance;
 
-        } catch(\Exception $e) {
-
-            echo 'Message' . $e->getMessage();
-
+        } catch(Exception\TypeException $e) {
+            echo "<strong>TypeException:</strong> <br/>";
+            echo $e->getMessage();
+            exit;
         }
 
     }
@@ -276,11 +283,11 @@ class ACL
     private function createRoleTable()
     {
         try {
-            $query = "CREATE TABLE `Role` ("
-                . "`id` int(11) NOT NULL AUTO_INCREMENT,"
-                . "`role_name` varchar(45) DEFAULT NULL,"
-                . "PRIMARY KEY (`id`),"
-                . "UNIQUE KEY `role_name_UNIQUE` (`role_name`)"
+            $query = "CREATE TABLE Role ("
+                . "id int(11) NOT NULL AUTO_INCREMENT,"
+                . "role_name varchar(45) DEFAULT NULL,"
+                . "PRIMARY KEY (id),"
+                . "UNIQUE KEY role_name_UNIQUE (role_name)"
                 . ") ENGINE=InnoDB DEFAULT CHARSET=utf8";
 
             $this->dbh->prepare($query)->execute();
@@ -297,7 +304,9 @@ class ACL
                 $this->dbh->prepare($query)->execute($arguments);
             }
         } catch (\PDOException $e) {
-            echo '<pre>', $e->getMessage(), '</pre>';
+            echo "<strong>PDOException:</strong> <br/>";
+            echo $e->getMessage();
+            exit;
         }
 
     }
@@ -305,16 +314,16 @@ class ACL
     private function createRoleAccessTable()
     {
         try {
-            $query = "CREATE TABLE `RoleAccess` ("
-                . "`id` int(11) NOT NULL AUTO_INCREMENT,"
-                . "`role_id` int(11) DEFAULT NULL,"
-                . "`role_module` varchar(65) DEFAULT NULL,"
-                . "`role_controller` varchar(255) DEFAULT NULL,"
-                . "`role_method` varchar(65) DEFAULT NULL,"
-                . "PRIMARY KEY (`id`),"
-                . "KEY `IXRole` (`role_controller`,`role_method`,`role_module`),"
-                . "KEY `IXRoleID` (`role_id`),"
-                . "CONSTRAINT `fk_RoleAccess_1` FOREIGN KEY (`role_id`) REFERENCES `Role` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION"
+            $query = "CREATE TABLE RoleAccess ("
+                . "id int(11) NOT NULL AUTO_INCREMENT,"
+                . "role_id int(11) DEFAULT NULL,"
+                . "role_module varchar(65) DEFAULT NULL,"
+                . "role_controller varchar(255) DEFAULT NULL,"
+                . "role_method varchar(65) DEFAULT NULL,"
+                . "PRIMARY KEY (id),"
+                . "KEY IXRole (role_controller,role_method,role_module),"
+                . "KEY IXRoleID (role_id),"
+                . "CONSTRAINT fk_RoleAccess_1 FOREIGN KEY (role_id) REFERENCES Role (id) ON DELETE CASCADE ON UPDATE NO ACTION"
                 . ") ENGINE=InnoDB DEFAULT CHARSET=utf8";
 
             $this->dbh->prepare($query)->execute();
@@ -338,7 +347,9 @@ class ACL
             $this->dbh->prepare($query)->execute($arguments);
 
         } catch (\PDOException $e) {
-            echo '<pre>', $e->getMessage(), '</pre>';
+            echo "<strong>PDOException:</strong> <br/>";
+            echo $e->getMessage();
+            exit;
         }
 
     }
@@ -346,22 +357,24 @@ class ACL
     private function createUserRoleTable()
     {
         try {
-            $query = "CREATE TABLE `UserRole` ("
-                . "`id` int(11) NOT NULL AUTO_INCREMENT,"
-                . "`role_id` int(11) DEFAULT NULL,"
-                . "`user_id` int(11) DEFAULT NULL,"
-                . "PRIMARY KEY (`id`),"
-                . "UNIQUE KEY `UX_UserID` (`user_id`),"
-                . "KEY `IX_RoleID` (`role_id`),"
-                . "CONSTRAINT `fkUserID1` FOREIGN KEY (`user_id`)"
-                . " REFERENCES `" . $this->configuration->acl->userTable . "` (`" . $this->configuration->acl->userId . "`)"
+            $query = "CREATE TABLE UserRole ("
+                . "id int(11) NOT NULL AUTO_INCREMENT,"
+                . "role_id int(11) DEFAULT NULL,"
+                . "user_id int(11) DEFAULT NULL,"
+                . "PRIMARY KEY (id),"
+                . "UNIQUE KEY UX_UserID (user_id),"
+                . "KEY IX_RoleID (role_id),"
+                . "CONSTRAINT fkUserID1 FOREIGN KEY (user_id)"
+                . " REFERENCES " . $this->configuration->acl->userTable . " (" . $this->configuration->acl->userId . ")"
                 . " ON DELETE CASCADE ON UPDATE NO ACTION"
                 . ") ENGINE=InnoDB DEFAULT CHARSET=utf8";
 
             $this->dbh->prepare($query)->execute();
 
         } catch (\PDOException $e) {
-            echo '<pre>', $e->getMessage(), '</pre>';
+            echo "<strong>PDOException:</strong> <br/>";
+            echo $e->getMessage();
+            exit;
         }
 
     }

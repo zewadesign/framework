@@ -18,13 +18,6 @@ abstract class Controller
     protected $configuration;
 
     /**
-     * Instantiated load class pointer
-     *
-     * @var object
-     */
-    protected $load;
-
-    /**
      * Instantiated router class pointer
      *
      * @var object
@@ -59,9 +52,8 @@ abstract class Controller
     {
         static::$instance = $this;
         $this->configuration = App::getConfiguration();
-        $this->load = Load::getInstance();
-        $this->request = Request::getInstance();
-        $this->router = Router::getInstance();
+        $this->request = App::getService('request');
+        $this->router = App::getService('router');
     }
 
     /**
@@ -69,21 +61,24 @@ abstract class Controller
      *
      * @access public
      * @return object
+     * @throws Exception\TypeException
      */
-    public static function &getInstance()
+    public static function getInstance()
     {
 
         try {
 
             if (static::$instance === null) {
-                throw new \Exception('Unable to get an instance of the controller class. The class has not been instantiated yet.');
+                throw new Exception\TypeException('There is no instance of ACL available.');
             }
 
             return static::$instance;
 
-        } catch(\Exception $e) {
+        } catch(Exception\TypeException $e) {
 
-            echo 'Message' . $e->getMessage();
+            echo "<strong>TypeException:</strong> <br/>";
+            echo $e->getMessage();
+            exit;
 
         }
 

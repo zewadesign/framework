@@ -1,4 +1,5 @@
 <?php
+
 namespace Zewa;
 
 /**
@@ -8,12 +9,7 @@ namespace Zewa;
  */
 class Database
 {
-    /**
-     * Reference to instantiated controller object.
-     *
-     * @var object
-     */
-    protected static $instance;
+    private $configuration;
 
     /**
      * Database object reference
@@ -21,79 +17,53 @@ class Database
      * @access private
      * @var object
      */
-    protected $dbh = [];
+    protected static $dbh = [];
 
-    /**
-     * Database configurations
-     *
-     * @access private
-     * @var object
-     */
-    private $config;
-
-
-
-    /**
-     * Load up some basic configuration settings.
-     */
-    public function __construct($config)
+    public function __construct($name = 'default')
     {
-        self::$instance = $this;
-        $this->config = $config;
-        $this->establishConnection($config->default);
+        $this->configuration = App::getConfiguration('database');
+        $this->establishConnection($name);
     }
 
-    public function establishConnection($config, $name = 'default')
+    public function establishConnection($name = 'default')
     {
-        if($config !== false) {
-            try {
-                $this->dbh[$name] = new \PDO($config->dsn, $config->user, $config->pass);
-                $this->dbh[$name]->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-            } catch (\Exception $e) {
-                // Echo a different exception here.
-                echo $e->getMessage();
+        try {
+
+            if($this->configuration !== false) {
+
+                if( ! empty ( $this->configuration->$name ) ) {
+                    $dbConfig = $this->configuration->$name;
+                    self::$dbh[$name] = new \PDO($dbConfig->dsn, $dbConfig->user, $dbConfig->pass);
+                    self::$dbh[$name]->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+                } else {
+                    throw new Exception\TypeException('Please specify a valid database configuration, or provide a default configuration.');
+                }
+
             }
 
-        } else {
-            throw new \Exception('Please specify a valid database configuration.');
+        } catch (Exception\TypeException $e) {
+            echo "<strong>TypeException:</strong> <br/>";
+            echo $e->getMessage();
+            exit;
         }
+
     }
 
     public function fetchConnection($name = 'default')
     {
-        if( ! empty($this->dbh[$name]) ) {
-            return $this->dbh[$name];
-        } else if( ! empty($this->config->$name) ){
-            $this->establishConnection($this->config->$name, $name);
-            return $this->dbh[$name];
-        }
-
-        return false;
-    }
-
-    /**
-     * Returns a reference of object once instantiated
-     *
-     * @access public
-     * @return object
-     */
-
-    public static function &getInstance()
-    {
-
         try {
-
-            if (self::$instance === null) {
-                throw new \Exception('Unable to get an instance of the database class. The class has not been instantiated yet.');
+            if (!empty(self::$dbh[$name])) {
+                return self::$dbh[$name];
+            } else if (!empty($this->configuration->$name)) {
+                $this->establishConnection($name);
+                return self::$dbh[$name];
+            } else {
+                throw new Exception\LookupException('Cannot find a valid database config for: ' . $name);
             }
-
-            return self::$instance;
-
-        } catch(\Exception $e) {
-
-            echo '<strong>Message:</strong> ' . $e->getMessage();
-
+        } catch(Exception\LookupException $e) {
+            echo "<strong>LookupException:</strong> <br/>";
+            echo $e->getMessage();
+            exit;
         }
-
     }
 }
