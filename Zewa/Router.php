@@ -206,8 +206,10 @@ class Router
 
         $normalizedURI = ltrim(preg_replace('/\?.*/', '', $normalizedURI), '/');
 
-        $normalizedURI = $this->discoverRoute($normalizedURI);
-
+        if( ! empty ( $this->configuration->routes ) ) {
+            $normalizedURI = $this->discoverRoute($normalizedURI);
+        }
+        
         return $normalizedURI;
     }
 
