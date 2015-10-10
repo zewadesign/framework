@@ -216,7 +216,7 @@ class Router
         $routes = $this->configuration->routes;
 
         foreach($routes as $route => $reroute) {
-            $pattern = '/^' . str_replace('/', '\/', $route) . '$/';
+            $pattern = '/^(?i)' . str_replace('/', '\/', $route) . '$/';
 
             if (preg_match($pattern, $uri, $params)) {
                 array_shift($params);
@@ -247,7 +247,7 @@ class Router
     private function uri($uri)
     {
         if($uri !== '') {
-            $uriChunks = explode('/', filter_var(trim(strtolower($uri)), FILTER_SANITIZE_URL));
+            $uriChunks = explode('/', filter_var(trim($uri), FILTER_SANITIZE_URL));
             $chunks = $this->sortURISegments($uriChunks);
         } else {
             $chunks = $this->sortURISegments();
@@ -263,21 +263,28 @@ class Router
 
     private function sortURISegments($uriChunks = [])
     {
-        $module = $this->defaultModule;
-        $controller = $this->defaultController;
-        $method = $this->defaultMethod;
+        $module = ucfirst(strtolower($this->defaultModule));
+        $controller = ucfirst(strtolower($this->defaultController));
+        $method = ucfirst(strtolower($this->defaultMethod));
 
         if (!empty($uriChunks)) {
-            $module = ucfirst($uriChunks[0]);
-            if (!empty($uriChunks[1])) { // && !empty($moduleConfig[$module]['defaultController'])) {
-                $controller = ucfirst($uriChunks[1]);
+
+            $module = ucfirst(strtolower($uriChunks[0]));
+
+            if (!empty($uriChunks[1])) {
+
+                $controller = ucfirst(strtolower($uriChunks[1]));
+
             } else if (!empty($this->configuration->modules->$module->defaultController)) {
-                $controller = ucfirst($this->configuration->modules->$module->defaultController);
+
+                $controller = $this->configuration->modules->$module->defaultController;
+
             }
 
             if (!empty($uriChunks[2])) {
-                $method = $uriChunks[2];
-                $class = '\\App\\Modules\\' . $module . '\\Controllers\\' . ucfirst($controller);
+
+                $method = ucfirst(strtolower($uriChunks[2]));
+                $class = '\\App\\Modules\\' . $module . '\\Controllers\\' . $controller;
                 $methodExist = method_exists($class, $method);
                 
                 if($methodExist === false) {
@@ -286,6 +293,7 @@ class Router
                         array_unshift($uriChunks, null);
                     }
                 }
+
             } else if (!empty($this->configuration->modules->$module->defaultMethod)) {
                 $method = $this->configuration->modules->$module->defaultMethod;
             }
@@ -294,7 +302,7 @@ class Router
 
         }
 
-        $return = [ucfirst($module), ucfirst($controller), ucfirst($method)];
+        $return = [$module, $controller, $method];
         return array_merge($return, array_values($uriChunks));
     }
 
