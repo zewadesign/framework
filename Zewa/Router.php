@@ -316,6 +316,9 @@ class Router
      */
     public function currentURL()
     {
+        if( trim ( $_SERVER['REQUEST_URI'] ) === '/' ) {
+            return $this->baseURL() . (!empty($_SERVER['QUERY_STRING']) ? '?' . $_SERVER['QUERY_STRING'] : '');
+        }
 
         return $this->baseURL($this->uri) . (!empty($_SERVER['QUERY_STRING']) ? '?' . $_SERVER['QUERY_STRING'] : '');
 
