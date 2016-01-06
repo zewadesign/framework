@@ -327,7 +327,8 @@ class Request
      */
     private function _normalize($data)
     {
-        if (is_array($data)) {
+        if (is_array($data) || is_object($data)) {
+            $data = (array) $data;
             foreach ($data as $key => $value) {
                 unset($data[$key]);
 
