@@ -91,7 +91,13 @@ class View
         if($this->layout === false) {
             $this->setLayout($this->configuration->layouts->default);
         }
-        return $this->process($this->layout, $this->properties);
+
+        if(is_null($this->layout)) {
+            return $this->view;
+        } else {
+            return $this->process($this->layout);
+        }
+
     }
 
     public function setView($requestedView)
@@ -125,21 +131,29 @@ class View
     public function setLayout($layout)
     {
 
-        $layout = APP_PATH . DIRECTORY_SEPARATOR . 'Layouts' . DIRECTORY_SEPARATOR . strtolower($layout) . '.php';
-        try {
+        if($layout === false) {
 
-            if(!file_exists($layout)) {
-                throw new Exception\LookupException('Layout: "' . $layout . '" could not be found.');
+            $this->layout = NULL;
+
+        } else {
+
+            $layout = APP_PATH . DIRECTORY_SEPARATOR . 'Layouts' . DIRECTORY_SEPARATOR . strtolower($layout) . '.php';
+            try {
+
+                if(!file_exists($layout)) {
+                    throw new Exception\LookupException('Layout: "' . $layout . '" could not be found.');
+                }
+
+                $this->layout = $layout;
+
+                return true;
+
+            } catch (Exception\LookupException $e) {
+                echo "<strong>LookupException:</strong> <br/>";
+                echo $e->getMessage();
+                exit;
             }
 
-            $this->layout = $layout;
-
-            return true;
-
-        } catch (Exception\LookupException $e) {
-            echo "<strong>LookupException:</strong> <br/>";
-            echo $e->getMessage();
-            exit;
         }
     }
 
@@ -174,6 +188,7 @@ class View
     private function verifyResource($resource) {
 
         $path = PUBLIC_PATH . DIRECTORY_SEPARATOR . $resource;
+
         if (!file_exists($path)) {
             return false;
         }
@@ -235,6 +250,7 @@ class View
                 if ($this->verifyResource($file)) {
                     $files[] = $file;
                 } else {
+                    var_dump($file);
                     throw new Exception\LookupException('The CSS Resource you\'ve specified does not exist.');
                 }
             }
