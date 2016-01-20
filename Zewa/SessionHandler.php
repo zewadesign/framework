@@ -11,11 +11,13 @@ class SessionHandler
     private $tableName;
     private $sessionLock;
     private $hash = "";
+    private $domain = "";
 
     function __construct(
         $interface,
         $security_code,
         $session_lifetime = '',
+        $domain = '',
         $lock_to_user_agent = true,
         $lock_to_ip = false,
         $gc_probability = 1,
@@ -27,6 +29,7 @@ class SessionHandler
         ini_set('session.cookie_httponly', 1);
         ini_set('session.use_only_cookies', 1);
         ini_set('session.cookie_lifetime', 0);
+        ini_set('session.cookie_domain', $domain );
 
         if ($session_lifetime != '' && is_integer($session_lifetime)) {
             ini_set('session.gc_maxlifetime', (int) $session_lifetime);
@@ -48,6 +51,8 @@ class SessionHandler
         $this->tableName = $table_name;
         $this->lockTimeout = $lock_timeout;
 
+        $this->domain = $domain;
+
         $this->generateHash();
         $this->initializeHandler($interface);
 
@@ -65,8 +70,7 @@ class SessionHandler
         if ($this->lockToIp && isset($_SERVER['REMOTE_ADDR'])) {
             $this->hash .= $_SERVER['REMOTE_ADDR'];
         }
-
-        $this->hash = md5($this->hash . $this->security_code);
+        $this->hash = md5($this->hash . $this->domain . $this->security_code);
     }
 
     private function initializeHandler($interface)
@@ -86,6 +90,7 @@ class SessionHandler
                     [&$this, 'write'],
                     [&$this, 'destroy'],
                     [&$this, 'gc']
+//                    ,[&$this, 'create_sid']
                 );
 
                 session_start();
@@ -141,12 +146,17 @@ class SessionHandler
 
     }
 
-    public function regenerateId()
+    //@TODO: implement.. can't figure out a way to make the sessionId fresh
+    private function regenerateId()
     {
-        $old_session_id = session_id();
+        $oldSessionId = session_id();
+//        session_write_close();
         session_regenerate_id();
-        $this->destroy($old_session_id);
+        $sessionId = session_id();
 
+        $query = "UPDATE " . $this->tableName . " SET id = ? WHERE hash = ?";
+        $this->dbh->prepare($query)->execute([$sessionId, $oldSessionId]);
+        $this->destroy($oldSessionId);
     }
 
     public function close()
@@ -178,10 +188,11 @@ class SessionHandler
         $success = false;
         try {
             $query = "DELETE FROM ". $this->tableName
-                . " WHERE id < ?";
+                . " WHERE id = ?";
 
             $success = $this->dbh->prepare($query)
                 ->execute([$sessionId]);
+
         } catch (\PDOException $e) {
             echo "<strong>PDOException:</strong> <br/>";
             echo $e->getMessage();
@@ -227,10 +238,13 @@ class SessionHandler
         $session = $this->fetchSessionData($sessionId);
 
         if ($session) {
+
+            if ($session->session_regeneration >= 20) {
+                //@TODO: implement for session hijack prevention, even though e'rythan ssl now
+//                $this->regenerateId($sessionId);
+            }
             return $session->session_data;
         }
-
-        $this->regenerateId();
 
         return '';
 
@@ -255,7 +269,8 @@ class SessionHandler
                 'id'             => $sessionId,
                 'hash'           => $this->hash,
                 'session_data'   => $sessionData,
-                'session_expire' => (time() + $this->sessionLifetime)
+                'session_expire' => (time() + $this->sessionLifetime),
+                'session_regeneration' => 0
             ];
 
             $fields = array_keys($session);
@@ -266,15 +281,16 @@ class SessionHandler
                 . " (" . rtrim(str_repeat('?,', $fieldCount), ',') . ")"
                 . " ON DUPLICATE KEY UPDATE"
                 . " session_data = VALUES(session_data),"
-                . " session_expire = VALUES(session_expire)";
+                . " session_expire = VALUES(session_expire),"
+                . " session_regeneration = session_regeneration + 1";
 
             $success = $this->dbh->prepare($query)
                 ->execute($arguments);
-
         } catch (\PDOException $e) {
             echo "<strong>PDOException:</strong> <br/>";
+
             echo $e->getMessage();
-            exit;
+//            exit;
         }
 
         return $success;
@@ -311,9 +327,10 @@ class SessionHandler
 
     private function fetchSessionData($sessionId)
     {
-        $query = "SELECT session_data FROM " . $this->tableName
+        $query = "SELECT session_data, session_regeneration FROM " . $this->tableName
             . " WHERE id = ? AND session_expire > ? AND hash = ?"
             . " LIMIT 1";
+
 
         $arguments = [
             $sessionId,
@@ -340,6 +357,7 @@ class SessionHandler
                 . "`hash` varchar(32) NOT NULL DEFAULT '',"
                 . "`session_data` blob NOT NULL,"
                 . "`session_expire` int(11) NOT NULL DEFAULT '0',"
+                . "`session_regeneration` int(2) NOT NULL DEFAULT '0',"
                 . "PRIMARY KEY (`id`)"
                 . ") ENGINE=InnoDB DEFAULT CHARSET=utf8";
 

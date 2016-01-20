@@ -253,7 +253,7 @@ class App
         if($config !== false) {
             App::callEvent('preSession');
             new SessionHandler(
-                $config->interface, $config->securityCode, $config->expiration,
+                $config->interface, $config->securityCode, $config->expiration, $config->domain,
                 $config->lockToUserAgent, $config->lockToIP, $config->gcProbability,
                 $config->gcDivisor, $config->tableName
             );
