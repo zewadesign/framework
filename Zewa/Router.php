@@ -89,7 +89,7 @@ class Router
         $this->configuration = App::getConfiguration();
 
         $this->defaultModule = $this->configuration->modules->defaultModule;
-        $defaultModule = strtolower($this->defaultModule);
+        $defaultModule = $this->defaultModule;
         $this->defaultController = $this->configuration->modules->$defaultModule->defaultController;
         $this->defaultMethod = $this->configuration->modules->$defaultModule->defaultMethod;
 
