@@ -254,9 +254,7 @@ class Router
         } else {
             $chunks = $this->sortURISegments();
         }
-        if (!empty($arguments)) {
-            $chunks = array_merge($chunks, $arguments);
-        }
+
         $uri = ltrim(implode('/', $chunks), '/');
 
         return $uri;
