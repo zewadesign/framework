@@ -30,6 +30,13 @@ class View
     protected $layout = false;
 
     /**
+     * Active module for view
+     *
+     * @var string|bool
+     */
+    protected $module = false;
+
+    /**
      * Rendered view content
      *
      * @var string
@@ -71,7 +78,7 @@ class View
 
 
     private function currentURI() {
-        return $this->router->uri();
+        return $this->router->uri;
     }
     /**
      * Loads a view
@@ -102,10 +109,13 @@ class View
 
     public function setView($requestedView)
     {
-        $module = $this->configuration->router->module;
+
+        if($this->module === false) {
+            $this->module = $this->configuration->router->module;
+        }
 
         try {
-            $view = APP_PATH . DIRECTORY_SEPARATOR . 'Modules' . DIRECTORY_SEPARATOR . $module . DIRECTORY_SEPARATOR . 'Views' . DIRECTORY_SEPARATOR . strtolower($requestedView) . '.php';
+            $view = APP_PATH . DIRECTORY_SEPARATOR . 'Modules' . DIRECTORY_SEPARATOR . $this->module . DIRECTORY_SEPARATOR . 'Views' . DIRECTORY_SEPARATOR . strtolower($requestedView) . '.php';
             if (!file_exists($view)) {
                 throw new Exception\LookupException('View: "' . $view . '" could not be found.');
             }
@@ -157,6 +167,14 @@ class View
         }
     }
 
+    public function setModule($module = false)
+    {
+        if($module === false) {
+            $this->module = $this->configuration->router->module;
+        } else {
+            $this->module = ucfirst($module);
+        }
+    }
     /**
      * Processes view/layouts and exposes variables to the view/layout
      *
@@ -279,26 +297,26 @@ class View
                 $existingJS = (array)$existingJS;
             }
 
-            if (empty($scripts)) {
-                throw new Exception\LookupException('You must provide a valid JS Resource.');
-            }
+            if (!empty($scripts)) {
 
-            $files = [];
+                $files = [];
 
-            foreach ($scripts as $file) {
-                if ($this->verifyResource($file)) {
-                    $files[] = $file;
-                } else {
-                    throw new Exception\LookupException('The JS Resource you\'ve specified does not exist: ' . $file);
+                foreach ($scripts as $file) {
+                    if ($this->verifyResource($file)) {
+                        $files[] = $file;
+                    } else {
+                        throw new Exception\LookupException('The JS Resource you\'ve specified does not exist: ' . $file);
+                    }
                 }
-            }
 
-            if ($place === 'prepend') {
-                $existingJS = array_merge($files, $existingJS);
-            } else {
-                $existingJS = array_merge($existingJS, $files);
+                if ($place === 'prepend') {
+                    $existingJS = array_merge($files, $existingJS);
+                } else {
+                    $existingJS = array_merge($existingJS, $files);
+                }
+                App::setConfiguration('view::js', (object)$existingJS);
+
             }
-            App::setConfiguration('view::js', (object)$existingJS);
 
         } catch (Exception\LookupException $e) {
             echo "<strong>LookupException:</strong> <br/>";
