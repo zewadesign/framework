@@ -129,6 +129,9 @@ class Request
             $this->flashdataId = $this->configuration->session->flashdataId;
         }
 
+//        $config = \HTMLPurifier_Config::createDefault();
+//        $this->purifier = new \HTMLPurifier($config);
+
         if(!empty($_SESSION)) {
             $this->sessionContainer = $this->_normalize($_SESSION);
         }
@@ -336,16 +339,17 @@ class Request
             }
         } else {
             $data = trim($data);
-            if (function_exists('iconv') && function_exists('mb_detect_encoding')) {
-                $current_encoding = mb_detect_encoding($data);
-
-                if ($current_encoding != 'UTF-8' && $current_encoding != 'UTF-16') {
-                    $data = iconv($current_encoding, 'UTF-8', $data);
-                }
-            }
+//            if (function_exists('iconv') && function_exists('mb_detect_encoding')) {
+//                $current_encoding = mb_detect_encoding($data);
+//
+//                if ($current_encoding != 'UTF-8' && $current_encoding != 'UTF-16') {
+//                    $data = iconv($current_encoding, 'UTF-8', $data);
+//                }
+//            }
             //Global XXS?
             // This is not sanitary.  FILTER_SANITIZE_STRING doesn't do much.
-            $data = filter_var($data, FILTER_SANITIZE_STRING);
+
+//            $data = filter_var($data, FILTER_SANITIZE_STRING);
 
             if (is_numeric($data)) {
                 if(is_int($data) || ctype_digit(trim($data, '-'))) {
@@ -353,6 +357,8 @@ class Request
                 } else if($data == (string)(float)$data) {
                     $data = (float) $data;
                 }
+            } else {
+//                $data = $this->purifier->purify($data);
             }
         }
 
