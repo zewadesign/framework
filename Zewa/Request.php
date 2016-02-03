@@ -266,7 +266,7 @@ class Request
     {
         try {
             if ((!is_array($index) && isset($value))
-                || (!is_object($index) && isset($value))
+                && (!is_object($index) && isset($value))
             ) {
                 $index = array($index => $value);
             }
