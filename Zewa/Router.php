@@ -89,7 +89,7 @@ class Router
         $this->configuration = App::getConfiguration();
 
         $this->defaultModule = $this->configuration->modules->defaultModule;
-        $defaultModule = strtolower($this->defaultModule);
+        $defaultModule = $this->defaultModule;
         $this->defaultController = $this->configuration->modules->$defaultModule->defaultController;
         $this->defaultMethod = $this->configuration->modules->$defaultModule->defaultMethod;
 
@@ -254,9 +254,7 @@ class Router
         } else {
             $chunks = $this->sortURISegments();
         }
-        if (!empty($arguments)) {
-            $chunks = array_merge($chunks, $arguments);
-        }
+
         $uri = ltrim(implode('/', $chunks), '/');
 
         return $uri;

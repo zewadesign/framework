@@ -158,10 +158,9 @@ class Request
      */
     private function registerFlashdata()
     {
-
         if (!empty($this->sessionContainer[$this->flashdataId])) {
 
-            $this->flashdata = unserialize($this->session($this->flashdataId));
+            $this->flashdata = unserialize(base64_decode($this->session($this->flashdataId)));
             // and destroy the temporary session variable
             unset($_SESSION[$this->flashdataId]);
 
@@ -187,7 +186,7 @@ class Request
                 // if there is any flashdata left to be handled
                 if (!empty($this->flashdata)) {
 // store data in a temporary session variable
-                    $_SESSION[$this->flashdataId] = serialize($this->flashdata);
+                    $_SESSION[$this->flashdataId] = base64_encode(serialize($this->flashdata));
                 }
             }
 
@@ -216,7 +215,7 @@ class Request
             'inc'   => 0
         );
 
-        $_SESSION[$this->flashdataId] = serialize($this->flashdata);
+        $_SESSION[$this->flashdataId] = base64_encode(serialize($this->flashdata));
 
     }
 
@@ -233,8 +232,8 @@ class Request
             return $this->flashdata;
         }
         if($name !== false) {
-            if(!empty($this->flashdata[$name])) {
-                return $this->flashdata[$name];
+            if(!empty($this->flashdata[$name]['value'])) {
+                return $this->flashdata[$name]['value'];
             }
         }
 
@@ -266,21 +265,14 @@ class Request
     public function setSession($index = false, $value = false)
     {
         try {
-
-            if ((!is_array($index) && $value !== false)
-                || (!is_object($index) && $value !== false)
+            if ((!is_array($index) && isset($value))
+                || (!is_object($index) && isset($value))
             ) {
                 $index = array($index => $value);
+            }
 
-            } elseif (is_object($index)) {
-
-                $index = (array) $index;
-
-            } else {
-                if (!is_array($index)) {
-                    throw new Exception\TypeException("Invalid where parameters");
-                }
-
+            if (!is_array($index) && !is_object($index)) {
+                throw new Exception\TypeException("Invalid session value");
             }
 
             foreach ($index as $k => $v) {
@@ -330,14 +322,20 @@ class Request
      */
     private function _normalize($data)
     {
-        if (is_array($data) || is_object($data)) {
-            $data = (array) $data;
+        if (is_array($data)){
             foreach ($data as $key => $value) {
                 unset($data[$key]);
-
                 $data[$this->_normalize($key)] = $this->_normalize($value);
             }
-        } else {
+        } else if(is_object($data)) {
+            $new = new \stdClass();
+            foreach ($data as $k => $v) {
+//                unset($data->{$k});
+                $key = $this->_normalize($k);
+                $new->{$key} = $this->_normalize($v);
+            }
+            $data = $new;
+       } else {
             $data = trim($data);
 //            if (function_exists('iconv') && function_exists('mb_detect_encoding')) {
 //                $current_encoding = mb_detect_encoding($data);
@@ -347,6 +345,15 @@ class Request
 //                }
 //            }
             //Global XXS?
+            //we need to review this.
+            if (function_exists('iconv') && function_exists('mb_detect_encoding')) {
+                $current_encoding = mb_detect_encoding($data);
+
+                if ($current_encoding != 'UTF-8' && $current_encoding != 'UTF-16') {
+                    $data = iconv($current_encoding, 'UTF-8', $data);
+                }
+            }
+//            Global XXS?
             // This is not sanitary.  FILTER_SANITIZE_STRING doesn't do much.
 
 //            $data = filter_var($data, FILTER_SANITIZE_STRING);
@@ -381,7 +388,7 @@ class Request
                     return $container;
                 }
                 if( ! empty ( $container[$argument] ) ) {
-                    if(!is_array($container[$argument]) && strlen($container[$argument]) > 0 || is_array($container[$argument])) {
+                    if(!is_array($container[$argument]) && !is_object($container[$argument]) && strlen($container[$argument]) > 0 || is_array($container[$argument]) || is_object($container[$argument])) {
                         return $container[$argument];
                     }
                 }
