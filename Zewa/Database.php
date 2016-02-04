@@ -36,12 +36,12 @@ class Database
                     self::$dbh[$name] = new \PDO($dbConfig->dsn, $dbConfig->user, $dbConfig->pass);
                     self::$dbh[$name]->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
                 } else {
-                    throw new Exception\TypeException('Please specify a valid database configuration, or provide a default configuration.');
+                    throw new \PDOException('Please specify a valid database configuration, or provide a default configuration.');
                 }
 
             }
 
-        } catch (Exception\TypeException $e) {
+        } catch (\PDOException $e) {
             echo "<strong>TypeException:</strong> <br/>";
             echo $e->getMessage();
             exit;
