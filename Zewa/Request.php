@@ -359,9 +359,9 @@ class Request
 //            $data = filter_var($data, FILTER_SANITIZE_STRING);
 
             if (is_numeric($data)) {
-                if(is_int($data) || ctype_digit(trim($data, '-'))) {
+                if((intval($data) === (int)trim($data, '-')) && strlen((string)(int)$data) === strlen($data)) {
                     $data = (int) $data;
-                } else if($data == (string)(float)$data) {
+                } else if($data === (string)(float)$data) {
                     $data = (float) $data;
                 }
             } else {
