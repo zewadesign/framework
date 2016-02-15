@@ -306,20 +306,48 @@ class Router
         return array_merge($return, array_values($uriChunks));
     }
 
+    private function addQueryString($url, $key, $value) {
+        $url = preg_replace('/(.*)(\?|&)' . $key . '=[^&]+?(&)(.*)/i', '$1$2$4', $url . '&');
+        $url = substr($url, 0, -1);
+        if (strpos($url, '?') === false) {
+            return ($url . '?' . $key . '=' . $value);
+        } else {
+            return ($url . '&' . $key . '=' . $value);
+        }
+    }
+
+    function removeQueryString($url, $key) {
+        $url = preg_replace('/(.*)(\?|&)' . $key . '=[^&]+?(&)(.*)/i', '$1$2$4', $url . '&');
+        $url = substr($url, 0, -1);
+        return ($url);
+    }
+
     /**
      * Return the currentURL w/ query strings
      *
      * @access public
      * @return string http://tld.com/formatted/u/r/l?q=bingo
      */
-    public function currentURL()
+    public function currentURL($params = false)
     {
         if( trim ( $_SERVER['REQUEST_URI'] ) === '/' ) {
-            return $this->baseURL() . (!empty($_SERVER['QUERY_STRING']) ? '?' . $_SERVER['QUERY_STRING'] : '');
+            $url = $this->baseURL() . (!empty($_SERVER['QUERY_STRING']) ? '?' . $_SERVER['QUERY_STRING'] : '');
+        } else {
+            $url = $this->baseURL($this->uri) . (!empty($_SERVER['QUERY_STRING']) ? '?' . $_SERVER['QUERY_STRING'] : '');
+        }
+        if(!empty($params)) {
+            foreach($params as $key => $param) {
+                $url = $this->removeQueryString($url, $key);
+//                var_dump($key);
+//                var_dump($param);
+//                var_dump($url);
+//
+                $url = $this->addQueryString($url, $key, $param);
+            }
         }
 
-        return $this->baseURL($this->uri) . (!empty($_SERVER['QUERY_STRING']) ? '?' . $_SERVER['QUERY_STRING'] : '');
 
+        return $url;
     }
 
     /**
