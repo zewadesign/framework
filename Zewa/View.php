@@ -72,8 +72,8 @@ class View
         return $this->router->baseURL($path);
     }
 
-    private function currentURL() {
-        return $this->router->currentURL();
+    private function currentURL($params = false) {
+        return $this->router->currentURL($params);
     }
 
 
