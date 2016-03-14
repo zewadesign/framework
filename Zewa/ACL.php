@@ -111,7 +111,7 @@ class ACL
                 $this->secureRedirect();
                 break;
             case '3': //@TODO: setup module 404's.
-                $this->output = $this->noAccessRedirect();
+                $this->noAccessRedirect();
                 break;
         }
     }
@@ -125,6 +125,8 @@ class ACL
      */
     private function noAccessRedirect()
     {
+        echo 'No Access';
+        exit;
         $view = new View();
         return $view->renderNoAccess('No access');
 

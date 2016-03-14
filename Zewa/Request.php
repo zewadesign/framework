@@ -142,15 +142,14 @@ class Request
         $this->cookieContainer = $this->_normalize($_COOKIE);
         $this->filesContainer = $this->_normalize($_FILES);
         $this->serverContainer = $this->_normalize($_SERVER);
-        if($this->server('REQUEST_METHOD') === 'PUT') {
-            parse_str(file_get_contents('php://input', "r"), $this->put);
-            $this->putContainer = $this->_normalize($this->put);
-        } else if($this->server('REQUEST_METHOD') === 'DELETE') {
-            parse_str(file_get_contents('php://input', "r"), $this->delete);
-            $this->deleteContainer = $this->_normalize($this->delete);
+        if($this->serverContainer['REQUEST_METHOD'] === 'PUT') {
+            parse_str(file_get_contents('php://input', "r"), $PUT);
+            $this->putContainer = $this->_normalize($PUT);
+        } else if($this->serverContainer['REQUEST_METHOD'] === 'DELETE') {
+            parse_str(file_get_contents('php://input', "r"), $DELETE);
+            $this->deleteContainer = $this->_normalize($DELETE);
         }
     }
-
 
     /**
      * Processes current requests flashdata, recycles old.
