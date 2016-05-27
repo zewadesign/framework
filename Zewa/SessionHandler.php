@@ -96,7 +96,6 @@ class SessionHandler
                 session_start();
 
             } catch(\PDOException $e) {
-
                 echo "<strong>PDOException:</strong> <br/>";
                 echo 'We can\'t find the Session table... hold on.. we\'re going to recreate! Alright! Give it a refresh.';
                 $this->createSessionTable();

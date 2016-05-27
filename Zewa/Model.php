@@ -48,12 +48,12 @@ class Model
             if(is_null($this->dbh)) {
                 throw new \PDOException('Database handler is not available');
             }
-            $sth = $this->dbh->prepare($sql);
-            $sth->execute($params);
-            if($sth->rowCount() > 0) {
-                $result = ($sth->rowCount() > 1 || $returnResultSet === 'result' ? $sth->fetchAll(\PDO::FETCH_OBJ) : $sth->fetch(\PDO::FETCH_OBJ));
+            $this->sth = $this->dbh->prepare($sql);
+            $this->sth->execute($params);
+            if($this->sth->rowCount() > 0) {
+                $result = ($this->sth->rowCount() > 1 || $returnResultSet === 'result' ? $this->sth->fetchAll(\PDO::FETCH_OBJ) : $this->sth->fetch(\PDO::FETCH_OBJ));
             }
-            $sth->closeCursor();
+            $this->sth->closeCursor();
 
         } catch (\PDOException $e) {
 
@@ -73,9 +73,9 @@ class Model
             if(is_null($this->dbh)) {
                 throw new \PDOException('Database handler is not available');
             }
-            $sth = $this->dbh->prepare($sql);
-            $result = $sth->execute($params);
-            $sth->closeCursor();
+            $this->sth = $this->dbh->prepare($sql);
+            $result = $this->sth->execute($params);
+            $this->sth->closeCursor();
         } catch (\PDOException $e) {
 
             echo "<strong>PDOException:</strong> <br/>";
