@@ -154,28 +154,37 @@ class App
 
         $this->registerSession();
 
-        self::$services = new ServiceManager();
+        if(self::$services === null) {
+            self::$services = new \stdClass();
+        }
 
-        $this->router = App::getService('router');
-        $this->request = App::getService('request');
-        $this->database = App::getService('database');
+        $this->router = new Router();
+        $this->request = new Request();
+        $this->database = new Database();
+
+        App::setService('router', $this->router);
+        App::setService('request', $this->request);
+        App::setService('database', $this->database);
 
         $this->module = ucfirst(self::$configuration->router->module);
         $this->controller = ucfirst(self::$configuration->router->controller);
         $this->method = self::$configuration->router->method;
         $this->params = self::$configuration->router->params;
-        $this->class = '\\App\\Modules\\' . self::$configuration->router->module . '\\Controllers\\' . ucfirst($this->controller);
+        $this->class = '\\App\\Modules\\' . $this->module . '\\Controllers\\' . ucfirst($this->controller);
     }
 
-    public static function getService($service = null, $new = false, $options = []) {
-        if ($service !== null) {
-            if($new === false ) {
-                return self::$services->$service;
-            } else if($new === true || empty ( self::$services->$service ) ) {
-                self::$services->$service = call_user_func_array(self::$services->$service, $options);
-                return self::$services->$service;
-            }
+    public static function getService($service, $new = false, $options = []) {
+        if($new === false ) {
+            return self::$services->$service;
+        } else if($new === true || empty ( self::$services->$service ) ) {
+            self::$services->$service = call_user_func_array(self::$services->$service, $options);
+            return self::$services->$service;
         }
+    }
+
+    public static function setService($service, $class)
+    {
+        self::$services->$service = $class;
     }
 
     /**
@@ -223,10 +232,16 @@ class App
                     }
 
                     if($fileProperties[0] === 'services') {
-                        self::$configuration->$fileProperties[0] = $vars;
+                        if(self::$services === null) {
+                            self::$services = new \stdClass();
+                        }
+                        foreach($vars as $serviceName => $service) {
+                            self::$services->$serviceName = $service;
+                        }
                     } else {
                         self::$configuration->$fileProperties[0] = json_decode(json_encode($vars));
                     }
+
                 }
 
                 return true;
