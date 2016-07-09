@@ -29,7 +29,8 @@ class Model
     public function __construct($name = 'default')
     {
         // This abstract is strictly to establish inheritance from a global registery.
-        $this->configuration = App::getConfiguration();
+        $app = App::getInstance();
+        $this->configuration = $app->getConfiguration();
         if ($this->configuration->database !== false) {
             $database = App::getService('database');
             $this->dbh = $database->fetchConnection($name);
