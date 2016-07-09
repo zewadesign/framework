@@ -75,7 +75,8 @@ class ACL
 
     public function __construct($userId = false, $roleId = false)
     {
-        $this->configuration = App::getConfiguration();
+        $app = App::getInstance();
+        $this->configuration = $app->getConfiguration();
 
         $this->dbh = App::getService('database')->fetchConnection();
         $this->router = App::getService('router');

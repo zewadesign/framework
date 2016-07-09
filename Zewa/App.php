@@ -17,11 +17,18 @@ namespace Zewa;
 class App
 {
     /**
+     * Reference to instantiated controller object.
+     *
+     * @var object
+     */
+    protected static $instance = false;
+
+    /**
      * System configuration
      *
      * @var object
      */
-    private static $configuration;
+    public $configuration;
 
     /**
      * System service management
@@ -106,13 +113,14 @@ class App
      */
     public function __construct()
     {
+        self::$instance = $this;
         //@TODO: unset unnececessary vars/profile/unit testing..? how?
         //@TODO: better try/catch usage
         //@TODO: setup custom routing based on regex // (can't we get away without using regex tho?)!!!!!!! routesssssss!!!!!!!!
         try {
 
-            self::$configuration = new \stdClass();
-            self::setConfiguration();
+            $this->configuration = new \stdClass();
+            $this->setConfiguration();
 
         } catch(\RuntimeException $e) {
             echo "<strong>RuntimeException:</strong> <br/>";
@@ -129,7 +137,7 @@ class App
 
         $this->prepare();
 
-        if (self::$configuration->acl) {
+        if ($this->configuration->acl) {
             $acl = new ACL(
                 $this->request->session('uid'),
                 $this->request->session('role_id')
@@ -166,10 +174,10 @@ class App
         App::setService('request', $this->request);
         App::setService('database', $this->database);
 
-        $this->module = ucfirst(self::$configuration->router->module);
-        $this->controller = ucfirst(self::$configuration->router->controller);
-        $this->method = self::$configuration->router->method;
-        $this->params = self::$configuration->router->params;
+        $this->module = ucfirst($this->configuration->router->module);
+        $this->controller = ucfirst($this->configuration->router->controller);
+        $this->method = $this->configuration->router->method;
+        $this->params = $this->configuration->router->params;
         $this->class = '\\App\\Modules\\' . $this->module . '\\Controllers\\' . ucfirst($this->controller);
     }
 
@@ -191,17 +199,17 @@ class App
      * @param mixed string with reference to config
      * @return mixed bool or config values
      */
-    public static function getConfiguration($config = null)
+    public function getConfiguration($config = null)
     {
         if($config !== null) {
-            if( ! empty ( self::$configuration->$config ) ) {
-                return self::$configuration->$config;
+            if( ! empty ( $this->configuration->$config ) ) {
+                return $this->configuration->$config;
             }
 
             return false;
         }
 
-        return self::$configuration;
+        return $this->configuration;
 
     }
 
@@ -212,15 +220,16 @@ class App
      * @return bool
      * @throws StateException
      */
-    public static function setConfiguration($config = null, $configObject = null)
+    public function setConfiguration($config = null, $configObject = null)
     {
         try {
             if( $config !== null && $configObject !== null && !empty( $configObject ) ) {
-                self::$configuration->$config = $configObject;
+                $this->configuration->$config = $configObject;
                 return true;
             } else if($config === null && $configObject === null) {
 
                 $files = glob(APP_PATH . DIRECTORY_SEPARATOR . 'Config' . DIRECTORY_SEPARATOR . '*.php');
+
                 foreach ($files as $index => $filename){
                     $pieces = explode('/', $filename);
                     $file = $pieces[count($pieces) - 1];
@@ -239,7 +248,14 @@ class App
                             self::$services->$serviceName = $service;
                         }
                     } else {
-                        self::$configuration->$fileProperties[0] = json_decode(json_encode($vars));
+//                        if($vars === false) return;
+                        $name = $fileProperties[0];
+                        if($vars === false) {
+                            $this->configuration->{$name} = false;
+                        } else {
+                            $this->configuration->{$name} = json_decode(json_encode($vars));
+                        }
+
                     }
 
                 }
@@ -263,7 +279,7 @@ class App
     private function registerSession()
     {
 
-        $config = self::$configuration->session;
+        $config = $this->configuration->session;
 
         if($config !== false) {
             App::callEvent('preSession');
@@ -380,5 +396,21 @@ class App
         App::callEvent('postApplication');
 
         return $this->output;
+    }
+
+
+    /**
+     * Returns a reference of object once instantiated
+     *
+     * @access public
+     * @return object
+     */
+    public static function getInstance()
+    {
+        if (self::$instance === null) {
+            return false;
+        }
+
+        return self::$instance;
     }
 }

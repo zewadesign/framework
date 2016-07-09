@@ -51,7 +51,10 @@ abstract class Controller
     public function __construct()
     {
         static::$instance = $this;
-        $this->configuration = App::getConfiguration();
+
+        $app = App::getInstance();
+        $this->configuration = $app->getConfiguration();
+        
         $this->request = App::getService('request');
         $this->router = App::getService('router');
     }

@@ -21,7 +21,10 @@ class Database
 
     public function __construct($name = 'default')
     {
-        $this->configuration = App::getConfiguration('database');
+
+        $app = App::getInstance();
+        $this->configuration = $app->getConfiguration('database');
+
         $this->establishConnection($name);
     }
 

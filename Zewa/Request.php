@@ -124,7 +124,8 @@ class Request
     public function __construct()
     {
         self::$instance = $this;
-        $this->configuration = App::getConfiguration();
+        $app = App::getInstance();
+        $this->configuration = $app->getConfiguration();
         if($this->configuration->session !== false && $this->configuration->session->flashdataId) {
             $this->flashdataId = $this->configuration->session->flashdataId;
         }

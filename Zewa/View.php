@@ -63,7 +63,8 @@ class View
     public function __construct()
     {
         // This abstract is strictly to establish inheritance from a global registery.
-        $this->configuration = App::getConfiguration();
+        $app = App::getInstance();
+        $this->configuration = $app->getConfiguration();
         $this->request = App::getService('request');
         $this->router = App::getService('router');
     }
@@ -216,7 +217,9 @@ class View
 
     protected function fetchCSS()
     {
-        $sheets = App::getConfiguration('view::css');
+        $app = App::getInstance();
+        $sheets = $app->getConfiguration('view::css');
+
         $string = "";
 
         if(empty($sheets)) {
@@ -233,7 +236,9 @@ class View
 
     protected function fetchJS()
     {
-        $scripts = App::getConfiguration('view::js');
+
+        $app = App::getInstance();
+        $scripts = $app->getConfiguration('view::js');
         $string = "<script>baseURL = '" . $this->baseURL() . "/'</script>";
 
         if(empty($scripts)) {
@@ -250,7 +255,8 @@ class View
 
     public function addCSS($sheets = [], $place = 'append') {
 
-        $existingCSS = App::getConfiguration('view::css');
+        $app = App::getInstance();
+        $existingCSS = $app->getConfiguration('view::css');
 
         try {
             if ($existingCSS === false) {
@@ -279,7 +285,8 @@ class View
                 $existingCSS = array_merge($existingCSS, $files);
             }
 
-            App::setConfiguration('view::css', (object)$existingCSS);
+            $app = App::getInstance();
+            $app->setConfiguration('view::css', (object)$existingCSS);
         } catch (Exception\LookupException $e) {
             echo "<strong>LookupException:</strong> <br/>";
             echo $e->getMessage();
@@ -288,7 +295,9 @@ class View
     }
 
     public function addJS($scripts = [], $place = 'append') {
-        $existingJS = App::getConfiguration('view::js');
+
+        $app = App::getInstance();
+        $existingJS = $app->getConfiguration('view::js');
 
         try {
             if ($existingJS === false) {
@@ -314,7 +323,9 @@ class View
                 } else {
                     $existingJS = array_merge($existingJS, $files);
                 }
-                App::setConfiguration('view::js', (object)$existingJS);
+
+                $app = App::getInstance();
+                $app->setConfiguration('view::js', (object)$existingJS);
 
             }
 

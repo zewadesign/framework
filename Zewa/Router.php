@@ -86,7 +86,9 @@ class Router
     public function __construct()
     {
         self::$instance = $this;
-        $this->configuration = App::getConfiguration();
+
+        $app = App::getInstance();
+        $this->configuration = $app->getConfiguration();
 
         $this->defaultModule = $this->configuration->modules->defaultModule;
         $defaultModule = $this->defaultModule;
@@ -105,7 +107,8 @@ class Router
         //@TODO: routing
         $uriChunks = $this->parseURI($this->uri);
 
-        App::setConfiguration('router', (object)[
+        $app = App::getInstance();
+        $app->setConfiguration('router', (object)[
             'module' => $uriChunks[0],
             'controller' => $uriChunks[1],
             'method' => $uriChunks[2],
