@@ -24,7 +24,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
     {
         global $_SERVER;
 
-        $_SERVER['REQUEST_URI'] = '/example/home/hello/'.$exponent;
+        $_SERVER['REQUEST_URI'] = '/example/home/hello/' . $exponent;
 
         // Re-Instantiate the Router so it overwrites the params with our new URI
         $router = new Router();
@@ -61,7 +61,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
     {
         global $_SERVER;
 
-        $_SERVER['REQUEST_URI'] = '/example/home/hello/'.$decimal;
+        $_SERVER['REQUEST_URI'] = '/example/home/hello/' . $decimal;
 
         // Re-Instantiate the Router so it overwrites the params with our new URI
         $router = new Router();
@@ -81,6 +81,38 @@ class RouterTest extends \PHPUnit_Framework_TestCase
             ['123.0932'],
             ['0.1'],
             ['99912.4044'],
+        ];
+    }
+
+    /**
+     * This tests to ensure that integer values passed to the route as a param
+     * are parsed and returned as integers (as opposed to strings)
+     *
+     * @dataProvider integerProvider
+     */
+    public function testRouteIntegerParamAsInteger($integer)
+    {
+        global $_SERVER;
+
+        $_SERVER['REQUEST_URI'] = '/example/home/hello/' . $integer;
+
+        // Re-Instantiate the Router so it overwrites the params with our new URI
+        $router = new Router();
+        $app    = App::getInstance();
+
+        $routerConfig    = $app->getConfiguration('router');
+        $firstRouteParam = $routerConfig->params[0];
+
+        $this->assertTrue(is_int($firstRouteParam));
+        $this->assertTrue(!is_string($firstRouteParam));
+    }
+
+    public function integerProvider()
+    {
+        return [
+            ['1'],
+            [99999999999999999],
+            ['792643']
         ];
     }
 }
