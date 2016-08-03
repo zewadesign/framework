@@ -80,4 +80,10 @@
         <exec executable="phpdox" dir="${basedir}/build"/>
     </target>
 
+    <target name="test" description="Run test suite and generate PHPUnit code coverage">
+        <delete dir="${basedir}/build/coverage"/>
+        <mkdir dir="${basedir}/build/coverage"/>
+        <exec executable="phpunit"/>
+    </target>
+
 </project>

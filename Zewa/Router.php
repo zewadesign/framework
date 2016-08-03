@@ -141,9 +141,9 @@ class Router
         if (is_numeric($data)) {
             if (is_int($data) || ctype_digit(trim($data, '-'))) {
                 $data = (int)$data;
-            } else if ($data == (string)(float)$data) {
+            } else if ($data === (string)(float)$data) {
                 //@TODO: this needs work.. 9E26 converts to float
-                //$data = (float)$data;
+                $data = (float)$data;
             }
         }
         return $data;

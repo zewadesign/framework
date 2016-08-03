@@ -8,6 +8,18 @@ cd mmvc
 composer install
 ```
 
+## Running Tests ##
+
+Tests can be executed from the command line using Composer, Ant or the PHPUnit executable as follows: 
+
+PHPUnit: `phpunit`
+
+Composer: `composer test`
+
+Ant: `ant phpunit`
+
+The code coverage can be found in the `/build/coverage` folder after running the tests. 
+
 ## Session database schema ##
 ```
 CREATE TABLE `Session` (
