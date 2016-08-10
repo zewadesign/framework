@@ -68,22 +68,11 @@ abstract class Controller
      */
     public static function getInstance()
     {
-
-        try {
-
-            if (static::$instance === null) {
-                throw new Exception\TypeException('There is no instance of ACL available.');
-            }
-
-            return static::$instance;
-
-        } catch(Exception\TypeException $e) {
-
-            echo "<strong>TypeException:</strong> <br/>";
-            echo $e->getMessage();
-            exit;
-
+        if (static::$instance === null) {
+            throw new Exception\TypeException('There is no instance of ACL available.');
         }
+
+        return static::$instance;
 
     }
 }

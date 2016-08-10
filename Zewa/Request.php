@@ -264,28 +264,19 @@ class Request
 
     public function setSession($index = false, $value = false)
     {
-        try {
-            if ((!is_array($index) && isset($value))
-                && (!is_object($index) && isset($value))
-            ) {
-                $index = array($index => $value);
-            }
+        if ((!is_array($index) && isset($value))
+            && (!is_object($index) && isset($value))
+        ) {
+            $index = array($index => $value);
+        }
 
-            if (!is_array($index) && !is_object($index)) {
-                throw new Exception\TypeException("Invalid session value");
-            }
+        if (!is_array($index) && !is_object($index)) {
+            throw new Exception\TypeException("Invalid session value");
+        }
 
-            foreach ($index as $k => $v) {
-                $_SESSION[$k] = $v;
-                $this->sessionContainer = $this->_normalize($_SESSION);
-            }
-
-        } catch (Exception\TypeException $e) {
-
-            echo "<strong>TypeException:</strong> <br/>";
-            echo $e->getMessage();
-            exit;
-
+        foreach ($index as $k => $v) {
+            $_SESSION[$k] = $v;
+            $this->sessionContainer = $this->_normalize($_SESSION);
         }
     }
 
@@ -376,33 +367,25 @@ class Request
     {
         $accepted = ['post', 'put', 'delete', 'get', 'server', 'session'];
 
-        try {
-            if(in_array($name, $accepted)) {
+        if(in_array($name, $accepted)) {
 
-                $container = $name . 'Container';
-                $container = $this->$container;
+            $container = $name . 'Container';
+            $container = $this->$container;
 
-                $argument = ! empty( $arguments[0] ) ? $arguments[0] : false;
+            $argument = ! empty( $arguments[0] ) ? $arguments[0] : false;
 
-                if($argument === false && !empty($container)) {
-                    return $container;
+            if($argument === false && !empty($container)) {
+                return $container;
+            }
+            if( ! empty ( $container[$argument] ) ) {
+                if(!is_array($container[$argument]) && !is_object($container[$argument]) && strlen($container[$argument]) > 0 || is_array($container[$argument]) || is_object($container[$argument])) {
+                    return $container[$argument];
                 }
-                if( ! empty ( $container[$argument] ) ) {
-                    if(!is_array($container[$argument]) && !is_object($container[$argument]) && strlen($container[$argument]) > 0 || is_array($container[$argument]) || is_object($container[$argument])) {
-                        return $container[$argument];
-                    }
-                }
-
-                return ! empty ( $arguments[1] ) ? $arguments[1] : false;
             }
 
-            throw new Exception\FunctionException('Method ' . $name . ' does not exist.');
-        } catch(Exception\FunctionException $e) {
-
-            echo "<strong>FunctionException:</strong> <br/>";
-            echo $e->getMessage();
-            exit;
-
+            return ! empty ( $arguments[1] ) ? $arguments[1] : false;
         }
+
+        throw new Exception\FunctionException('Method ' . $name . ' does not exist.');
     }
 }
