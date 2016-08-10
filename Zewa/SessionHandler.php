@@ -115,15 +115,9 @@ class SessionHandler
 
         $this->gc();
 
-        try {
-            $sth = $this->dbh->prepare('COUNT(id) as count FROM' . $this->tableName);
-            $sth->execute();
-            $result = $sth->fetch(\PDO::FETCH_OBJ);
-        } catch (\PDOException $e) {
-            echo "<strong>PDOException:</strong> <br/>";
-            echo $e->getMessage();
-            exit;
-        }
+        $sth = $this->dbh->prepare('COUNT(id) as count FROM' . $this->tableName);
+        $sth->execute();
+        $result = $sth->fetch(\PDO::FETCH_OBJ);
 
         return $result->count;
 
@@ -160,24 +154,12 @@ class SessionHandler
 
     public function close()
     {
-        try {
-            $lock = $this->dbh->prepare('SELECT RELEASE_LOCK(?)')
-                ->execute([$this->sessionLock]);
+        $lock = $this->dbh->prepare('SELECT RELEASE_LOCK(?)')
+            ->execute([$this->sessionLock]);
 
-            if (!$lock) {
-                throw new Exception\StateException('Session: Could not release session lock!');
-            }
-
-        } catch (\PDOException $e) {
-            echo "<strong>PDOException:</strong> <br/>";
-            echo $e->getMessage();
-            exit;
-        } catch(Exception\StateException $e) {
-            echo "<strong>StateException:</strong> <br/>";
-            echo $e->getMessage();
-            exit;
+        if (!$lock) {
+            throw new Exception\StateException('Session: Could not release session lock!');
         }
-
         return true;
 
     }
@@ -185,18 +167,11 @@ class SessionHandler
     public function destroy($sessionId)
     {
         $success = false;
-        try {
-            $query = "DELETE FROM ". $this->tableName
-                . " WHERE id = ?";
+        $query = "DELETE FROM ". $this->tableName
+            . " WHERE id = ?";
 
-            $success = $this->dbh->prepare($query)
-                ->execute([$sessionId]);
-
-        } catch (\PDOException $e) {
-            echo "<strong>PDOException:</strong> <br/>";
-            echo $e->getMessage();
-            exit;
-        }
+        $success = $this->dbh->prepare($query)
+            ->execute([$sessionId]);
 
         if ($success) {
             return true;
@@ -208,18 +183,11 @@ class SessionHandler
     public function gc()
     {
 
-        try {
-            $query = "DELETE FROM ". $this->tableName
-                . " WHERE session_expire < ?";
+        $query = "DELETE FROM ". $this->tableName
+            . " WHERE session_expire < ?";
 
-            return $this->dbh->prepare($query)
-                ->execute([time()]);
-        } catch (\PDOException $e) {
-            echo "<strong>PDOException:</strong> <br/>";
-            echo $e->getMessage();
-            exit;
-        }
-
+        return $this->dbh->prepare($query)
+            ->execute([time()]);
     }
 
     public function open($save_path, $session_name)
@@ -298,30 +266,17 @@ class SessionHandler
 
     private function fetchSessionLock()
     {
-        try {
-            $lock = $this->dbh->prepare('SELECT GET_LOCK(?, ?)')
-                ->execute([
-                    $this->sessionLock,
-                    $this->lockTimeout
-                ]);
+        $lock = $this->dbh->prepare('SELECT GET_LOCK(?, ?)')
+            ->execute([
+                $this->sessionLock,
+                $this->lockTimeout
+            ]);
 
-            if (!$lock) {
-                throw new Exception\StateException('Session: Could not obtain session lock!');
-            }
-
-            return $lock;
-
-        } catch (\PDOException $e) {
-            echo "<strong>PDOException:</strong> <br/>";
-            echo $e->getMessage();
-            exit;
-        } catch(Exception\StateException $e) {
-            echo "<strong>StateException:</strong> <br/>";
-            echo $e->getMessage();
-            exit;
+        if (!$lock) {
+            throw new Exception\StateException('Session: Could not obtain session lock!');
         }
 
-
+        return $lock;
     }
 
     private function fetchSessionData($sessionId)
@@ -350,25 +305,17 @@ class SessionHandler
         echo 'The Session table does not exist, we\'re going to try and do this for you! Please refresh.';
         echo "</PRE>";
 
-        try {
-            $query = "CREATE TABLE `Session` ("
-                . "`id` varchar(32) NOT NULL DEFAULT '',"
-                . "`hash` varchar(32) NOT NULL DEFAULT '',"
-                . "`session_data` blob NOT NULL,"
-                . "`session_expire` int(11) NOT NULL DEFAULT '0',"
-                . "`session_regeneration` int(2) NOT NULL DEFAULT '0',"
-                . "PRIMARY KEY (`id`)"
-                . ") ENGINE=InnoDB DEFAULT CHARSET=utf8";
+        $query = "CREATE TABLE `Session` ("
+            . "`id` varchar(32) NOT NULL DEFAULT '',"
+            . "`hash` varchar(32) NOT NULL DEFAULT '',"
+            . "`session_data` blob NOT NULL,"
+            . "`session_expire` int(11) NOT NULL DEFAULT '0',"
+            . "`session_regeneration` int(2) NOT NULL DEFAULT '0',"
+            . "PRIMARY KEY (`id`)"
+            . ") ENGINE=InnoDB DEFAULT CHARSET=utf8";
 
-            $this->dbh->prepare($query)
-                ->execute();
+        $this->dbh->prepare($query)
+            ->execute();
 
-        } catch (\PDOException $e) {
-            echo "<strong>PDOException:</strong> <br/>";
-            echo $e->getMessage();
-            exit;
-        }
-
-        exit;
     }
 }

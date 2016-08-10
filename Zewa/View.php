@@ -115,17 +115,11 @@ class View
             $this->module = $this->configuration->router->module;
         }
 
-        try {
-            $view = APP_PATH . DIRECTORY_SEPARATOR . 'Modules' . DIRECTORY_SEPARATOR . $this->module . DIRECTORY_SEPARATOR . 'Views' . DIRECTORY_SEPARATOR . strtolower($requestedView) . '.php';
-            if (!file_exists($view)) {
-                throw new Exception\LookupException('View: "' . $view . '" could not be found.');
-            }
-            $this->view = $view;
-        } catch (Exception\LookupException $e) {
-            echo "<strong>LookupException:</strong> <br/>";
-            echo $e->getMessage();
-            exit;
+        $view = APP_PATH . DIRECTORY_SEPARATOR . 'Modules' . DIRECTORY_SEPARATOR . $this->module . DIRECTORY_SEPARATOR . 'Views' . DIRECTORY_SEPARATOR . strtolower($requestedView) . '.php';
+        if (!file_exists($view)) {
+            throw new Exception\LookupException('View: "' . $view . '" could not be found.');
         }
+        $this->view = $view;
 
     }
 
@@ -149,21 +143,15 @@ class View
         } else {
 
             $layout = APP_PATH . DIRECTORY_SEPARATOR . 'Layouts' . DIRECTORY_SEPARATOR . strtolower($layout) . '.php';
-            try {
 
-                if(!file_exists($layout)) {
-                    throw new Exception\LookupException('Layout: "' . $layout . '" could not be found.');
-                }
-
-                $this->layout = $layout;
-
-                return true;
-
-            } catch (Exception\LookupException $e) {
-                echo "<strong>LookupException:</strong> <br/>";
-                echo $e->getMessage();
-                exit;
+            if(!file_exists($layout)) {
+                throw new Exception\LookupException('Layout: "' . $layout . '" could not be found.');
             }
+
+            $this->layout = $layout;
+
+            return true;
+
 
         }
     }
@@ -204,16 +192,16 @@ class View
         return $return;
     }
 
-    private function verifyResource($resource) {
-
-        $path = PUBLIC_PATH . DIRECTORY_SEPARATOR . $resource;
-
-        if (!file_exists($path)) {
-            return false;
-        }
-
-        return true;
-    }
+//    private function verifyResource($resource) {
+//
+//        $path = PUBLIC_PATH . DIRECTORY_SEPARATOR . $resource;
+//
+//        if (!file_exists($path)) {
+//            return false;
+//        }
+//
+//        return true;
+//    }
 
     protected function fetchCSS()
     {
@@ -227,7 +215,7 @@ class View
         }
 
         foreach($sheets as $sheet) {
-            $string .= '<link rel="stylesheet" href="' . $this->baseURL($sheet) .'">' . "\r\n";
+            $string .= '<link rel="stylesheet" href="' . $sheet .'">' . "\r\n";
         }
 
         return $string;
@@ -246,52 +234,45 @@ class View
         }
 
         foreach($scripts as $script) {
-            $string .= '<script src="' . $this->baseURL($script) . '"></script>' . "\r\n";
+            $string .= '<script src="' . $script . '"></script>' . "\r\n";
         }
 
         return $string;
 
     }
 
-    public function addCSS($sheets = [], $place = 'append') {
-
+    public function addCSS($sheets = [], $place = 'append')
+    {
         $app = App::getInstance();
         $existingCSS = $app->getConfiguration('view::css');
 
-        try {
-            if ($existingCSS === false) {
-                $existingCSS = [];
-            } else {
-                $existingCSS = (array)$existingCSS;
-            }
-            if (empty($sheets)) {
-                throw new Exception\LookupException('You must provide a valid CSS Resource.');
-            }
-
-            $files = [];
-
-            foreach ($sheets as $file) {
-                if ($this->verifyResource($file)) {
-                    $files[] = $file;
-                } else {
-                    var_dump($file);
-                    throw new Exception\LookupException('The CSS Resource you\'ve specified does not exist.');
-                }
-            }
-
-            if ($place === 'prepend') {
-                $existingCSS = array_merge($files, $existingCSS);
-            } else {
-                $existingCSS = array_merge($existingCSS, $files);
-            }
-
-            $app = App::getInstance();
-            $app->setConfiguration('view::css', (object)$existingCSS);
-        } catch (Exception\LookupException $e) {
-            echo "<strong>LookupException:</strong> <br/>";
-            echo $e->getMessage();
-            exit;
+        if ($existingCSS === false) {
+            $existingCSS = [];
+        } else {
+            $existingCSS = (array)$existingCSS;
         }
+        if (empty($sheets)) {
+            throw new Exception\LookupException('You must provide a valid CSS Resource.');
+        }
+
+        $files = [];
+
+        foreach ($sheets as $file) {
+            $files[] = $file;
+//            if ($this->verifyResource($file)) {
+//            } else {
+//                throw new Exception\LookupException('The CSS Resource you\'ve specified does not exist.');
+//            }
+        }
+
+        if ($place === 'prepend') {
+            $existingCSS = array_merge($files, $existingCSS);
+        } else {
+            $existingCSS = array_merge($existingCSS, $files);
+        }
+
+        $app = App::getInstance();
+        $app->setConfiguration('view::css', (object)$existingCSS);
     }
 
     public function addJS($scripts = [], $place = 'append') {
@@ -299,40 +280,33 @@ class View
         $app = App::getInstance();
         $existingJS = $app->getConfiguration('view::js');
 
-        try {
-            if ($existingJS === false) {
-                $existingJS = [];
+        if ($existingJS === false) {
+            $existingJS = [];
+        } else {
+            $existingJS = (array)$existingJS;
+        }
+
+        if (!empty($scripts)) {
+
+            $files = [];
+
+            foreach ($scripts as $file) {
+                $files[] = $file;
+//                if ($this->verifyResource($file)) {
+//                } else {
+//                    throw new Exception\LookupException('The JS Resource you\'ve specified does not exist: ' . $file);
+//                }
+            }
+
+            if ($place === 'prepend') {
+                $existingJS = array_merge($files, $existingJS);
             } else {
-                $existingJS = (array)$existingJS;
+                $existingJS = array_merge($existingJS, $files);
             }
 
-            if (!empty($scripts)) {
+            $app = App::getInstance();
+            $app->setConfiguration('view::js', (object)$existingJS);
 
-                $files = [];
-
-                foreach ($scripts as $file) {
-                    if ($this->verifyResource($file)) {
-                        $files[] = $file;
-                    } else {
-                        throw new Exception\LookupException('The JS Resource you\'ve specified does not exist: ' . $file);
-                    }
-                }
-
-                if ($place === 'prepend') {
-                    $existingJS = array_merge($files, $existingJS);
-                } else {
-                    $existingJS = array_merge($existingJS, $files);
-                }
-
-                $app = App::getInstance();
-                $app->setConfiguration('view::js', (object)$existingJS);
-
-            }
-
-        } catch (Exception\LookupException $e) {
-            echo "<strong>LookupException:</strong> <br/>";
-            echo $e->getMessage();
-            exit;
         }
     }
 
