@@ -134,18 +134,7 @@ class App
         }
 
         $this->prepare();
-
-        if ($this->configuration->acl) {
-            $acl = new ACL(
-                $this->request->session('uid'),
-                $this->request->session('role_id')
-            );
-            $acl->secureStart(function(){
-                return $this->start();
-            });
-        } else {
-            $this->start();
-        }
+        $this->start();
 
         return $this;
 
