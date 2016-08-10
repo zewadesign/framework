@@ -4,9 +4,9 @@
  */
 
 return [
-    'defaultModule' => 'example',
-    'example'     => [
-        'defaultController' => 'home',
-        'defaultMethod'     => 'index',
+    'defaultModule' => 'Example',
+    'Example'     => [
+        'defaultController' => 'Home',
+        'defaultMethod'     => 'Index',
     ],
 ];
