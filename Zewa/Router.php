@@ -1,6 +1,8 @@
 <?php
 namespace Zewa;
 
+use Zewa\Exception\RouteException;
+
 /**
  * Handles everything relating to URL/URI.
  *
@@ -177,8 +179,7 @@ class Router
         $result = array_merge($uriChunks, $params);
 
         if ($this->isURIClean($uri, $result) === false) {
-            //@TODO: throw exceptions here..
-            die('Invalid key characters.');
+            throw new RouteException('Invalid key characters.');
         }
 
         return $result;
