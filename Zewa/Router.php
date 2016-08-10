@@ -441,12 +441,13 @@ class Router
         }
         if (preg_match('/^https?/', $url)) {
             header("Location: $url");
-            exit;
+            //@TODO: does this break without exit?
+            //exit;
         }
         // strip leading slashies
         $url = preg_replace('!^/*!', '', $url);
         header("Location: " . $this->baseURL($url));
-        exit;
-
+        //@TODO: does this break without exit?
+        //exit;
     }
 }

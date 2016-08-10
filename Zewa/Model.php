@@ -45,24 +45,15 @@ class Model
     protected function fetch($sql, $params = [], $returnResultSet = 'result') {
         $result = false;
 
-        try {
-            if(is_null($this->dbh)) {
-                throw new \PDOException('Database handler is not available');
-            }
-            $this->sth = $this->dbh->prepare($sql);
-            $this->sth->execute($params);
-            if($this->sth->rowCount() > 0) {
-                $result = ($this->sth->rowCount() > 1 || $returnResultSet === 'result' ? $this->sth->fetchAll(\PDO::FETCH_OBJ) : $this->sth->fetch(\PDO::FETCH_OBJ));
-            }
-            $this->sth->closeCursor();
-
-        } catch (\PDOException $e) {
-
-            echo "<strong>PDOException:</strong> <br/>";
-            echo $e->getMessage();
-            exit;
-
+        if(is_null($this->dbh)) {
+            throw new \PDOException('Database handler is not available');
         }
+        $this->sth = $this->dbh->prepare($sql);
+        $this->sth->execute($params);
+        if($this->sth->rowCount() > 0) {
+            $result = ($this->sth->rowCount() > 1 || $returnResultSet === 'result' ? $this->sth->fetchAll(\PDO::FETCH_OBJ) : $this->sth->fetch(\PDO::FETCH_OBJ));
+        }
+        $this->sth->closeCursor();
 
         return $result;
     }
@@ -70,38 +61,22 @@ class Model
     protected function modify($sql, $params) {
         $result = false;
 
-        try {
-            if(is_null($this->dbh)) {
-                throw new \PDOException('Database handler is not available');
-            }
-            $this->sth = $this->dbh->prepare($sql);
-            $result = $this->sth->execute($params);
-            $this->sth->closeCursor();
-        } catch (\PDOException $e) {
-
-            echo "<strong>PDOException:</strong> <br/>";
-            echo $e->getMessage();
-            exit;
-
+        if(is_null($this->dbh)) {
+            throw new \PDOException('Database handler is not available');
         }
+        $this->sth = $this->dbh->prepare($sql);
+        $result = $this->sth->execute($params);
+        $this->sth->closeCursor();
 
         return $result;
     }
 
     protected function lastInsertId()
     {
-        try {
-            if(is_null($this->dbh)) {
-                throw new \PDOException('Database handler is not available');
-            }
-            return $this->dbh->lastInsertId();
-        } catch (\PDOException $e) {
-
-            echo "<strong>PDOException:</strong> <br/>";
-            echo $e->getMessage();
-            exit;
-
+        if(is_null($this->dbh)) {
+            throw new \PDOException('Database handler is not available');
         }
+        return $this->dbh->lastInsertId();
     }
 
     /**
@@ -113,20 +88,10 @@ class Model
 
     public static function getInstance()
     {
-
-        try {
-
-            if (self::$instance === null) {
-                throw new Exception\TypeException('There is no instance of Model available.');
-            }
-
-            return self::$instance;
-
-        } catch(Exception\TypeException $e) {
-            echo "<strong>TypeException:</strong> <br/>";
-            echo $e->getMessage();
-            exit;
+        if (self::$instance === null) {
+            throw new Exception\TypeException('There is no instance of Model available.');
         }
 
+        return self::$instance;
     }
 }

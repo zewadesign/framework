@@ -117,16 +117,8 @@ class App
         //@TODO: unset unnececessary vars/profile/unit testing..? how?
         //@TODO: better try/catch usage
         //@TODO: setup custom routing based on regex // (can't we get away without using regex tho?)!!!!!!! routesssssss!!!!!!!!
-        try {
-
-            $this->configuration = new \stdClass();
-            $this->setConfiguration();
-
-        } catch(\RuntimeException $e) {
-            echo "<strong>RuntimeException:</strong> <br/>";
-            echo $e->getMessage();
-            exit;
-        }
+        $this->configuration = new \stdClass();
+        $this->setConfiguration();
     }
 
     /**
@@ -134,6 +126,12 @@ class App
      * @access private
      */
     public function initialize() {
+
+        if($this->configuration->app->environment == 'development') {
+            ini_set('display_errors', 1);
+            ini_set('display_startup_errors', 1);
+            error_reporting(E_ALL);
+        }
 
         $this->prepare();
 
@@ -222,53 +220,47 @@ class App
      */
     public function setConfiguration($config = null, $configObject = null)
     {
-        try {
-            if( $config !== null && $configObject !== null && !empty( $configObject ) ) {
-                $this->configuration->$config = $configObject;
-                return true;
-            } else if($config === null && $configObject === null) {
+        if( $config !== null && $configObject !== null && !empty( $configObject ) ) {
+            $this->configuration->$config = $configObject;
+            return true;
+        } else if($config === null && $configObject === null) {
 
-                $files = glob(APP_PATH . DIRECTORY_SEPARATOR . 'Config' . DIRECTORY_SEPARATOR . '*.php');
+            $files = glob(APP_PATH . DIRECTORY_SEPARATOR . 'Config' . DIRECTORY_SEPARATOR . '*.php');
 
-                foreach ($files as $index => $filename){
-                    $pieces = explode('/', $filename);
-                    $file = $pieces[count($pieces) - 1];
-                    $fileProperties = explode('.', $file);
+            foreach ($files as $index => $filename){
+                $pieces = explode('/', $filename);
+                $file = $pieces[count($pieces) - 1];
+                $fileProperties = explode('.', $file);
 
-                    $vars = include($filename);
-                    if($vars === 1) {
-                        throw new Exception\StateException('No configuration values found in: ' . $fileProperties[0]);
+                $vars = include($filename);
+                if($vars === 1) {
+                    throw new Exception\StateException('No configuration values found in: ' . $fileProperties[0]);
+                }
+
+                if($fileProperties[0] === 'services') {
+                    if(self::$services === null) {
+                        self::$services = new \stdClass();
                     }
-
-                    if($fileProperties[0] === 'services') {
-                        if(self::$services === null) {
-                            self::$services = new \stdClass();
-                        }
-                        foreach($vars as $serviceName => $service) {
-                            self::$services->$serviceName = $service;
-                        }
-                    } else {
+                    foreach($vars as $serviceName => $service) {
+                        self::$services->$serviceName = $service;
+                    }
+                } else {
 //                        if($vars === false) return;
-                        $name = $fileProperties[0];
-                        if($vars === false) {
-                            $this->configuration->{$name} = false;
-                        } else {
-                            $this->configuration->{$name} = json_decode(json_encode($vars));
-                        }
-
+                    $name = $fileProperties[0];
+                    if($vars === false) {
+                        $this->configuration->{$name} = false;
+                    } else {
+                        $this->configuration->{$name} = json_decode(json_encode($vars));
                     }
 
                 }
 
-                return true;
             }
 
-            throw new Exception\StateException('You must provide the configuration key, and its value.');
-        } catch(Exception\StateException $e) {
-            echo "<strong>StateException:</strong> <br/>";
-            echo $e->getMessage();
-            exit;
+            return true;
         }
+
+        throw new Exception\StateException('You must provide the configuration key, and its value.');
     }
 
     /**
