@@ -67,7 +67,8 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $app    = App::getInstance();
 
         $routerConfig    = $app->getConfiguration('router');
-        $firstRouteParam = $routerConfig->params[1];
+
+        $firstRouteParam = $routerConfig->params[0];
 
         $this->assertTrue(is_float($firstRouteParam));
         $this->assertTrue(!is_string($firstRouteParam));
@@ -100,7 +101,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $app    = App::getInstance();
 
         $routerConfig    = $app->getConfiguration('router');
-        $firstRouteParam = $routerConfig->params[1];
+        $firstRouteParam = $routerConfig->params[0];
 
         $this->assertTrue(is_int($firstRouteParam));
         $this->assertTrue(!is_string($firstRouteParam));
@@ -217,11 +218,11 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $router = new Router();
         $currentURL = $router->currentURL();
 
-        $this->assertSame('http://test.zewa.com/Example/Home/Index/batman',$currentURL);
+        $this->assertSame('http://test.zewa.com/Batman/Home/Index',$currentURL);
 
         $currentURLWithParams = $router->currentURL(['param1' => 'something','p2' => 'nothing']);
         $this->assertSame(
-            'http://test.zewa.com/Example/Home/Index/batman?param1=something&p2=nothing',
+            'http://test.zewa.com/Batman/Home/Index?param1=something&p2=nothing',
             $currentURLWithParams
         );
     }
@@ -238,11 +239,11 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $router = new Router();
         $currentURL = $router->currentURL();
 
-        $this->assertSame('https://test.zewa.com/Example/Home/Index/batman',$currentURL);
+        $this->assertSame('https://test.zewa.com/Batman/Home/Index',$currentURL);
 
         $currentURLWithParams = $router->currentURL(['param1' => 'something']);
         $this->assertSame(
-            'https://test.zewa.com/Example/Home/Index/batman?param1=something',
+            'https://test.zewa.com/Batman/Home/Index?param1=something',
             $currentURLWithParams
         );
     }
