@@ -143,7 +143,7 @@ class Router
         if (is_numeric($data)) {
             if (is_int($data) || ctype_digit(trim($data, '-'))) {
                 $data = (int)$data;
-            } else if ($data === (string)(float)$data) {
+            } elseif ($data === (string)(float)$data) {
                 //@TODO: this needs work.. 9E26 converts to float
                 $data = (float)$data;
             }
@@ -211,7 +211,7 @@ class Router
 
         $normalizedURI = ltrim(preg_replace('/\?.*/', '', $normalizedURI), '/');
 
-        if( ! empty ( $this->configuration->routes ) ) {
+        if (! empty ( $this->configuration->routes )) {
             $normalizedURI = $this->discoverRoute($normalizedURI);
         }
         
@@ -222,7 +222,7 @@ class Router
     {
         $routes = $this->configuration->routes;
 
-        foreach($routes as $route => $reroute) {
+        foreach ($routes as $route => $reroute) {
             $pattern = '/^(?i)' . str_replace('/', '\/', $route) . '$/';
 
             if (preg_match($pattern, $uri, $params)) {
@@ -230,9 +230,9 @@ class Router
 
                 $uri = $reroute;
 
-                if( ! empty ( $params ) ) {
+                if (! empty ( $params )) {
                     $pat = '/(\$\d+)/';
-                    $uri = preg_replace_callback($pat, function() use (&$params){
+                    $uri = preg_replace_callback($pat, function () use (&$params) {
                         $first = $params[0];
                         array_shift($params);
                         return $first;
@@ -253,7 +253,7 @@ class Router
      */
     private function uri($uri)
     {
-        if($uri !== '') {
+        if ($uri !== '') {
             $uriChunks = explode('/', filter_var(trim($uri), FILTER_SANITIZE_URL));
             $chunks = $this->sortURISegments($uriChunks);
         } else {
@@ -273,33 +273,29 @@ class Router
         $method = ucfirst(strtolower($this->defaultMethod));
 
         if (!empty($uriChunks)) {
-
             $module = ucfirst(strtolower($uriChunks[0]));
 
             if (!empty($uriChunks[1])) {
-
                 $controller = ucfirst(strtolower($uriChunks[1]));
 
-            } else if (!empty($this->configuration->modules->$module->defaultController)) {
-
+            } elseif (!empty($this->configuration->modules->$module->defaultController)) {
                 $controller = $this->configuration->modules->$module->defaultController;
 
             }
 
             if (!empty($uriChunks[2])) {
-
                 $method = ucfirst(strtolower($uriChunks[2]));
                 $class = '\\App\\Modules\\' . $module . '\\Controllers\\' . $controller;
                 $methodExist = method_exists($class, $method);
                 
-                if($methodExist === false) {
+                if ($methodExist === false) {
                     if (!empty($this->configuration->modules->$module->defaultMethod)) {
                         $method = $this->configuration->modules->$module->defaultMethod;
                         array_unshift($uriChunks, null);
                     }
                 }
 
-            } else if (!empty($this->configuration->modules->$module->defaultMethod)) {
+            } elseif (!empty($this->configuration->modules->$module->defaultMethod)) {
                 $method = $this->configuration->modules->$module->defaultMethod;
             }
 
@@ -311,7 +307,8 @@ class Router
         return array_merge($return, array_values($uriChunks));
     }
 
-    private function addQueryString($url, $key, $value) {
+    private function addQueryString($url, $key, $value)
+    {
         $url = preg_replace('/(.*)(\?|&)' . $key . '=[^&]+?(&)(.*)/i', '$1$2$4', $url . '&');
         $url = substr($url, 0, -1);
         if (strpos($url, '?') === false) {
@@ -321,7 +318,8 @@ class Router
         }
     }
 
-    function removeQueryString($url, $key) {
+    private function removeQueryString($url, $key)
+    {
         $url = preg_replace('/(.*)(\?|&)' . $key . '=[^&]+?(&)(.*)/i', '$1$2$4', $url . '&');
         $url = substr($url, 0, -1);
         return ($url);
@@ -335,22 +333,20 @@ class Router
      */
     public function currentURL($params = false)
     {
-        if( trim ( $_SERVER['REQUEST_URI'] ) === '/' ) {
-            $url = $this->baseURL() . (!empty($_SERVER['QUERY_STRING']) ? '?' . $_SERVER['QUERY_STRING'] : '');
+        if (trim($_SERVER['REQUEST_URI']) === '/') {
+            $url = $this->baseURL()
+                   . (!empty($_SERVER['QUERY_STRING']) ? '?' . $_SERVER['QUERY_STRING'] : '');
         } else {
-            $url = $this->baseURL($this->uri) . (!empty($_SERVER['QUERY_STRING']) ? '?' . $_SERVER['QUERY_STRING'] : '');
+            $url = $this->baseURL($this->uri)
+                   . (!empty($_SERVER['QUERY_STRING']) ? '?' . $_SERVER['QUERY_STRING'] : '');
         }
-        if(!empty($params)) {
-            foreach($params as $key => $param) {
+
+        if (!empty($params)) {
+            foreach ($params as $key => $param) {
                 $url = $this->removeQueryString($url, $key);
-//                var_dump($key);
-//                var_dump($param);
-//                var_dump($url);
-//
                 $url = $this->addQueryString($url, $key, $param);
             }
         }
-
 
         return $url;
     }
@@ -364,10 +360,14 @@ class Router
     public function baseURL($path = '')
     {
         if (is_null($this->baseURL)) {
-
             $self = $_SERVER['PHP_SELF'];
-            $server = $_SERVER['HTTP_HOST'] . rtrim(str_replace(strstr($self, 'index.php'), '', $self), '/');
-            if ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') || !empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
+            $server = $_SERVER['HTTP_HOST']
+                      . rtrim(str_replace(strstr($self, 'index.php'), '', $self), '/');
+
+            if ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off')
+                || !empty($_SERVER['HTTP_X_FORWARDED_PROTO'])
+                   && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https'
+            ) {
                 $protocol = 'https://';
             } else {
                 $protocol = 'http://';

@@ -69,16 +69,19 @@ class View
         $this->router = App::getService('router');
     }
 
-    private function baseURL($path = '') {
+    private function baseURL($path = '')
+    {
         return $this->router->baseURL($path);
     }
 
-    private function currentURL($params = false) {
+    private function currentURL($params = false)
+    {
         return $this->router->currentURL($params);
     }
 
 
-    private function currentURI() {
+    private function currentURI()
+    {
         return $this->router->uri;
     }
     /**
@@ -93,14 +96,14 @@ class View
      */
     public function render()
     {
-        if($this->view !== false) {
+        if ($this->view !== false) {
             $this->view = $this->process($this->view);
         }
-        if($this->layout === false) {
+        if ($this->layout === false) {
             $this->setLayout($this->configuration->layouts->default);
         }
 
-        if(is_null($this->layout)) {
+        if (is_null($this->layout)) {
             return $this->view;
         } else {
             return $this->process($this->layout);
@@ -111,11 +114,21 @@ class View
     public function setView($requestedView)
     {
 
-        if($this->module === false) {
+        if ($this->module === false) {
             $this->module = $this->configuration->router->module;
         }
 
-        $view = APP_PATH . DIRECTORY_SEPARATOR . 'Modules' . DIRECTORY_SEPARATOR . $this->module . DIRECTORY_SEPARATOR . 'Views' . DIRECTORY_SEPARATOR . strtolower($requestedView) . '.php';
+        $view = APP_PATH
+                . DIRECTORY_SEPARATOR
+                . 'Modules'
+                . DIRECTORY_SEPARATOR
+                . $this->module
+                . DIRECTORY_SEPARATOR
+                . 'Views'
+                . DIRECTORY_SEPARATOR
+                . strtolower($requestedView)
+                . '.php';
+
         if (!file_exists($view)) {
             throw new Exception\LookupException('View: "' . $view . '" could not be found.');
         }
@@ -125,9 +138,9 @@ class View
 
     public function setProperty($property, $value = false)
     {
-        if( $value !== false) {
+        if ($value !== false) {
             $this->properties[$property] = $value;
-        } else if(!empty($property)) {
+        } elseif (!empty($property)) {
             $this->properties = $property;
         }
         return false;
@@ -136,15 +149,13 @@ class View
     public function setLayout($layout)
     {
 
-        if($layout === false) {
-
-            $this->layout = NULL;
+        if ($layout === false) {
+            $this->layout = null;
 
         } else {
-
             $layout = APP_PATH . DIRECTORY_SEPARATOR . 'Layouts' . DIRECTORY_SEPARATOR . strtolower($layout) . '.php';
 
-            if(!file_exists($layout)) {
+            if (!file_exists($layout)) {
                 throw new Exception\LookupException('Layout: "' . $layout . '" could not be found.');
             }
 
@@ -158,7 +169,7 @@ class View
 
     public function setModule($module = false)
     {
-        if($module === false) {
+        if ($module === false) {
             $this->module = $this->configuration->router->module;
         } else {
             $this->module = ucfirst($module);
@@ -210,11 +221,11 @@ class View
 
         $string = "";
 
-        if(empty($sheets)) {
+        if (empty($sheets)) {
             return $string;
         }
 
-        foreach($sheets as $sheet) {
+        foreach ($sheets as $sheet) {
             $string .= '<link rel="stylesheet" href="' . $sheet .'">' . "\r\n";
         }
 
@@ -229,11 +240,11 @@ class View
         $scripts = $app->getConfiguration('view::js');
         $string = "<script>baseURL = '" . $this->baseURL() . "/'</script>";
 
-        if(empty($scripts)) {
+        if (empty($scripts)) {
             return $string;
         }
 
-        foreach($scripts as $script) {
+        foreach ($scripts as $script) {
             $string .= '<script src="' . $script . '"></script>' . "\r\n";
         }
 
@@ -275,7 +286,8 @@ class View
         $app->setConfiguration('view::css', (object)$existingCSS);
     }
 
-    public function addJS($scripts = [], $place = 'append') {
+    public function addJS($scripts = [], $place = 'append')
+    {
 
         $app = App::getInstance();
         $existingJS = $app->getConfiguration('view::js');
@@ -287,7 +299,6 @@ class View
         }
 
         if (!empty($scripts)) {
-
             $files = [];
 
             foreach ($scripts as $file) {
@@ -340,5 +351,4 @@ class View
         $this->setLayout('404');
         return $this->render();
     }
-
 }

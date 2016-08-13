@@ -2,4 +2,7 @@
 
 namespace Zewa\Exception;
 
-class TypeException extends Exception { }
+class TypeException extends Exception
+{
+ 
+}

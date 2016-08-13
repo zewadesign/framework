@@ -6,7 +6,6 @@ namespace Zewa\Tests;
 use \Zewa\App;
 use \Zewa\Router;
 
-
 class RouterTest extends \PHPUnit_Framework_TestCase
 {
 

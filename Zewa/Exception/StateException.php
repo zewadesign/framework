@@ -2,4 +2,7 @@
 
 namespace Zewa\Exception;
 
-class StateException extends Exception { }
+class StateException extends Exception
+{
+ 
+}
