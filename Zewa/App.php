@@ -1,6 +1,7 @@
 <?php
 
 namespace Zewa;
+use Zewa\Exception\LookupException;
 
 /**
  * This class is the starting point for application
@@ -24,6 +25,13 @@ class App
     protected static $instance = false;
 
     /**
+     * Available configuration files
+     *
+     * @var object
+     */
+    private $files;
+
+    /**
      * System configuration
      *
      * @var object
@@ -35,7 +43,7 @@ class App
      *
      * @var object
      */
-    private static $services;
+    private $services;
 
     /**
      * Events
@@ -118,8 +126,19 @@ class App
         //@TODO: better try/catch usage
         //@TODO: setup custom routing based on regex
         // (can't we get away without using regex tho?)!!!!!!! routesssssss!!!!!!!!
+        $files = (object)glob(APP_PATH . DIRECTORY_SEPARATOR . 'Config' . DIRECTORY_SEPARATOR . '*.php');
+        $oFiles = [];
+
+        foreach ($files as $index => $filename) {
+            $pieces = explode('/', $filename);
+            $file = $pieces[count($pieces) - 1];
+            $fileProperties = explode('.', $file);
+            $currentFile = $fileProperties[0];
+            $oFiles[$currentFile] = $filename;
+        }
+
+        $this->files = $oFiles;
         $this->configuration = new \stdClass();
-        $this->setConfiguration();
     }
 
     /**
@@ -128,8 +147,9 @@ class App
      */
     public function initialize()
     {
+        $appConfig = $this->getConfiguration('app');
 
-        if ($this->configuration->app->environment == 'development') {
+        if ($appConfig->environment == 'development') {
             ini_set('display_errors', 1);
             ini_set('display_startup_errors', 1);
             error_reporting(E_ALL);
@@ -150,17 +170,13 @@ class App
 
         $this->registerSession();
 
-        if (self::$services === null) {
-            self::$services = new \stdClass();
-        }
-
         $this->router = new Router();
         $this->request = new Request();
         $this->database = new Database();
 
-        App::setService('router', $this->router);
-        App::setService('request', $this->request);
-        App::setService('database', $this->database);
+        $this->setService('router', $this->router);
+        $this->setService('request', $this->request);
+        $this->setService('database', $this->database);
 
         $this->module = ucfirst($this->configuration->router->module);
         $this->controller = ucfirst($this->configuration->router->controller);
@@ -169,19 +185,41 @@ class App
         $this->class = '\\App\\Modules\\' . $this->module . '\\Controllers\\' . ucfirst($this->controller);
     }
 
-    public static function getService($service, $new = false, $options = [])
+    private function prepareServices()
     {
-        if ($new === false) {
-            return self::$services->$service;
-        } elseif ($new === true || empty(self::$services->$service)) {
-            self::$services->$service = call_user_func_array(self::$services->$service, $options);
-            return self::$services->$service;
+        if(isset($this->files['services'])) {
+            $services = include($this->files['services']);
+            if ($services === false) {
+                $this->services = [];
+            } else {
+                $this->services = (object)$services;
+            }
+        } else {
+            throw new LookupException('No service configuration found.');
         }
     }
 
-    public static function setService($service, $class)
+    public function getService($service, $new = false, $options = [])
     {
-        self::$services->$service = $class;
+        if($this->services === null) {
+            $this->prepareServices();
+        }
+
+        if ($new === false) {
+            return $this->services->$service;
+        } elseif ($new === true || empty($this->services->$service)) {
+            $this->services->$service = call_user_func_array($this->services->$service, $options);
+            return $this->services->$service;
+        }
+    }
+
+    public function setService($service, $class)
+    {
+        if($this->services === null) {
+            $this->prepareServices();
+        }
+
+        $this->services->$service = $class;
     }
 
     /**
@@ -193,6 +231,19 @@ class App
         if ($config !== null) {
             if (! empty($this->configuration->$config)) {
                 return $this->configuration->$config;
+            } elseif(! empty($this->files{$config}) ) {
+
+                $vars = include($this->files{$config});
+
+                if ($vars === false) {
+                    $this->configuration->{$config} = false;
+                } else {
+                    //turn array into object the dirty way?
+                    $this->configuration->{$config} = json_decode(json_encode($vars));
+                }
+
+                return $this->configuration->$config;
+
             }
 
             return false;
@@ -206,44 +257,12 @@ class App
      * @param null|object|array optional array of configuration data
      *
      * @return bool
-     * @throws StateException
+     * @throws Exception\StateException
      */
     public function setConfiguration($config = null, $configObject = null)
     {
         if ($config !== null && $configObject !== null && !empty($configObject)) {
             $this->configuration->$config = $configObject;
-            return true;
-        } elseif ($config === null && $configObject === null) {
-            $files = glob(APP_PATH . DIRECTORY_SEPARATOR . 'Config' . DIRECTORY_SEPARATOR . '*.php');
-
-            foreach ($files as $index => $filename) {
-                $pieces = explode('/', $filename);
-                $file = $pieces[count($pieces) - 1];
-                $fileProperties = explode('.', $file);
-
-                $vars = include($filename);
-                if ($vars === 1) {
-                    throw new Exception\StateException('No configuration values found in: ' . $fileProperties[0]);
-                }
-
-                if ($fileProperties[0] === 'services') {
-                    if (self::$services === null) {
-                        self::$services = new \stdClass();
-                    }
-                    foreach ($vars as $serviceName => $service) {
-                        self::$services->$serviceName = $service;
-                    }
-                } else {
-//                        if($vars === false) return;
-                    $name = $fileProperties[0];
-                    if ($vars === false) {
-                        $this->configuration->{$name} = false;
-                    } else {
-                        $this->configuration->{$name} = json_decode(json_encode($vars));
-                    }
-                }
-            }
-
             return true;
         }
 
@@ -257,21 +276,20 @@ class App
      */
     private function registerSession()
     {
+        $session = $this->getConfiguration('session');
 
-        $config = $this->configuration->session;
-
-        if ($config !== false) {
+        if ($session !== false) {
             App::callEvent('preSession');
             new SessionHandler(
-                $config->interface,
-                $config->securityCode,
-                $config->expiration,
-                $config->domain,
-                $config->lockToUserAgent,
-                $config->lockToIP,
-                $config->gcProbability,
-                $config->gcDivisor,
-                $config->tableName
+                $session->interface,
+                $session->securityCode,
+                $session->expiration,
+                $session->domain,
+                $session->lockToUserAgent,
+                $session->lockToIP,
+                $session->gcProbability,
+                $session->gcDivisor,
+                $session->tableName
             );
             App::callEvent('postSession');
         }

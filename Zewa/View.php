@@ -64,9 +64,10 @@ class View
     {
         // This abstract is strictly to establish inheritance from a global registery.
         $app = App::getInstance();
+        $layouts = $app->getConfiguration('layouts');
         $this->configuration = $app->getConfiguration();
-        $this->request = App::getService('request');
-        $this->router = App::getService('router');
+        $this->request = $app->getService('request');
+        $this->router = $app->getService('router');
     }
 
     private function baseURL($path = '')

@@ -90,12 +90,12 @@ class Router
         self::$instance = $this;
 
         $app = App::getInstance();
-        $this->configuration = $app->getConfiguration();
+        $moduleConfig = $app->getConfiguration('modules');
 
-        $this->defaultModule = $this->configuration->modules->defaultModule;
+        $this->defaultModule = $moduleConfig->defaultModule;
         $defaultModule = $this->defaultModule;
-        $this->defaultController = $this->configuration->modules->$defaultModule->defaultController;
-        $this->defaultMethod = $this->configuration->modules->$defaultModule->defaultMethod;
+        $this->defaultController = $moduleConfig->$defaultModule->defaultController;
+        $this->defaultMethod = $moduleConfig->$defaultModule->defaultMethod;
 
         $normalizedURI = $this->normalizeURI();
 

@@ -74,9 +74,9 @@ class SessionHandler
 
     private function initializeHandler($interface)
     {
-
         if ($interface !== 'file') {
             try {
+                //@TODO: database should be pulling an instance or DI.
                 $database = new Database();//App::getService('database')->fetchConnection();
                 $this->dbh = $database->fetchConnection('default');
 
@@ -94,6 +94,9 @@ class SessionHandler
             } catch (\PDOException $e) {
                 echo "<strong>PDOException:</strong> <br/>";
                 echo 'We can\'t find the Session table so we re-created it. Alright! Give it a refresh.';
+                echo "<PRE>";
+                print_r($e->getMessage());
+                echo "</PRE>";
                 $this->createSessionTable();
                 exit;
             }
@@ -291,16 +294,21 @@ class SessionHandler
         echo 'The Session table does not exist, we\'re going to try and do this for you! Please refresh.';
         echo "</PRE>";
 
-        $query = "CREATE TABLE `Session` ("
-            . "`id` varchar(32) NOT NULL DEFAULT '',"
-            . "`hash` varchar(32) NOT NULL DEFAULT '',"
-            . "`session_data` blob NOT NULL,"
-            . "`session_expire` int(11) NOT NULL DEFAULT '0',"
-            . "`session_regeneration` int(2) NOT NULL DEFAULT '0',"
-            . "PRIMARY KEY (`id`)"
-            . ") ENGINE=InnoDB DEFAULT CHARSET=utf8";
+        try {
 
-        $this->dbh->prepare($query)
-            ->execute();
+            $query = "CREATE TABLE `Session` ("
+                . "`id` varchar(32) NOT NULL DEFAULT '',"
+                . "`hash` varchar(32) NOT NULL DEFAULT '',"
+                . "`session_data` blob NOT NULL,"
+                . "`session_expire` int(11) NOT NULL DEFAULT '0',"
+                . "`session_regeneration` int(2) NOT NULL DEFAULT '0',"
+                . "PRIMARY KEY (`id`)"
+                . ") ENGINE=InnoDB DEFAULT CHARSET=utf8";
+
+            $this->dbh->prepare($query)->execute();
+        } catch(\PDOException $e) {
+            print_r($e->getMessage());
+        }
+        die('test');
     }
 }

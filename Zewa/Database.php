@@ -21,10 +21,10 @@ class Database
 
     public function __construct($name = 'default')
     {
-
         $app = App::getInstance();
         $this->configuration = $app->getConfiguration('database');
 
+        //@TODO: lazyload connection
         $this->establishConnection($name);
     }
 
