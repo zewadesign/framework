@@ -199,17 +199,6 @@ class View
         return $return;
     }
 
-    //    private function verifyResource($resource) {
-    //
-    //        $path = PUBLIC_PATH . DIRECTORY_SEPARATOR . $resource;
-    //
-    //        if (!file_exists($path)) {
-    //            return false;
-    //        }
-    //
-    //        return true;
-    //    }
-
     protected function fetchCSS()
     {
         $app = App::getInstance();
@@ -264,10 +253,6 @@ class View
 
         foreach ($sheets as $file) {
             $files[] = $file;
-            //            if ($this->verifyResource($file)) {
-            //            } else {
-            //                throw new Exception\LookupException('The CSS Resource you\'ve specified does not exist.');
-            //            }
         }
 
         if ($place === 'prepend') {
@@ -297,10 +282,6 @@ class View
 
             foreach ($scripts as $file) {
                 $files[] = $file;
-                //                if ($this->verifyResource($file)) {
-                //                } else {
-                //                    throw new Exception\LookupException('The JS Resource you\'ve specified does not exist: ' . $file);
-                //                }
             }
 
             if ($place === 'prepend') {
