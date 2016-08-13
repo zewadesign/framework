@@ -28,7 +28,9 @@ The code coverage can be found in the `/build/coverage` folder after running the
  
 ## Code Style ##
 
-Zewa Framework adheres to the PSR2 Code Style standard and all PRs must meet those standards. 
+Zewa Framework adheres to the [PSR2 Code Style standard](http://www.php-fig.org/psr/psr-2/) and all PRs must meet those standards. 
+
+Check your code before committing.
 
 PHP Code Sniffer: `./vendor/bin/phpcs`
 
