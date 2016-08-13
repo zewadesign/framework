@@ -91,7 +91,7 @@ class View
      * @access public
      *
      * @param string $requestedView relative path for the view
-     * @param string $renderName array of data to expose to view
+     * @param string $renderName    array of data to expose to view
      *
      * @throws \Exception when a view can not be found
      */
@@ -190,7 +190,7 @@ class View
         }
         //should i set $this->data in abstract controller, and provide all access vars ? seems bad practice..
 
-        include($file);
+        include $file;
 
         $return = ob_get_contents();
 
@@ -199,16 +199,16 @@ class View
         return $return;
     }
 
-//    private function verifyResource($resource) {
-//
-//        $path = PUBLIC_PATH . DIRECTORY_SEPARATOR . $resource;
-//
-//        if (!file_exists($path)) {
-//            return false;
-//        }
-//
-//        return true;
-//    }
+    //    private function verifyResource($resource) {
+    //
+    //        $path = PUBLIC_PATH . DIRECTORY_SEPARATOR . $resource;
+    //
+    //        if (!file_exists($path)) {
+    //            return false;
+    //        }
+    //
+    //        return true;
+    //    }
 
     protected function fetchCSS()
     {
@@ -264,10 +264,10 @@ class View
 
         foreach ($sheets as $file) {
             $files[] = $file;
-//            if ($this->verifyResource($file)) {
-//            } else {
-//                throw new Exception\LookupException('The CSS Resource you\'ve specified does not exist.');
-//            }
+            //            if ($this->verifyResource($file)) {
+            //            } else {
+            //                throw new Exception\LookupException('The CSS Resource you\'ve specified does not exist.');
+            //            }
         }
 
         if ($place === 'prepend') {
@@ -297,10 +297,10 @@ class View
 
             foreach ($scripts as $file) {
                 $files[] = $file;
-//                if ($this->verifyResource($file)) {
-//                } else {
-//                    throw new Exception\LookupException('The JS Resource you\'ve specified does not exist: ' . $file);
-//                }
+                //                if ($this->verifyResource($file)) {
+                //                } else {
+                //                    throw new Exception\LookupException('The JS Resource you\'ve specified does not exist: ' . $file);
+                //                }
             }
 
             if ($place === 'prepend') {
@@ -333,8 +333,8 @@ class View
      * Set 404 header, and return 404 view contents
      *
      * @access public
-     * @param $module string
-     * @param $data array
+     * @param  $module string
+     * @param  $data array
      * @return string
      */
     public function render404($data = [])

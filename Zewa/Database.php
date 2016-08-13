@@ -15,7 +15,7 @@ class Database
      * Database object reference
      *
      * @access private
-     * @var object
+     * @var    object
      */
     protected static $dbh = [];
 

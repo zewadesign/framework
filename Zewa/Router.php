@@ -27,7 +27,7 @@ class Router
     /**
      * The active module
      *
-     * @var string
+     * @var    string
      * @access public
      */
     public $module;
@@ -35,7 +35,7 @@ class Router
     /**
      * The active controller
      *
-     * @var string
+     * @var    string
      * @access public
      */
     public $controller;
@@ -43,42 +43,47 @@ class Router
     /**
      * The active method
      *
-     * @var string
+     * @var    string
      * @access public
      */
     public $method;
 
     /**
      * The base URL
-     * @var string
+     *
+     * @var    string
      * @access public
      */
     public $baseURL;
 
     /**
      * Default module
-     * @var string
+     *
+     * @var    string
      * @access public
      */
     public $defaultModule;
 
     /**
      * Default controller
-     * @var string
+     *
+     * @var    string
      * @access public
      */
     public $defaultController;
 
     /**
      * Default method
-     * @var string
+     *
+     * @var    string
      * @access public
      */
     public $defaultMethod;
 
     /**
      * Default uri
-     * @var string
+     *
+     * @var    string
      * @access public
      */
     public $uri;
@@ -110,25 +115,29 @@ class Router
         $uriChunks = $this->parseURI($this->uri);
 
         $app = App::getInstance();
-        $app->setConfiguration('router', (object)[
+        $app->setConfiguration(
+            'router', (object)[
             'module' => $uriChunks[0],
             'controller' => $uriChunks[1],
             'method' => $uriChunks[2],
             'params' => array_slice($uriChunks, 3),
             'baseURL' => $this->baseURL,
             'currentURL' => $this->currentURL
-        ]);
+            ]
+        );
     }
 
 
     private function isURIClean($uri, $uriChunks)
     {
         if (!preg_match("/^[a-z0-9:_\/\.\[\]-]+$/i", $uri)
-            || array_filter($uriChunks, function ($uriChunk) {
-                if (strpos($uriChunk, '__') !== false) {
-                    return true;
+            || array_filter(
+                $uriChunks, function ($uriChunk) {
+                    if (strpos($uriChunk, '__') !== false) {
+                        return true;
+                    }
                 }
-            })
+            )
         ) {
             return false;
         } else {
@@ -228,11 +237,13 @@ class Router
 
                 if (! empty($params)) {
                     $pat = '/(\$\d+)/';
-                    $uri = preg_replace_callback($pat, function () use (&$params) {
-                        $first = $params[0];
-                        array_shift($params);
-                        return $first;
-                    }, $reroute);
+                    $uri = preg_replace_callback(
+                        $pat, function () use (&$params) {
+                            $first = $params[0];
+                            array_shift($params);
+                            return $first;
+                        }, $reroute
+                    );
                 }
             }
         }
@@ -356,7 +367,7 @@ class Router
 
             if ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off')
                 || !empty($_SERVER['HTTP_X_FORWARDED_PROTO'])
-                   && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https'
+                && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https'
             ) {
                 $protocol = 'https://';
             } else {
@@ -399,29 +410,29 @@ class Router
         // push a status to the browser if necessary
         if ((int)$status > 0) {
             switch ($status) {
-                case '301':
-                    $msg = '301 Moved Permanently';
-                    break;
-                case '307':
-                    $msg = '307 Temporary Redirect';
-                    break;
+            case '301':
+                $msg = '301 Moved Permanently';
+                break;
+            case '307':
+                $msg = '307 Temporary Redirect';
+                break;
                 // Using these below (except 302) would be an intentional misuse of the 'system'
-                case '401':
-                    $msg = '401 Access Denied';
-                    break;
-                case '403':
-                    $msg = '403 Request Forbidden';
-                    break;
-                case '404':
-                    $msg = '404 Not Found';
-                    break;
-                case '405':
-                    $msg = '405 Method Not Allowed';
-                    break;
-                case '302':
-                default:
-                    $msg = '302 Found';
-                    break; // temp redirect
+            case '401':
+                $msg = '401 Access Denied';
+                break;
+            case '403':
+                $msg = '403 Request Forbidden';
+                break;
+            case '404':
+                $msg = '404 Not Found';
+                break;
+            case '405':
+                $msg = '405 Method Not Allowed';
+                break;
+            case '302':
+            default:
+                $msg = '302 Found';
+                break; // temp redirect
             }
             if (isset($msg)) {
                 header('HTTP/1.1 ' . $msg);

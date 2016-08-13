@@ -143,6 +143,7 @@ class App
 
     /**
      * Calls the proper shell for app execution
+     *
      * @access private
      */
     public function initialize()
@@ -188,7 +189,7 @@ class App
     private function prepareServices()
     {
         if(isset($this->files['services'])) {
-            $services = include($this->files['services']);
+            $services = include $this->files['services'];
             if ($services === false) {
                 $this->services = [];
             } else {
@@ -233,7 +234,7 @@ class App
                 return $this->configuration->$config;
             } elseif(! empty($this->files{$config}) ) {
 
-                $vars = include($this->files{$config});
+                $vars = include $this->files{$config};
 
                 if ($vars === false) {
                     $this->configuration->{$config} = false;
@@ -340,9 +341,9 @@ class App
     /**
      * Attach (or remove) multiple callbacks to an event and trigger those callbacks when that event is called.
      *
-     * @param string $event name
-     * @param mixed $value the optional value to pass to each callback
-     * @param mixed $callback the method or function to call - FALSE to remove all callbacks for event
+     * @param string $event    name
+     * @param mixed  $value    the optional value to pass to each callback
+     * @param mixed  $callback the method or function to call - FALSE to remove all callbacks for event
      */
 
     public static function addEvent($event, $callback = false)

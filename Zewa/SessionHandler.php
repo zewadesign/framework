@@ -126,19 +126,21 @@ class SessionHandler
         $gc_probability = ini_get('session.gc_probability');
         $gc_divisor = ini_get('session.gc_divisor');
 
-        print_r(array(
+        print_r(
+            array(
             'session.gc_maxlifetime' => $gc_maxlifetime . ' seconds (' . round($gc_maxlifetime / 60) . ' minutes)',
             'session.gc_probability' => $gc_probability,
             'session.gc_divisor'     => $gc_divisor,
             'probability'            => $gc_probability / $gc_divisor * 100 . '%'
-        ));
+            )
+        );
     }
 
     //@TODO: implement.. can't figure out a way to make the sessionId fresh
     private function regenerateId()
     {
         $oldSessionId = session_id();
-//        session_write_close();
+        //        session_write_close();
         session_regenerate_id();
         $sessionId = session_id();
 
@@ -200,7 +202,7 @@ class SessionHandler
         if ($session) {
             if ($session->session_regeneration >= 20) {
                 //@TODO: implement for session hijack prevention, even though e'rythan ssl now
-//                $this->regenerateId($sessionId);
+                //                $this->regenerateId($sessionId);
             }
             return $session->session_data;
         }
@@ -247,7 +249,7 @@ class SessionHandler
             echo "<strong>PDOException:</strong> <br/>";
 
             echo $e->getMessage();
-//            exit;
+            //            exit;
         }
 
         return $success;
@@ -256,10 +258,12 @@ class SessionHandler
     private function fetchSessionLock()
     {
         $lock = $this->dbh->prepare('SELECT GET_LOCK(?, ?)')
-            ->execute([
+            ->execute(
+                [
                 $this->sessionLock,
                 $this->lockTimeout
-            ]);
+                ]
+            );
 
         if (!$lock) {
             throw new Exception\StateException('Session: Could not obtain session lock!');

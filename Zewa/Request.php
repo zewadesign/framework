@@ -26,7 +26,7 @@ class Request
     /**
      * normalized $_GET superglobal
      *
-     * @var array
+     * @var    array
      * @access private
      */
 
@@ -35,7 +35,7 @@ class Request
     /**
      * normalized $_POST superglobal
      *
-     * @var array
+     * @var    array
      * @access private
      */
 
@@ -44,7 +44,7 @@ class Request
     /**
      * normalized $_DELETE superglobal
      *
-     * @var array
+     * @var    array
      * @access private
      */
 
@@ -53,7 +53,7 @@ class Request
     /**
      * normalized $_PUT superglobal
      *
-     * @var array
+     * @var    array
      * @access private
      */
 
@@ -62,7 +62,7 @@ class Request
     /**
      * normalized $_SESSION superglobal
      *
-     * @var array
+     * @var    array
      * @access private
      */
 
@@ -71,7 +71,7 @@ class Request
     /**
      * normalized $_COOKIE superglobal
      *
-     * @var array
+     * @var    array
      * @access private
      */
 
@@ -80,7 +80,7 @@ class Request
     /**
      * normalized $_FILES superglobal
      *
-     * @var array
+     * @var    array
      * @access private
      */
 
@@ -89,7 +89,7 @@ class Request
     /**
      * normalized $_SERVER superglobal
      *
-     * @var array
+     * @var    array
      * @access private
      */
 
@@ -99,7 +99,7 @@ class Request
     /**
      * Flashdata container
      *
-     * @var array
+     * @var    array
      * @access private
      */
 
@@ -108,9 +108,9 @@ class Request
     /**
      * Flashdata identifier
      *
-     * @var string
+     * @var    string
      * @access private
-     * @TODO: move flashdata to sessionhandler, make available here with other request vars still
+     * @TODO:  move flashdata to sessionhandler, make available here with other request vars still
      */
 
 
@@ -130,8 +130,8 @@ class Request
             $this->flashdataId = $this->configuration->session->flashdataId;
         }
 
-//        $config = \HTMLPurifier_Config::createDefault();
-//        $this->purifier = new \HTMLPurifier($config);
+        //        $config = \HTMLPurifier_Config::createDefault();
+        //        $this->purifier = new \HTMLPurifier($config);
 
         if (!empty($_SESSION)) {
             $this->sessionContainer = $this->normalize($_SESSION);
@@ -154,6 +154,7 @@ class Request
 
     /**
      * Processes current requests flashdata, recycles old.
+     *
      * @access private
      */
     private function registerFlashdata()
@@ -182,7 +183,7 @@ class Request
 
                 // if there is any flashdata left to be handled
                 if (!empty($this->flashdata)) {
-// store data in a temporary session variable
+                    // store data in a temporary session variable
                     $_SESSION[$this->flashdataId] = base64_encode(serialize($this->flashdata));
                 }
             }
@@ -191,6 +192,7 @@ class Request
 
     /**
      * Sets flashdata
+     *
      * @access public
      *
      * @params string $name
@@ -214,6 +216,7 @@ class Request
 
     /**
      * Gets flashdata
+     *
      * @access public
      *
      * @params string $name
@@ -235,6 +238,7 @@ class Request
 
     /**
      * Remove session data
+     *
      * @access public
      *
      * @params string $index
@@ -248,6 +252,7 @@ class Request
 
     /**
      * Set session data
+     *
      * @access public
      *
      * @params string $index
@@ -274,6 +279,7 @@ class Request
 
     /**
      * Dumps all session data
+     *
      * @access public
      */
     public function destroySession()
@@ -299,8 +305,9 @@ class Request
 
     /**
      * Normalizes data
+     *
      * @access private
-     * @TODO: expand functionality, set/perform based on configuration
+     * @TODO:  expand functionality, set/perform based on configuration
      */
     private function normalize($data)
     {
@@ -312,20 +319,20 @@ class Request
         } elseif (is_object($data)) {
             $new = new \stdClass();
             foreach ($data as $k => $v) {
-//                unset($data->{$k});
+                //                unset($data->{$k});
                 $key = $this->normalize($k);
                 $new->{$key} = $this->normalize($v);
             }
             $data = $new;
         } else {
             $data = trim($data);
- //            if (function_exists('iconv') && function_exists('mb_detect_encoding')) {
- //                $current_encoding = mb_detect_encoding($data);
- //
- //                if ($current_encoding != 'UTF-8' && $current_encoding != 'UTF-16') {
- //                    $data = iconv($current_encoding, 'UTF-8', $data);
- //                }
- //            }
+            //            if (function_exists('iconv') && function_exists('mb_detect_encoding')) {
+            //                $current_encoding = mb_detect_encoding($data);
+            //
+            //                if ($current_encoding != 'UTF-8' && $current_encoding != 'UTF-16') {
+            //                    $data = iconv($current_encoding, 'UTF-8', $data);
+            //                }
+            //            }
             //Global XXS?
             //we need to review this.
             if (function_exists('iconv') && function_exists('mb_detect_encoding')) {
@@ -335,10 +342,10 @@ class Request
                     $data = iconv($current_encoding, 'UTF-8', $data);
                 }
             }
- //            Global XXS?
+            //            Global XXS?
             // This is not sanitary.  FILTER_SANITIZE_STRING doesn't do much.
 
- //            $data = filter_var($data, FILTER_SANITIZE_STRING);
+            //            $data = filter_var($data, FILTER_SANITIZE_STRING);
 
             if (is_numeric($data)) {
                 if ((intval($data) === (int)trim($data, '-')) && strlen((string)(int)$data) === strlen($data)) {
@@ -347,7 +354,7 @@ class Request
                     $data = (float) $data;
                 }
             } else {
- //                $data = $this->purifier->purify($data);
+                //                $data = $this->purifier->purify($data);
             }
         }
 

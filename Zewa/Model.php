@@ -12,7 +12,7 @@ class Model
      * Database object reference
      *
      * @access private
-     * @var object
+     * @var    object
      */
     protected $dbh;
 
