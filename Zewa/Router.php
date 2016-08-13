@@ -421,6 +421,7 @@ class Router
                     $msg = '307 Temporary Redirect';
                     break;
                 // Using these below (except 302) would be an intentional misuse of the 'system'
+                // Need to dig into the above comment @zech
                 case '401':
                     $msg = '401 Access Denied';
                     break;
@@ -442,15 +443,8 @@ class Router
                 header('HTTP/1.1 ' . $msg);
             }
         }
-        if (preg_match('/^https?/', $url)) {
-            header("Location: $url");
-            //@TODO: does this break without exit?
-            //exit;
-        }
-        // strip leading slashies
+
         $url = preg_replace('!^/*!', '', $url);
-        header("Location: " . $this->baseURL($url));
-        //@TODO: does this break without exit?
-        //exit;
+        header("Location: " . $url);
     }
 }
