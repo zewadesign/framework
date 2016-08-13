@@ -27,7 +27,7 @@ class Router
     /**
      * The active module
      *
-     * @var string
+     * @var    string
      * @access public
      */
     public $module;
@@ -35,7 +35,7 @@ class Router
     /**
      * The active controller
      *
-     * @var string
+     * @var    string
      * @access public
      */
     public $controller;
@@ -43,42 +43,47 @@ class Router
     /**
      * The active method
      *
-     * @var string
+     * @var    string
      * @access public
      */
     public $method;
 
     /**
      * The base URL
-     * @var string
+     *
+     * @var    string
      * @access public
      */
     public $baseURL;
 
     /**
      * Default module
-     * @var string
+     *
+     * @var    string
      * @access public
      */
     public $defaultModule;
 
     /**
      * Default controller
-     * @var string
+     *
+     * @var    string
      * @access public
      */
     public $defaultController;
 
     /**
      * Default method
-     * @var string
+     *
+     * @var    string
      * @access public
      */
     public $defaultMethod;
 
     /**
      * Default uri
-     * @var string
+     *
+     * @var    string
      * @access public
      */
     public $uri;
@@ -90,12 +95,12 @@ class Router
         self::$instance = $this;
 
         $app = App::getInstance();
-        $this->configuration = $app->getConfiguration();
+        $moduleConfig = $app->getConfiguration('modules');
 
-        $this->defaultModule = $this->configuration->modules->defaultModule;
+        $this->defaultModule = $moduleConfig->defaultModule;
         $defaultModule = $this->defaultModule;
-        $this->defaultController = $this->configuration->modules->$defaultModule->defaultController;
-        $this->defaultMethod = $this->configuration->modules->$defaultModule->defaultMethod;
+        $this->defaultController = $moduleConfig->$defaultModule->defaultController;
+        $this->defaultMethod = $moduleConfig->$defaultModule->defaultMethod;
 
         $normalizedURI = $this->normalizeURI();
 
@@ -110,25 +115,31 @@ class Router
         $uriChunks = $this->parseURI($this->uri);
 
         $app = App::getInstance();
-        $app->setConfiguration('router', (object)[
+        $app->setConfiguration(
+            'router',
+            (object)[
             'module' => $uriChunks[0],
             'controller' => $uriChunks[1],
             'method' => $uriChunks[2],
             'params' => array_slice($uriChunks, 3),
             'baseURL' => $this->baseURL,
             'currentURL' => $this->currentURL
-        ]);
+            ]
+        );
     }
 
 
     private function isURIClean($uri, $uriChunks)
     {
         if (!preg_match("/^[a-z0-9:_\/\.\[\]-]+$/i", $uri)
-            || array_filter($uriChunks, function ($uriChunk) {
-                if (strpos($uriChunk, '__') !== false) {
-                    return true;
+            || array_filter(
+                $uriChunks,
+                function ($uriChunk) {
+                    if (strpos($uriChunk, '__') !== false) {
+                        return true;
+                    }
                 }
-            })
+            )
         ) {
             return false;
         } else {
@@ -228,11 +239,15 @@ class Router
 
                 if (! empty($params)) {
                     $pat = '/(\$\d+)/';
-                    $uri = preg_replace_callback($pat, function () use (&$params) {
-                        $first = $params[0];
-                        array_shift($params);
-                        return $first;
-                    }, $reroute);
+                    $uri = preg_replace_callback(
+                        $pat,
+                        function () use (&$params) {
+                            $first = $params[0];
+                            array_shift($params);
+                            return $first;
+                        },
+                        $reroute
+                    );
                 }
             }
         }
@@ -356,7 +371,7 @@ class Router
 
             if ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off')
                 || !empty($_SERVER['HTTP_X_FORWARDED_PROTO'])
-                   && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https'
+                && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https'
             ) {
                 $protocol = 'https://';
             } else {

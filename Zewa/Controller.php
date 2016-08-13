@@ -54,9 +54,8 @@ abstract class Controller
 
         $app = App::getInstance();
         $this->configuration = $app->getConfiguration();
-        
-        $this->request = App::getService('request');
-        $this->router = App::getService('router');
+        $this->request = $app->getService('request');
+        $this->router = $app->getService('router');
     }
 
     /**

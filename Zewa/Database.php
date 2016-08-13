@@ -15,16 +15,16 @@ class Database
      * Database object reference
      *
      * @access private
-     * @var object
+     * @var    object
      */
     protected static $dbh = [];
 
     public function __construct($name = 'default')
     {
-
         $app = App::getInstance();
         $this->configuration = $app->getConfiguration('database');
 
+        //@TODO: lazyload connection
         $this->establishConnection($name);
     }
 

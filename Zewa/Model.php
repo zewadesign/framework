@@ -12,7 +12,7 @@ class Model
      * Database object reference
      *
      * @access private
-     * @var object
+     * @var    object
      */
     protected $dbh;
 
@@ -32,7 +32,7 @@ class Model
         $app                 = App::getInstance();
         $this->configuration = $app->getConfiguration();
         if ($this->configuration->database !== false) {
-            $database  = App::getService('database');
+            $database  = $app->getService('database');
             $this->dbh = $database->fetchConnection($name);
         }
     }
