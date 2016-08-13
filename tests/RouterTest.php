@@ -67,7 +67,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $app    = App::getInstance();
 
         $routerConfig    = $app->getConfiguration('router');
-        $firstRouteParam = $routerConfig->params[0];
+        $firstRouteParam = $routerConfig->params[1];
 
         $this->assertTrue(is_float($firstRouteParam));
         $this->assertTrue(!is_string($firstRouteParam));
@@ -100,7 +100,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $app    = App::getInstance();
 
         $routerConfig    = $app->getConfiguration('router');
-        $firstRouteParam = $routerConfig->params[0];
+        $firstRouteParam = $routerConfig->params[1];
 
         $this->assertTrue(is_int($firstRouteParam));
         $this->assertTrue(!is_string($firstRouteParam));
@@ -113,5 +113,137 @@ class RouterTest extends \PHPUnit_Framework_TestCase
             [99999999999999999],
             ['792643']
         ];
+    }
+
+    /**
+     * Test passing some bad route params to the router.
+     *
+     * @dataProvider badRouteParamProvider
+     * @expectedException \Zewa\Exception\RouteException
+     */
+    public function testBadRouteParam($badRouteParam)
+    {
+        global $_SERVER;
+
+        $_SERVER['REQUEST_URI'] = '/example/home/batman/' . $badRouteParam;
+
+        $router = new Router();
+        $app = App::getInstance();
+    }
+
+    public function badRouteParamProvider()
+    {
+        return [
+            ['%'],
+            ['@'],
+            ['^'],
+            ['*'],
+            ['!'],
+            ['~'],
+            ['`'],
+            ['+'],
+            ['|'],
+            ['a__']
+        ];
+    }
+
+    public function testNormalizeURIFromPathInfo()
+    {
+        global $_SERVER;
+
+        // Normalize URI from Path Info superglobal.
+        $_SERVER['PATH_INFO'] = 'Example';
+
+        $router = new Router();
+        $app = App::getInstance();
+
+        $this->assertSame('Example/Home/Index',$router->uri);
+    }
+
+    /**
+     * Test the result of normalizing empty routes which should result in
+     * the URI being generated out of the default module, controller and method.
+     *
+     * @dataProvider emptyURIProvider
+     */
+    public function testNormalizeEmptyURI($emptyURI)
+    {
+        global $_SERVER;
+
+        if(!empty($_SERVER['PATH_INFO'])) {
+            unset($_SERVER['PATH_INFO']);
+        }
+
+        $_SERVER['REQUEST_URI'] = $emptyURI;
+
+        $router = new Router();
+        $app = App::getInstance();
+        $routerConfig    = $app->getConfiguration('router');
+
+        $uriShouldBe = $routerConfig->module . "/" . $routerConfig->controller . "/" . $routerConfig->method;
+
+        $this->assertSame($router->uri,$uriShouldBe);
+    }
+
+    public function emptyURIProvider()
+    {
+        return [
+            ['/'],
+            [''],
+        ];
+    }
+
+    public function testDiscoverRoute()
+    {
+        global $_SERVER;
+
+        $_SERVER['REQUEST_URI'] = 'hello/Josh';
+
+        $router = new Router();
+        $app = App::getInstance();
+        $routerConfig    = $app->getConfiguration('router');
+
+        $this->assertSame($routerConfig->method,'Index');
+    }
+
+    public function testCurrentURL()
+    {
+        global $_SERVER;
+
+        $_SERVER['REQUEST_URI'] = '/batman';
+        $_SERVER['HTTP_HOST'] = "test.zewa.com";
+        $_SERVER['PHP_SELF'] = "index.php";
+
+        $router = new Router();
+        $currentURL = $router->currentURL();
+
+        $this->assertSame('http://test.zewa.com/Example/Home/Index/batman',$currentURL);
+
+        $currentURLWithParams = $router->currentURL(['param1' => 'something','p2' => 'nothing']);
+        $this->assertSame(
+            'http://test.zewa.com/Example/Home/Index/batman?param1=something&p2=nothing',
+            $currentURLWithParams
+        );
+    }
+
+    public function testCurrentURLWithHTTPS()
+    {
+        global $_SERVER;
+
+        $_SERVER['REQUEST_URI'] = '/batman';
+        $_SERVER['HTTP_HOST'] = "test.zewa.com";
+        $_SERVER['PHP_SELF'] = "index.php";
+        $_SERVER['HTTPS'] = "on";
+
+        $router = new Router();
+        $currentURL = $router->currentURL();
+
+        $this->assertSame('https://test.zewa.com/Example/Home/Index/batman',$currentURL);
+
+        $currentURLWithParams = $router->currentURL(['param1' => 'something']);
+        $this->assertSame(
+            'https://test.zewa.com/Example/Home/Index/batman?param1=something',
+            $currentURLWithParams
+        );
     }
 }
