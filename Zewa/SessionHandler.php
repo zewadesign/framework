@@ -13,7 +13,7 @@ class SessionHandler
     private $hash = "";
     private $domain = "";
 
-    function __construct(
+    public function __construct(
         $interface,
         $security_code,
         $session_lifetime = '',
@@ -29,7 +29,7 @@ class SessionHandler
         ini_set('session.cookie_httponly', 1);
         ini_set('session.use_only_cookies', 1);
         ini_set('session.cookie_lifetime', 0);
-        ini_set('session.cookie_domain', $domain );
+        ini_set('session.cookie_domain', $domain);
 
         if ($session_lifetime != '' && is_integer($session_lifetime)) {
             ini_set('session.gc_maxlifetime', (int) $session_lifetime);
@@ -76,10 +76,8 @@ class SessionHandler
     private function initializeHandler($interface)
     {
 
-        if($interface !== 'file') {
-
+        if ($interface !== 'file') {
             try {
-
                 $database = new Database();//App::getService('database')->fetchConnection();
                 $this->dbh = $database->fetchConnection('default');
 
@@ -90,14 +88,14 @@ class SessionHandler
                     [&$this, 'write'],
                     [&$this, 'destroy'],
                     [&$this, 'gc']
-//                    ,[&$this, 'create_sid']
+                    //                    ,[&$this, 'create_sid']
                 );
 
                 session_start();
 
-            } catch(\PDOException $e) {
+            } catch (\PDOException $e) {
                 echo "<strong>PDOException:</strong> <br/>";
-                echo 'We can\'t find the Session table... hold on.. we\'re going to recreate! Alright! Give it a refresh.';
+                echo 'We can\'t find the Session table so we re-created it. Alright! Give it a refresh.';
                 $this->createSessionTable();
                 exit;
 
@@ -205,7 +203,6 @@ class SessionHandler
         $session = $this->fetchSessionData($sessionId);
 
         if ($session) {
-
             if ($session->session_regeneration >= 20) {
                 //@TODO: implement for session hijack prevention, even though e'rythan ssl now
 //                $this->regenerateId($sessionId);
