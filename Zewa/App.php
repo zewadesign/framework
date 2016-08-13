@@ -1,6 +1,7 @@
 <?php
 
 namespace Zewa;
+
 use Zewa\Exception\LookupException;
 
 /**
@@ -188,7 +189,7 @@ class App
 
     private function prepareServices()
     {
-        if(isset($this->files['services'])) {
+        if (isset($this->files['services'])) {
             $services = include $this->files['services'];
             if ($services === false) {
                 $this->services = [];
@@ -202,7 +203,7 @@ class App
 
     public function getService($service, $new = false, $options = [])
     {
-        if($this->services === null) {
+        if ($this->services === null) {
             $this->prepareServices();
         }
 
@@ -216,7 +217,7 @@ class App
 
     public function setService($service, $class)
     {
-        if($this->services === null) {
+        if ($this->services === null) {
             $this->prepareServices();
         }
 
@@ -232,8 +233,7 @@ class App
         if ($config !== null) {
             if (! empty($this->configuration->$config)) {
                 return $this->configuration->$config;
-            } elseif(! empty($this->files{$config}) ) {
-
+            } elseif (! empty($this->files{$config})) {
                 $vars = include $this->files{$config};
 
                 if ($vars === false) {
@@ -244,7 +244,6 @@ class App
                 }
 
                 return $this->configuration->$config;
-
             }
 
             return false;

@@ -116,7 +116,8 @@ class Router
 
         $app = App::getInstance();
         $app->setConfiguration(
-            'router', (object)[
+            'router',
+            (object)[
             'module' => $uriChunks[0],
             'controller' => $uriChunks[1],
             'method' => $uriChunks[2],
@@ -132,7 +133,8 @@ class Router
     {
         if (!preg_match("/^[a-z0-9:_\/\.\[\]-]+$/i", $uri)
             || array_filter(
-                $uriChunks, function ($uriChunk) {
+                $uriChunks,
+                function ($uriChunk) {
                     if (strpos($uriChunk, '__') !== false) {
                         return true;
                     }
@@ -238,11 +240,13 @@ class Router
                 if (! empty($params)) {
                     $pat = '/(\$\d+)/';
                     $uri = preg_replace_callback(
-                        $pat, function () use (&$params) {
+                        $pat,
+                        function () use (&$params) {
                             $first = $params[0];
                             array_shift($params);
                             return $first;
-                        }, $reroute
+                        },
+                        $reroute
                     );
                 }
             }
@@ -410,29 +414,29 @@ class Router
         // push a status to the browser if necessary
         if ((int)$status > 0) {
             switch ($status) {
-            case '301':
-                $msg = '301 Moved Permanently';
-                break;
-            case '307':
-                $msg = '307 Temporary Redirect';
-                break;
+                case '301':
+                    $msg = '301 Moved Permanently';
+                    break;
+                case '307':
+                    $msg = '307 Temporary Redirect';
+                    break;
                 // Using these below (except 302) would be an intentional misuse of the 'system'
-            case '401':
-                $msg = '401 Access Denied';
-                break;
-            case '403':
-                $msg = '403 Request Forbidden';
-                break;
-            case '404':
-                $msg = '404 Not Found';
-                break;
-            case '405':
-                $msg = '405 Method Not Allowed';
-                break;
-            case '302':
-            default:
-                $msg = '302 Found';
-                break; // temp redirect
+                case '401':
+                    $msg = '401 Access Denied';
+                    break;
+                case '403':
+                    $msg = '403 Request Forbidden';
+                    break;
+                case '404':
+                    $msg = '404 Not Found';
+                    break;
+                case '405':
+                    $msg = '405 Method Not Allowed';
+                    break;
+                case '302':
+                default:
+                    $msg = '302 Found';
+                    break; // temp redirect
             }
             if (isset($msg)) {
                 header('HTTP/1.1 ' . $msg);

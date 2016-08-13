@@ -299,7 +299,6 @@ class SessionHandler
         echo "</PRE>";
 
         try {
-
             $query = "CREATE TABLE `Session` ("
                 . "`id` varchar(32) NOT NULL DEFAULT '',"
                 . "`hash` varchar(32) NOT NULL DEFAULT '',"
@@ -310,7 +309,7 @@ class SessionHandler
                 . ") ENGINE=InnoDB DEFAULT CHARSET=utf8";
 
             $this->dbh->prepare($query)->execute();
-        } catch(\PDOException $e) {
+        } catch (\PDOException $e) {
             print_r($e->getMessage());
         }
         die('test');
