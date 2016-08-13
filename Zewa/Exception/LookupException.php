@@ -2,4 +2,7 @@
 
 namespace Zewa\Exception;
 
-class LookupException extends Exception { }
+class LookupException extends Exception
+{
+ 
+}

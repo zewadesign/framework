@@ -116,7 +116,8 @@ class App
         self::$instance = $this;
         //@TODO: unset unnececessary vars/profile/unit testing..? how?
         //@TODO: better try/catch usage
-        //@TODO: setup custom routing based on regex // (can't we get away without using regex tho?)!!!!!!! routesssssss!!!!!!!!
+        //@TODO: setup custom routing based on regex
+        // (can't we get away without using regex tho?)!!!!!!! routesssssss!!!!!!!!
         $this->configuration = new \stdClass();
         $this->setConfiguration();
     }
@@ -125,9 +126,10 @@ class App
      * Calls the proper shell for app execution
      * @access private
      */
-    public function initialize() {
+    public function initialize()
+    {
 
-        if($this->configuration->app->environment == 'development') {
+        if ($this->configuration->app->environment == 'development') {
             ini_set('display_errors', 1);
             ini_set('display_startup_errors', 1);
             error_reporting(E_ALL);
@@ -149,7 +151,7 @@ class App
 
         $this->registerSession();
 
-        if(self::$services === null) {
+        if (self::$services === null) {
             self::$services = new \stdClass();
         }
 
@@ -168,10 +170,11 @@ class App
         $this->class = '\\App\\Modules\\' . $this->module . '\\Controllers\\' . ucfirst($this->controller);
     }
 
-    public static function getService($service, $new = false, $options = []) {
-        if($new === false ) {
+    public static function getService($service, $new = false, $options = [])
+    {
+        if ($new === false) {
             return self::$services->$service;
-        } else if($new === true || empty ( self::$services->$service ) ) {
+        } elseif ($new === true || empty ( self::$services->$service )) {
             self::$services->$service = call_user_func_array(self::$services->$service, $options);
             return self::$services->$service;
         }
@@ -188,8 +191,8 @@ class App
      */
     public function getConfiguration($config = null)
     {
-        if($config !== null) {
-            if( ! empty ( $this->configuration->$config ) ) {
+        if ($config !== null) {
+            if (! empty ( $this->configuration->$config )) {
                 return $this->configuration->$config;
             }
 
@@ -209,34 +212,33 @@ class App
      */
     public function setConfiguration($config = null, $configObject = null)
     {
-        if( $config !== null && $configObject !== null && !empty( $configObject ) ) {
+        if ($config !== null && $configObject !== null && !empty( $configObject )) {
             $this->configuration->$config = $configObject;
             return true;
-        } else if($config === null && $configObject === null) {
-
+        } elseif ($config === null && $configObject === null) {
             $files = glob(APP_PATH . DIRECTORY_SEPARATOR . 'Config' . DIRECTORY_SEPARATOR . '*.php');
 
-            foreach ($files as $index => $filename){
+            foreach ($files as $index => $filename) {
                 $pieces = explode('/', $filename);
                 $file = $pieces[count($pieces) - 1];
                 $fileProperties = explode('.', $file);
 
                 $vars = include($filename);
-                if($vars === 1) {
+                if ($vars === 1) {
                     throw new Exception\StateException('No configuration values found in: ' . $fileProperties[0]);
                 }
 
-                if($fileProperties[0] === 'services') {
-                    if(self::$services === null) {
+                if ($fileProperties[0] === 'services') {
+                    if (self::$services === null) {
                         self::$services = new \stdClass();
                     }
-                    foreach($vars as $serviceName => $service) {
+                    foreach ($vars as $serviceName => $service) {
                         self::$services->$serviceName = $service;
                     }
                 } else {
 //                        if($vars === false) return;
                     $name = $fileProperties[0];
-                    if($vars === false) {
+                    if ($vars === false) {
                         $this->configuration->{$name} = false;
                     } else {
                         $this->configuration->{$name} = json_decode(json_encode($vars));
@@ -262,12 +264,18 @@ class App
 
         $config = $this->configuration->session;
 
-        if($config !== false) {
+        if ($config !== false) {
             App::callEvent('preSession');
             new SessionHandler(
-                $config->interface, $config->securityCode, $config->expiration, $config->domain,
-                $config->lockToUserAgent, $config->lockToIP, $config->gcProbability,
-                $config->gcDivisor, $config->tableName
+                $config->interface,
+                $config->securityCode,
+                $config->expiration,
+                $config->domain,
+                $config->lockToUserAgent,
+                $config->lockToIP,
+                $config->gcProbability,
+                $config->gcDivisor,
+                $config->tableName
             );
             App::callEvent('postSession');
         }
@@ -328,7 +336,7 @@ class App
     public static function addEvent($event, $callback = false)
     {
         // Adding or removing a callback?
-        if($callback !== false){
+        if ($callback !== false) {
             self::$events[$event][] = $callback;
         } else {
             unset(self::$events[$event]);
@@ -338,17 +346,16 @@ class App
 
     public function callEvent($event, $method = false, $arguments = [])
     {
-        if(isset(self::$events[$event])) {
+        if (isset(self::$events[$event])) {
             foreach (self::$events[$event] as $e) {
-
-                if($method !== false) { // class w/ method specified
+                if ($method !== false) { // class w/ method specified
                     $object = new $e();
                     $value = call_user_func_array(
                         [&$object, $method],
                         $arguments
                     );
                 } else {
-                    if(class_exists($e)) {
+                    if (class_exists($e)) {
                         $value = new $e($arguments); // class w/o method specified
                     } else {
                         $value = call_user_func($e, $arguments); // function yuk
