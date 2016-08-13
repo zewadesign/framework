@@ -108,7 +108,6 @@ class View
         } else {
             return $this->process($this->layout);
         }
-
     }
 
     public function setView($requestedView)
@@ -133,7 +132,6 @@ class View
             throw new Exception\LookupException('View: "' . $view . '" could not be found.');
         }
         $this->view = $view;
-
     }
 
     public function setProperty($property, $value = false)
@@ -151,7 +149,6 @@ class View
 
         if ($layout === false) {
             $this->layout = null;
-
         } else {
             $layout = APP_PATH . DIRECTORY_SEPARATOR . 'Layouts' . DIRECTORY_SEPARATOR . strtolower($layout) . '.php';
 
@@ -162,8 +159,6 @@ class View
             $this->layout = $layout;
 
             return true;
-
-
         }
     }
 
@@ -230,7 +225,6 @@ class View
         }
 
         return $string;
-
     }
 
     protected function fetchJS()
@@ -249,7 +243,6 @@ class View
         }
 
         return $string;
-
     }
 
     public function addCSS($sheets = [], $place = 'append')
@@ -317,7 +310,6 @@ class View
 
             $app = App::getInstance();
             $app->setConfiguration('view::js', (object)$existingJS);
-
         }
     }
 

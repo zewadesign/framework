@@ -55,7 +55,6 @@ class SessionHandler
 
         $this->generateHash();
         $this->initializeHandler($interface);
-
     }
 
     private function generateHash()
@@ -92,15 +91,12 @@ class SessionHandler
                 );
 
                 session_start();
-
             } catch (\PDOException $e) {
                 echo "<strong>PDOException:</strong> <br/>";
                 echo 'We can\'t find the Session table so we re-created it. Alright! Give it a refresh.';
                 $this->createSessionTable();
                 exit;
-
             }
-
         } else {
             if (session_status() == PHP_SESSION_NONE) {
                 session_start();
@@ -118,7 +114,6 @@ class SessionHandler
         $result = $sth->fetch(\PDO::FETCH_OBJ);
 
         return $result->count;
-
     }
 
     public function getSettings()
@@ -134,7 +129,6 @@ class SessionHandler
             'session.gc_divisor'     => $gc_divisor,
             'probability'            => $gc_probability / $gc_divisor * 100 . '%'
         ));
-
     }
 
     //@TODO: implement.. can't figure out a way to make the sessionId fresh
@@ -159,7 +153,6 @@ class SessionHandler
             throw new Exception\StateException('Session: Could not release session lock!');
         }
         return true;
-
     }
 
     public function destroy($sessionId)
@@ -192,7 +185,6 @@ class SessionHandler
     {
         //??
         return true;
-
     }
 
     public function read($sessionId)
@@ -211,7 +203,6 @@ class SessionHandler
         }
 
         return '';
-
     }
 
     public function write($sessionId, $sessionData)
@@ -221,7 +212,6 @@ class SessionHandler
         }
 
         return false;
-
     }
 
     private function insertSession($sessionId, $sessionData)
@@ -258,7 +248,6 @@ class SessionHandler
         }
 
         return $success;
-
     }
 
     private function fetchSessionLock()
@@ -313,6 +302,5 @@ class SessionHandler
 
         $this->dbh->prepare($query)
             ->execute();
-
     }
 }
