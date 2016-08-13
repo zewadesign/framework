@@ -177,9 +177,7 @@ class Request
 
                         // stop tracking
                         unset($this->flashdata[$variable]);
-
                     }
-
                 }
 
                 // if there is any flashdata left to be handled
@@ -188,10 +186,7 @@ class Request
                     $_SESSION[$this->flashdataId] = base64_encode(serialize($this->flashdata));
                 }
             }
-
-
         }
-
     }
 
     /**
@@ -215,7 +210,6 @@ class Request
         ];
 
         $_SESSION[$this->flashdataId] = base64_encode(serialize($this->flashdata));
-
     }
 
     /**
@@ -250,7 +244,6 @@ class Request
 
         unset($this->sessionContainer[$index]);
         unset($_SESSION[$index]);
-
     }
 
     /**
@@ -302,7 +295,6 @@ class Request
         }
 
         session_destroy();
-
     }
 
     /**
@@ -370,12 +362,12 @@ class Request
             $container = $name . 'Container';
             $container = $this->$container;
 
-            $argument = ! empty( $arguments[0] ) ? $arguments[0] : false;
+            $argument = ! empty($arguments[0]) ? $arguments[0] : false;
 
             if ($argument === false && !empty($container)) {
                 return $container;
             }
-            if (! empty ( $container[$argument] )) {
+            if (! empty($container[$argument])) {
                 if (!is_array($container[$argument])
                     && !is_object($container[$argument])
                     && strlen($container[$argument]) > 0
@@ -386,7 +378,7 @@ class Request
                 }
             }
 
-            return ! empty ( $arguments[1] ) ? $arguments[1] : false;
+            return ! empty($arguments[1]) ? $arguments[1] : false;
         }
 
         throw new Exception\FunctionException('Method ' . $name . ' does not exist.');

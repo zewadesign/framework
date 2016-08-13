@@ -118,7 +118,6 @@ class Router
             'baseURL' => $this->baseURL,
             'currentURL' => $this->currentURL
         ]);
-
     }
 
 
@@ -196,13 +195,10 @@ class Router
 
         if (!empty($_SERVER['PATH_INFO'])) {
             $normalizedURI = $_SERVER['PATH_INFO'];
-
         } elseif (!empty($_SERVER['REQUEST_URI'])) {
             $normalizedURI = $_SERVER['REQUEST_URI'];
-
         } else {
             $normalizedURI = false;
-
         }
 
         if ($normalizedURI === '/') {
@@ -211,7 +207,7 @@ class Router
 
         $normalizedURI = ltrim(preg_replace('/\?.*/', '', $normalizedURI), '/');
 
-        if (! empty ( $this->configuration->routes )) {
+        if (! empty($this->configuration->routes)) {
             $normalizedURI = $this->discoverRoute($normalizedURI);
         }
         
@@ -230,7 +226,7 @@ class Router
 
                 $uri = $reroute;
 
-                if (! empty ( $params )) {
+                if (! empty($params)) {
                     $pat = '/(\$\d+)/';
                     $uri = preg_replace_callback($pat, function () use (&$params) {
                         $first = $params[0];
@@ -238,7 +234,6 @@ class Router
                         return $first;
                     }, $reroute);
                 }
-
             }
         }
 
@@ -263,7 +258,6 @@ class Router
         $uri = ltrim(implode('/', $chunks), '/');
 
         return $uri;
-
     }
 
     private function sortURISegments($uriChunks = [])
@@ -277,10 +271,8 @@ class Router
 
             if (!empty($uriChunks[1])) {
                 $controller = ucfirst(strtolower($uriChunks[1]));
-
             } elseif (!empty($this->configuration->modules->$module->defaultController)) {
                 $controller = $this->configuration->modules->$module->defaultController;
-
             }
 
             if (!empty($uriChunks[2])) {
@@ -294,13 +286,11 @@ class Router
                         array_unshift($uriChunks, null);
                     }
                 }
-
             } elseif (!empty($this->configuration->modules->$module->defaultMethod)) {
                 $method = $this->configuration->modules->$module->defaultMethod;
             }
 
             unset($uriChunks[0], $uriChunks[1], $uriChunks[2]);
-
         }
 
         $return = [$module, $controller, $method];
@@ -371,11 +361,9 @@ class Router
                 $protocol = 'https://';
             } else {
                 $protocol = 'http://';
-
             }
 
             $this->baseURL = $protocol . $server;
-
         }
 
         $url = $this->baseURL;
@@ -385,7 +373,6 @@ class Router
         }
 
         return $url;
-
     }
 
     /**

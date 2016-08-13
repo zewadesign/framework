@@ -73,6 +73,5 @@ abstract class Controller
         }
 
         return static::$instance;
-
     }
 }

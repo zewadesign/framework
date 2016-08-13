@@ -139,7 +139,6 @@ class App
         $this->start();
 
         return $this;
-
     }
 
     /**
@@ -174,7 +173,7 @@ class App
     {
         if ($new === false) {
             return self::$services->$service;
-        } elseif ($new === true || empty ( self::$services->$service )) {
+        } elseif ($new === true || empty(self::$services->$service)) {
             self::$services->$service = call_user_func_array(self::$services->$service, $options);
             return self::$services->$service;
         }
@@ -192,7 +191,7 @@ class App
     public function getConfiguration($config = null)
     {
         if ($config !== null) {
-            if (! empty ( $this->configuration->$config )) {
+            if (! empty($this->configuration->$config)) {
                 return $this->configuration->$config;
             }
 
@@ -200,7 +199,6 @@ class App
         }
 
         return $this->configuration;
-
     }
 
     /**
@@ -212,7 +210,7 @@ class App
      */
     public function setConfiguration($config = null, $configObject = null)
     {
-        if ($config !== null && $configObject !== null && !empty( $configObject )) {
+        if ($config !== null && $configObject !== null && !empty($configObject)) {
             $this->configuration->$config = $configObject;
             return true;
         } elseif ($config === null && $configObject === null) {
@@ -243,9 +241,7 @@ class App
                     } else {
                         $this->configuration->{$name} = json_decode(json_encode($vars));
                     }
-
                 }
-
             }
 
             return true;
@@ -281,7 +277,6 @@ class App
         }
 
         return;
-
     }
 
     /**
@@ -302,7 +297,6 @@ class App
         }
 
         return true;
-
     }
 
     /**
@@ -341,7 +335,6 @@ class App
         } else {
             unset(self::$events[$event]);
         }
-
     }
 
     public function callEvent($event, $method = false, $arguments = [])
@@ -361,7 +354,6 @@ class App
                         $value = call_user_func($e, $arguments); // function yuk
                     }
                 }
-
             }
 
             return $value;
