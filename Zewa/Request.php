@@ -375,16 +375,7 @@ class Request
             if ($argument === false && !empty($container)) {
                 return $container;
             }
-            if (! empty ( $container[$argument] )) {
-                if (!is_array($container[$argument])
-                    && !is_object($container[$argument])
-                    && strlen($container[$argument]) > 0
-                    || is_array($container[$argument])
-                    || is_object($container[$argument])
-                ) {
-                    return $container[$argument];
-                }
-            }
+            if (! empty ( $container[$argument] )) { if (!is_array($container[$argument]) && !is_object($container[$argument]) && strlen($container[$argument]) > 0 || is_array($container[$argument]) || is_object($container[$argument])) {return $container[$argument];} }
 
             return ! empty ( $arguments[1] ) ? $arguments[1] : false;
         }
