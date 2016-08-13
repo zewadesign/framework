@@ -16,6 +16,8 @@ PHPUnit: `phpunit`
 
 Composer: `composer test`
 
+PHP Code Sniffer: `phpcs`
+
 Ant: `ant phpunit`
 
 The code coverage can be found in the `/build/coverage` folder after running the tests. 
