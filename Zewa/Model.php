@@ -29,43 +29,53 @@ class Model
     public function __construct($name = 'default')
     {
         // This abstract is strictly to establish inheritance from a global registery.
-        $app = App::getInstance();
+        $app                 = App::getInstance();
         $this->configuration = $app->getConfiguration();
         if ($this->configuration->database !== false) {
-            $database = App::getService('database');
+            $database  = App::getService('database');
             $this->dbh = $database->fetchConnection($name);
         }
     }
+
     //@TODO: add these to Database, and then set a $this->db here,
     protected function preparePlaceHolders($arguments)
     {
         return str_pad('', count($arguments) * 2 - 1, '?,');
     }
 
-    protected function fetch($sql, $params = [], $returnResultSet = 'result') {
+    protected function fetch($sql, $params = [], $returnResultSet = 'result')
+    {
         $result = false;
 
-        if(is_null($this->dbh)) {
+        if (is_null($this->dbh)) {
             throw new \PDOException('Database handler is not available');
         }
+
         $this->sth = $this->dbh->prepare($sql);
         $this->sth->execute($params);
-        if($this->sth->rowCount() > 0) {
-            $result = ($this->sth->rowCount() > 1 || $returnResultSet === 'result' ? $this->sth->fetchAll(\PDO::FETCH_OBJ) : $this->sth->fetch(\PDO::FETCH_OBJ));
+
+        if ($this->sth->rowCount() > 0) {
+            if ($this->sth->rowCount() > 1 || $returnResultSet === 'result') {
+                $result = $this->sth->fetchAll(\PDO::FETCH_OBJ);
+            } else {
+                $result = $this->sth->fetch(\PDO::FETCH_OBJ);
+            }
         }
+
         $this->sth->closeCursor();
 
         return $result;
     }
 
-    protected function modify($sql, $params) {
+    protected function modify($sql, $params)
+    {
         $result = false;
 
-        if(is_null($this->dbh)) {
+        if (is_null($this->dbh)) {
             throw new \PDOException('Database handler is not available');
         }
         $this->sth = $this->dbh->prepare($sql);
-        $result = $this->sth->execute($params);
+        $result    = $this->sth->execute($params);
         $this->sth->closeCursor();
 
         return $result;
@@ -73,9 +83,10 @@ class Model
 
     protected function lastInsertId()
     {
-        if(is_null($this->dbh)) {
+        if (is_null($this->dbh)) {
             throw new \PDOException('Database handler is not available');
         }
+
         return $this->dbh->lastInsertId();
     }
 

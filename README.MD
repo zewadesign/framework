@@ -24,7 +24,15 @@ Composer: `composer test`
 
 Ant: `ant phpunit`
 
-The code coverage can be found in the `/build/coverage` folder after running the tests. 
+The code coverage can be found in the `/build/coverage` folder after running the tests.
+ 
+## Code Style ##
+
+Zewa Framework adheres to the PSR2 Code Style standard and all PRs must meet those standards. 
+
+PHP Code Sniffer: `./vendor/bin/phpcs`
+
+Ant: `ant phpcs`
 
 ## Session database schema ##
 ```
@@ -36,7 +44,6 @@ CREATE TABLE `Session` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8
 ```
-
 
 [ico-version]: https://img.shields.io/packagist/v/zewa/framework.svg?style=flat-square
 [ico-license]: https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square

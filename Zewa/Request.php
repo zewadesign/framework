@@ -126,29 +126,29 @@ class Request
         self::$instance = $this;
         $app = App::getInstance();
         $this->configuration = $app->getConfiguration();
-        if($this->configuration->session !== false && $this->configuration->session->flashdataId) {
+        if ($this->configuration->session !== false && $this->configuration->session->flashdataId) {
             $this->flashdataId = $this->configuration->session->flashdataId;
         }
 
 //        $config = \HTMLPurifier_Config::createDefault();
 //        $this->purifier = new \HTMLPurifier($config);
 
-        if(!empty($_SESSION)) {
-            $this->sessionContainer = $this->_normalize($_SESSION);
+        if (!empty($_SESSION)) {
+            $this->sessionContainer = $this->normalize($_SESSION);
         }
         $this->registerFlashdata();
 
-        $this->getContainer = $this->_normalize($_GET);
-        $this->postContainer = $this->_normalize($_POST);
-        $this->cookieContainer = $this->_normalize($_COOKIE);
-        $this->filesContainer = $this->_normalize($_FILES);
-        $this->serverContainer = $this->_normalize($_SERVER);
-        if($this->serverContainer['REQUEST_METHOD'] === 'PUT') {
+        $this->getContainer = $this->normalize($_GET);
+        $this->postContainer = $this->normalize($_POST);
+        $this->cookieContainer = $this->normalize($_COOKIE);
+        $this->filesContainer = $this->normalize($_FILES);
+        $this->serverContainer = $this->normalize($_SERVER);
+        if ($this->serverContainer['REQUEST_METHOD'] === 'PUT') {
             parse_str(file_get_contents('php://input', "r"), $PUT);
-            $this->putContainer = $this->_normalize($PUT);
-        } else if($this->serverContainer['REQUEST_METHOD'] === 'DELETE') {
+            $this->putContainer = $this->normalize($PUT);
+        } elseif ($this->serverContainer['REQUEST_METHOD'] === 'DELETE') {
             parse_str(file_get_contents('php://input', "r"), $DELETE);
-            $this->deleteContainer = $this->_normalize($DELETE);
+            $this->deleteContainer = $this->normalize($DELETE);
         }
     }
 
@@ -159,7 +159,6 @@ class Request
     private function registerFlashdata()
     {
         if (!empty($this->sessionContainer[$this->flashdataId])) {
-
             $this->flashdata = unserialize(base64_decode($this->session($this->flashdataId)));
             // and destroy the temporary session variable
             unset($_SESSION[$this->flashdataId]);
@@ -210,10 +209,10 @@ class Request
         $this->sessionContainer[$name] = $value;
 
         // initialize the counter for this flashdata
-        $this->flashdata[$name] = array(
+        $this->flashdata[$name] = [
             'value' => $value,
             'inc'   => 0
-        );
+        ];
 
         $_SESSION[$this->flashdataId] = base64_encode(serialize($this->flashdata));
 
@@ -231,8 +230,8 @@ class Request
         if ($name === false && !empty($this->flashdata)) {
             return $this->flashdata;
         }
-        if($name !== false) {
-            if(!empty($this->flashdata[$name]['value'])) {
+        if ($name !== false) {
+            if (!empty($this->flashdata[$name]['value'])) {
                 return $this->flashdata[$name]['value'];
             }
         }
@@ -267,7 +266,7 @@ class Request
         if ((!is_array($index) && isset($value))
             && (!is_object($index) && isset($value))
         ) {
-            $index = array($index => $value);
+            $index = [$index => $value];
         }
 
         if (!is_array($index) && !is_object($index)) {
@@ -276,7 +275,7 @@ class Request
 
         foreach ($index as $k => $v) {
             $_SESSION[$k] = $v;
-            $this->sessionContainer = $this->_normalize($_SESSION);
+            $this->sessionContainer = $this->normalize($_SESSION);
         }
     }
 
@@ -311,30 +310,30 @@ class Request
      * @access private
      * @TODO: expand functionality, set/perform based on configuration
      */
-    private function _normalize($data)
+    private function normalize($data)
     {
-        if (is_array($data)){
+        if (is_array($data)) {
             foreach ($data as $key => $value) {
                 unset($data[$key]);
-                $data[$this->_normalize($key)] = $this->_normalize($value);
+                $data[$this->normalize($key)] = $this->normalize($value);
             }
-        } else if(is_object($data)) {
+        } elseif (is_object($data)) {
             $new = new \stdClass();
             foreach ($data as $k => $v) {
 //                unset($data->{$k});
-                $key = $this->_normalize($k);
-                $new->{$key} = $this->_normalize($v);
+                $key = $this->normalize($k);
+                $new->{$key} = $this->normalize($v);
             }
             $data = $new;
-       } else {
+        } else {
             $data = trim($data);
-//            if (function_exists('iconv') && function_exists('mb_detect_encoding')) {
-//                $current_encoding = mb_detect_encoding($data);
-//
-//                if ($current_encoding != 'UTF-8' && $current_encoding != 'UTF-16') {
-//                    $data = iconv($current_encoding, 'UTF-8', $data);
-//                }
-//            }
+ //            if (function_exists('iconv') && function_exists('mb_detect_encoding')) {
+ //                $current_encoding = mb_detect_encoding($data);
+ //
+ //                if ($current_encoding != 'UTF-8' && $current_encoding != 'UTF-16') {
+ //                    $data = iconv($current_encoding, 'UTF-8', $data);
+ //                }
+ //            }
             //Global XXS?
             //we need to review this.
             if (function_exists('iconv') && function_exists('mb_detect_encoding')) {
@@ -344,19 +343,19 @@ class Request
                     $data = iconv($current_encoding, 'UTF-8', $data);
                 }
             }
-//            Global XXS?
+ //            Global XXS?
             // This is not sanitary.  FILTER_SANITIZE_STRING doesn't do much.
 
-//            $data = filter_var($data, FILTER_SANITIZE_STRING);
+ //            $data = filter_var($data, FILTER_SANITIZE_STRING);
 
             if (is_numeric($data)) {
-                if((intval($data) === (int)trim($data, '-')) && strlen((string)(int)$data) === strlen($data)) {
+                if ((intval($data) === (int)trim($data, '-')) && strlen((string)(int)$data) === strlen($data)) {
                     $data = (int) $data;
-                } else if($data === (string)(float)$data) {
+                } elseif ($data === (string)(float)$data) {
                     $data = (float) $data;
                 }
             } else {
-//                $data = $this->purifier->purify($data);
+ //                $data = $this->purifier->purify($data);
             }
         }
 
@@ -367,18 +366,22 @@ class Request
     {
         $accepted = ['post', 'put', 'delete', 'get', 'server', 'session'];
 
-        if(in_array($name, $accepted)) {
-
+        if (in_array($name, $accepted)) {
             $container = $name . 'Container';
             $container = $this->$container;
 
             $argument = ! empty( $arguments[0] ) ? $arguments[0] : false;
 
-            if($argument === false && !empty($container)) {
+            if ($argument === false && !empty($container)) {
                 return $container;
             }
-            if( ! empty ( $container[$argument] ) ) {
-                if(!is_array($container[$argument]) && !is_object($container[$argument]) && strlen($container[$argument]) > 0 || is_array($container[$argument]) || is_object($container[$argument])) {
+            if (! empty ( $container[$argument] )) {
+                if (!is_array($container[$argument])
+                    && !is_object($container[$argument])
+                    && strlen($container[$argument]) > 0
+                    || is_array($container[$argument])
+                    || is_object($container[$argument])
+                ) {
                     return $container[$argument];
                 }
             }

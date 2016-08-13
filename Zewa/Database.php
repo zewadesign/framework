@@ -30,14 +30,15 @@ class Database
 
     public function establishConnection($name = 'default')
     {
-        if($this->configuration !== false) {
-
-            if( ! empty ( $this->configuration->$name ) ) {
+        if ($this->configuration !== false) {
+            if (! empty ( $this->configuration->$name )) {
                 $dbConfig = $this->configuration->$name;
                 self::$dbh[$name] = new \PDO($dbConfig->dsn, $dbConfig->user, $dbConfig->pass);
                 self::$dbh[$name]->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
             } else {
-                throw new \PDOException('Please specify a valid database configuration, or provide a default configuration.');
+                throw new \PDOException(
+                    'Please specify a valid database configuration, or provide a default configuration.'
+                );
             }
 
         }
@@ -48,7 +49,7 @@ class Database
     {
         if (!empty(self::$dbh[$name])) {
             return self::$dbh[$name];
-        } else if (!empty($this->configuration->$name)) {
+        } elseif (!empty($this->configuration->$name)) {
             $this->establishConnection($name);
             return self::$dbh[$name];
         } else {
