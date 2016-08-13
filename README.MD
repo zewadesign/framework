@@ -16,7 +16,7 @@ PHPUnit: `phpunit`
 
 Composer: `composer test`
 
-PHP Codestyle: `phpcs`
+PHP Code Sniffer: `phpcs`
 
 Ant: `ant phpunit`
 
