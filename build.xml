@@ -64,7 +64,7 @@
             <arg value="--report=checkstyle"/>
             <arg value="--report-file=${basedir}/build/logs/checkstyle.xml"/>
             <arg value="--standard=PSR2"/>
-            <arg path="${basedir}"/>
+            <arg path="${basedir}/Zewa"/>
         </exec>
     </target>
 
