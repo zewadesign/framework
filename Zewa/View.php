@@ -106,7 +106,7 @@ class View
      */
     public function render($view = false)
     {
-        if($view !== false) {
+        if ($view !== false) {
             $view = $this->prepareView($view);
             return $this->process($view);
         } else {
@@ -114,7 +114,7 @@ class View
                 $this->view = $this->process($this->view);
             }
 
-            if (! is_null($this->layout) ) {
+            if (! is_null($this->layout)) {
                 return $this->process($this->layout);
             } else {
                 return $this->view;
@@ -154,7 +154,7 @@ class View
 
     public function setView($viewName, $layout = false)
     {
-        if( $layout !== false ) {
+        if ($layout !== false) {
             $this->setLayout($layout);
         }
         $this->view = $this->prepareView($viewName);
