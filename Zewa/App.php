@@ -140,6 +140,8 @@ class App
 
         $this->files = $oFiles;
         $this->configuration = new \stdClass();
+
+        $this->prepare();
     }
 
     /**
@@ -149,17 +151,7 @@ class App
      */
     public function initialize()
     {
-        $appConfig = $this->getConfiguration('app');
-
-        if ($appConfig->environment == 'development') {
-            ini_set('display_errors', 1);
-            ini_set('display_startup_errors', 1);
-            error_reporting(E_ALL);
-        }
-
-        $this->prepare();
         $this->start();
-
         return $this;
     }
 
@@ -191,13 +183,13 @@ class App
     {
         if (isset($this->files['services'])) {
             $services = include $this->files['services'];
-            if ($services === false) {
-                $this->services = [];
-            } else {
+            if ($services !== false) {
                 $this->services = (object)$services;
             }
-        } else {
-            throw new LookupException('No service configuration found.');
+        }
+
+        if (is_null($this->services)) {
+            $this->services = (object)[];
         }
     }
 

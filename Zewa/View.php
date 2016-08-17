@@ -27,7 +27,7 @@ class View
      *
      * @var string|bool
      */
-    protected $layout = false;
+    protected $layout;
 
     /**
      * Active module for view
@@ -62,77 +62,102 @@ class View
      */
     public function __construct()
     {
-        // This abstract is strictly to establish inheritance from a global registery.
         $app = App::getInstance();
-        $layouts = $app->getConfiguration('layouts');
         $this->configuration = $app->getConfiguration();
         $this->request = $app->getService('request');
         $this->router = $app->getService('router');
     }
 
+    /**
+     * Returns base URL for app
+     * @return string
+     */
     private function baseURL($path = '')
     {
         return $this->router->baseURL($path);
     }
 
+    /**
+     * Returns the current request URL
+     * @return string
+     */
     private function currentURL($params = false)
     {
         return $this->router->currentURL($params);
     }
 
-
+    /**
+     * Returns uri string
+     * @return string
+     */
     private function currentURI()
     {
         return $this->router->uri;
     }
+
     /**
      * Loads a view
      *
      * @access public
      *
-     * @param string $requestedView relative path for the view
-     * @param string $renderName    array of data to expose to view
+     * @param string|bool $view view to load
      *
-     * @throws \Exception when a view can not be found
+     * @return string
      */
-    public function render()
+    public function render($view = false)
     {
-        if ($this->view !== false) {
-            $this->view = $this->process($this->view);
-        }
-        if ($this->layout === false) {
-            $this->setLayout($this->configuration->layouts->default);
-        }
-
-        if (is_null($this->layout)) {
-            return $this->view;
+        if ($view !== false) {
+            $view = $this->prepareView($view);
+            return $this->process($view);
         } else {
-            return $this->process($this->layout);
+            if ($this->view !== false) {
+                $this->view = $this->process($this->view);
+            }
+
+            if (! is_null($this->layout)) {
+                return $this->process($this->layout);
+            } else {
+                return $this->view;
+            }
         }
     }
 
-    public function setView($requestedView)
+    /**
+     * formats and prepares view for inclusion
+     * @param $viewName
+     * @return string
+     * @throws Exception\LookupException
+     */
+    private function prepareView($viewName)
     {
-
         if ($this->module === false) {
-            $this->module = $this->configuration->router->module;
+            $this->setModule();
         }
 
         $view = APP_PATH
-                . DIRECTORY_SEPARATOR
-                . 'Modules'
-                . DIRECTORY_SEPARATOR
-                . $this->module
-                . DIRECTORY_SEPARATOR
-                . 'Views'
-                . DIRECTORY_SEPARATOR
-                . strtolower($requestedView)
-                . '.php';
+            . DIRECTORY_SEPARATOR
+            . 'Modules'
+            . DIRECTORY_SEPARATOR
+            . $this->module
+            . DIRECTORY_SEPARATOR
+            . 'Views'
+            . DIRECTORY_SEPARATOR
+            . strtolower($viewName)
+            . '.php';
 
         if (!file_exists($view)) {
             throw new Exception\LookupException('View: "' . $view . '" could not be found.');
         }
-        $this->view = $view;
+
+        return $view;
+    }
+
+    public function setView($viewName, $layout = false)
+    {
+        if ($layout !== false) {
+            $this->setLayout($layout);
+        }
+        $this->view = $this->prepareView($viewName);
     }
 
     public function setProperty($property, $value = false)
@@ -163,6 +188,12 @@ class View
         }
     }
 
+    /**
+     * Set the module for view look
+     *
+     * @access public
+     * @param string|bool $module module to override
+     */
     public function setModule($module = false)
     {
         if ($module === false) {
@@ -171,13 +202,12 @@ class View
             $this->module = ucfirst($module);
         }
     }
+
     /**
      * Processes view/layouts and exposes variables to the view/layout
      *
      * @access private
-     *
      * @param string $file file being rendered
-     *
      * @return string processed content
      */
     //@TODO: come back and clean up this and the way the view receives stuff
@@ -199,6 +229,12 @@ class View
         return $return;
     }
 
+    /**
+     * Helper method for grabbing aggregated css files
+     *
+     * @access protected
+     * @return string css includes
+     */
     protected function fetchCSS()
     {
         $app = App::getInstance();
@@ -217,6 +253,12 @@ class View
         return $string;
     }
 
+    /**
+     * Helper method for grabbing aggregated JS files
+     *
+     * @access protected
+     * @return string JS includes
+     */
     protected function fetchJS()
     {
 
@@ -235,6 +277,15 @@ class View
         return $string;
     }
 
+    /**
+     * Helper method for adding css files for aggregation/render
+     *
+     * @access public
+     * @param $sheets array
+     * @param $place string
+     * @return string css includes
+     * @throws Exception\LookupException
+     */
     public function addCSS($sheets = [], $place = 'append')
     {
         $app = App::getInstance();
@@ -295,26 +346,10 @@ class View
         }
     }
 
-
-    /**
-     * Set 401 header, and return noaccess view contents
-     *
-     * @access public
-     * @return string
-     */
-    public function renderNoAccess($data)
-    {
-        header('HTTP/1.1 401 Access Denied');
-        $this->setProperty($data);
-        $this->setLayout('no-access');
-        return $this->render();
-    }
-
     /**
      * Set 404 header, and return 404 view contents
      *
      * @access public
-     * @param  $module string
      * @param  $data array
      * @return string
      */

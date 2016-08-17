@@ -95,6 +95,7 @@ class Model
      *
      * @access public
      * @return object
+     * @throws Exception\TypeException
      */
 
     public static function getInstance()
