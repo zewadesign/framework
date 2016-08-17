@@ -190,11 +190,6 @@ class Router
         $result = array_merge($uriChunks, $params);
 
         if ($this->isURIClean($uri, $result) === false) {
-//            echo "<PRE>\r\n";
-//            print_r($_SERVER);
-//            print_r($uri);echo "\r\n";
-//            print_r($result);echo "\r\n";
-//            die("test");
             throw new RouteException('Invalid key characters.');
         }
 
