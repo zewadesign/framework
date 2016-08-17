@@ -95,13 +95,20 @@ class View
         return $this->router->uri;
     }
 
+    /*
+     * @todo create method for returning
+     * a valid json string with header..
+     * view shouldn't set header logic,
+     * and the framework doesn't care what returns the string
+     * ..but view should handle the json_encode...
+     * seems overkill to call header() with returning a $view->json;
+     * thoughts?*/
+
     /**
      * Loads a view
      *
      * @access public
-     *
      * @param string|bool $view view to load
-     *
      * @return string
      */
     public function render($view = false)
