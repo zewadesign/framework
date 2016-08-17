@@ -188,7 +188,7 @@ class App
             }
         }
 
-        if(is_null($this->services)) {
+        if (is_null($this->services)) {
             $this->services = (object)[];
         }
     }

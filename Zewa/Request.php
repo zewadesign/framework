@@ -127,7 +127,7 @@ class Request
         $app = App::getInstance();
         $this->configuration = $app->getConfiguration();
 
-        if( !empty($this->configuration->session) ) {
+        if (!empty($this->configuration->session)) {
             if ($this->configuration->session !== false && $this->configuration->session->flashdataId) {
                 $this->flashdataId = $this->configuration->session->flashdataId;
             }
