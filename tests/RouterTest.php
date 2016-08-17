@@ -150,11 +150,12 @@ class RouterTest extends \PHPUnit_Framework_TestCase
     {
         global $_SERVER;
         // Normalize URI from Path Info superglobal.
+        $_SERVER['REQUEST_URI'] = "";
 
         $app = new \Zewa\App();
-        $routerConfig = $app->getConfiguration('router');
+        $router = $app->getService('router');
 
-        $this->assertSame('Example/Home/Index',$routerConfig->uri);
+        $this->assertSame('Example/Home/Index',$router->uri);
     }
 
     /**
