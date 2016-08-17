@@ -38,12 +38,12 @@ class Model
     }
 
     //@TODO: add these to Database, and then set a $this->db here,
-    protected function preparePlaceHolders($arguments)
+    public function preparePlaceHolders($arguments)
     {
         return str_pad('', count($arguments) * 2 - 1, '?,');
     }
 
-    protected function fetch($sql, $params = [], $returnResultSet = 'result')
+    public function fetch($sql, $params = [], $returnResultSet = 'result')
     {
         $result = false;
 
@@ -67,7 +67,7 @@ class Model
         return $result;
     }
 
-    protected function modify($sql, $params)
+    public function modify($sql, $params)
     {
         $result = false;
 
@@ -81,7 +81,7 @@ class Model
         return $result;
     }
 
-    protected function lastInsertId()
+    public function lastInsertId()
     {
         if (is_null($this->dbh)) {
             throw new \PDOException('Database handler is not available');
