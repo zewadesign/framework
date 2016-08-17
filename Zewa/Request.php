@@ -126,8 +126,11 @@ class Request
         self::$instance = $this;
         $app = App::getInstance();
         $this->configuration = $app->getConfiguration();
-        if ($this->configuration->session !== false && $this->configuration->session->flashdataId) {
-            $this->flashdataId = $this->configuration->session->flashdataId;
+
+        if( !empty($this->configuration->session) ) {
+            if ($this->configuration->session !== false && $this->configuration->session->flashdataId) {
+                $this->flashdataId = $this->configuration->session->flashdataId;
+            }
         }
 
         //        $config = \HTMLPurifier_Config::createDefault();

@@ -115,6 +115,7 @@ class Router
         $uriChunks = $this->parseURI($this->uri);
 
         $app = App::getInstance();
+
         $app->setConfiguration(
             'router',
             (object)[
@@ -169,7 +170,7 @@ class Router
      * @param string $uri
      *
      * @return array chunks of uri
-     * @throws Exception on disallowed characters
+     * @throws RouteException on disallowed characters
      */
     private function parseURI($uri)
     {
@@ -189,6 +190,11 @@ class Router
         $result = array_merge($uriChunks, $params);
 
         if ($this->isURIClean($uri, $result) === false) {
+//            echo "<PRE>\r\n";
+//            print_r($_SERVER);
+//            print_r($uri);echo "\r\n";
+//            print_r($result);echo "\r\n";
+//            die("test");
             throw new RouteException('Invalid key characters.');
         }
 
@@ -203,7 +209,6 @@ class Router
      */
     private function normalizeURI()
     {
-
         if (!empty($_SERVER['PATH_INFO'])) {
             $normalizedURI = $_SERVER['PATH_INFO'];
         } elseif (!empty($_SERVER['REQUEST_URI'])) {
@@ -221,7 +226,7 @@ class Router
         if (! empty($this->configuration->routes)) {
             $normalizedURI = $this->discoverRoute($normalizedURI);
         }
-        
+
         return $normalizedURI;
     }
 
