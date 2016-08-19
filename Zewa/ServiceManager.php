@@ -35,7 +35,7 @@ class ServiceManager
 
     public function __get($property)
     {
-        if (! empty ( $this->services[$property] )) {
+        if (! empty($this->services[$property])) {
             return $this->services[$property];
         }
         throw new Exception\LookupException('The service: ' . $property . ' hasn\'t been registered.');

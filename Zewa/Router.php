@@ -27,7 +27,7 @@ class Router
     /**
      * The active module
      *
-     * @var string
+     * @var    string
      * @access public
      */
     public $module;
@@ -35,7 +35,7 @@ class Router
     /**
      * The active controller
      *
-     * @var string
+     * @var    string
      * @access public
      */
     public $controller;
@@ -43,42 +43,47 @@ class Router
     /**
      * The active method
      *
-     * @var string
+     * @var    string
      * @access public
      */
     public $method;
 
     /**
      * The base URL
-     * @var string
+     *
+     * @var    string
      * @access public
      */
     public $baseURL;
 
     /**
      * Default module
-     * @var string
+     *
+     * @var    string
      * @access public
      */
     public $defaultModule;
 
     /**
      * Default controller
-     * @var string
+     *
+     * @var    string
      * @access public
      */
     public $defaultController;
 
     /**
      * Default method
-     * @var string
+     *
+     * @var    string
      * @access public
      */
     public $defaultMethod;
 
     /**
      * Default uri
-     * @var string
+     *
+     * @var    string
      * @access public
      */
     public $uri;
@@ -90,12 +95,12 @@ class Router
         self::$instance = $this;
 
         $app = App::getInstance();
-        $this->configuration = $app->getConfiguration();
+        $moduleConfig = $app->getConfiguration('modules');
 
-        $this->defaultModule = $this->configuration->modules->defaultModule;
+        $this->defaultModule = $moduleConfig->defaultModule;
         $defaultModule = $this->defaultModule;
-        $this->defaultController = $this->configuration->modules->$defaultModule->defaultController;
-        $this->defaultMethod = $this->configuration->modules->$defaultModule->defaultMethod;
+        $this->defaultController = $moduleConfig->$defaultModule->defaultController;
+        $this->defaultMethod = $moduleConfig->$defaultModule->defaultMethod;
 
         $normalizedURI = $this->normalizeURI();
 
@@ -110,26 +115,32 @@ class Router
         $uriChunks = $this->parseURI($this->uri);
 
         $app = App::getInstance();
-        $app->setConfiguration('router', (object)[
+
+        $app->setConfiguration(
+            'router',
+            (object)[
             'module' => $uriChunks[0],
             'controller' => $uriChunks[1],
             'method' => $uriChunks[2],
             'params' => array_slice($uriChunks, 3),
             'baseURL' => $this->baseURL,
             'currentURL' => $this->currentURL
-        ]);
-
+            ]
+        );
     }
 
 
     private function isURIClean($uri, $uriChunks)
     {
         if (!preg_match("/^[a-z0-9:_\/\.\[\]-]+$/i", $uri)
-            || array_filter($uriChunks, function ($uriChunk) {
-                if (strpos($uriChunk, '__') !== false) {
-                    return true;
+            || array_filter(
+                $uriChunks,
+                function ($uriChunk) {
+                    if (strpos($uriChunk, '__') !== false) {
+                        return true;
+                    }
                 }
-            })
+            )
         ) {
             return false;
         } else {
@@ -159,7 +170,7 @@ class Router
      * @param string $uri
      *
      * @return array chunks of uri
-     * @throws Exception on disallowed characters
+     * @throws RouteException on disallowed characters
      */
     private function parseURI($uri)
     {
@@ -193,16 +204,12 @@ class Router
      */
     private function normalizeURI()
     {
-
         if (!empty($_SERVER['PATH_INFO'])) {
             $normalizedURI = $_SERVER['PATH_INFO'];
-
         } elseif (!empty($_SERVER['REQUEST_URI'])) {
             $normalizedURI = $_SERVER['REQUEST_URI'];
-
         } else {
             $normalizedURI = false;
-
         }
 
         if ($normalizedURI === '/') {
@@ -211,10 +218,10 @@ class Router
 
         $normalizedURI = ltrim(preg_replace('/\?.*/', '', $normalizedURI), '/');
 
-        if (! empty ( $this->configuration->routes )) {
+        if (! empty($this->configuration->routes)) {
             $normalizedURI = $this->discoverRoute($normalizedURI);
         }
-        
+
         return $normalizedURI;
     }
 
@@ -230,15 +237,18 @@ class Router
 
                 $uri = $reroute;
 
-                if (! empty ( $params )) {
+                if (! empty($params)) {
                     $pat = '/(\$\d+)/';
-                    $uri = preg_replace_callback($pat, function () use (&$params) {
-                        $first = $params[0];
-                        array_shift($params);
-                        return $first;
-                    }, $reroute);
+                    $uri = preg_replace_callback(
+                        $pat,
+                        function () use (&$params) {
+                            $first = $params[0];
+                            array_shift($params);
+                            return $first;
+                        },
+                        $reroute
+                    );
                 }
-
             }
         }
 
@@ -263,7 +273,6 @@ class Router
         $uri = ltrim(implode('/', $chunks), '/');
 
         return $uri;
-
     }
 
     private function sortURISegments($uriChunks = [])
@@ -277,10 +286,8 @@ class Router
 
             if (!empty($uriChunks[1])) {
                 $controller = ucfirst(strtolower($uriChunks[1]));
-
             } elseif (!empty($this->configuration->modules->$module->defaultController)) {
                 $controller = $this->configuration->modules->$module->defaultController;
-
             }
 
             if (!empty($uriChunks[2])) {
@@ -294,13 +301,11 @@ class Router
                         array_unshift($uriChunks, null);
                     }
                 }
-
             } elseif (!empty($this->configuration->modules->$module->defaultMethod)) {
                 $method = $this->configuration->modules->$module->defaultMethod;
             }
 
             unset($uriChunks[0], $uriChunks[1], $uriChunks[2]);
-
         }
 
         $return = [$module, $controller, $method];
@@ -366,16 +371,14 @@ class Router
 
             if ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off')
                 || !empty($_SERVER['HTTP_X_FORWARDED_PROTO'])
-                   && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https'
+                && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https'
             ) {
                 $protocol = 'https://';
             } else {
                 $protocol = 'http://';
-
             }
 
             $this->baseURL = $protocol . $server;
-
         }
 
         $url = $this->baseURL;
@@ -385,7 +388,6 @@ class Router
         }
 
         return $url;
-
     }
 
     /**
@@ -419,6 +421,7 @@ class Router
                     $msg = '307 Temporary Redirect';
                     break;
                 // Using these below (except 302) would be an intentional misuse of the 'system'
+                // Need to dig into the above comment @zech
                 case '401':
                     $msg = '401 Access Denied';
                     break;
@@ -440,15 +443,8 @@ class Router
                 header('HTTP/1.1 ' . $msg);
             }
         }
-        if (preg_match('/^https?/', $url)) {
-            header("Location: $url");
-            //@TODO: does this break without exit?
-            //exit;
-        }
-        // strip leading slashies
+
         $url = preg_replace('!^/*!', '', $url);
-        header("Location: " . $this->baseURL($url));
-        //@TODO: does this break without exit?
-        //exit;
+        header("Location: " . $url);
     }
 }

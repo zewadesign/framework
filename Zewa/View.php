@@ -27,7 +27,7 @@ class View
      *
      * @var string|bool
      */
-    protected $layout = false;
+    protected $layout;
 
     /**
      * Active module for view
@@ -62,78 +62,109 @@ class View
      */
     public function __construct()
     {
-        // This abstract is strictly to establish inheritance from a global registery.
         $app = App::getInstance();
         $this->configuration = $app->getConfiguration();
-        $this->request = App::getService('request');
-        $this->router = App::getService('router');
+        $this->request = $app->getService('request');
+        $this->router = $app->getService('router');
     }
 
+    /**
+     * Returns base URL for app
+     * @return string
+     */
     private function baseURL($path = '')
     {
         return $this->router->baseURL($path);
     }
 
+    /**
+     * Returns the current request URL
+     * @return string
+     */
     private function currentURL($params = false)
     {
         return $this->router->currentURL($params);
     }
 
-
+    /**
+     * Returns uri string
+     * @return string
+     */
     private function currentURI()
     {
         return $this->router->uri;
     }
+
+    /*
+     * @todo create method for returning
+     * a valid json string with header..
+     * view shouldn't set header logic,
+     * and the framework doesn't care what returns the string
+     * ..but view should handle the json_encode...
+     * seems overkill to call header() with returning a $view->json;
+     * thoughts?*/
+
     /**
      * Loads a view
      *
      * @access public
-     *
-     * @param string $requestedView relative path for the view
-     * @param string $renderName array of data to expose to view
-     *
-     * @throws \Exception when a view can not be found
+     * @param string|bool $view view to load
+     * @return string
      */
-    public function render()
+    public function render($view = false)
     {
-        if ($this->view !== false) {
-            $this->view = $this->process($this->view);
-        }
-        if ($this->layout === false) {
-            $this->setLayout($this->configuration->layouts->default);
-        }
-
-        if (is_null($this->layout)) {
-            return $this->view;
+        if ($view !== false) {
+            $view = $this->prepareView($view);
+            return $this->process($view);
         } else {
-            return $this->process($this->layout);
-        }
+            if ($this->view !== false) {
+                $this->view = $this->process($this->view);
+            }
 
+            if (! is_null($this->layout)) {
+                return $this->process($this->layout);
+            } else {
+                return $this->view;
+            }
+        }
     }
 
-    public function setView($requestedView)
+    /**
+     * formats and prepares view for inclusion
+     * @param $viewName
+     * @return string
+     * @throws Exception\LookupException
+     */
+    private function prepareView($viewName)
     {
-
         if ($this->module === false) {
-            $this->module = $this->configuration->router->module;
+            $this->setModule();
         }
 
         $view = APP_PATH
-                . DIRECTORY_SEPARATOR
-                . 'Modules'
-                . DIRECTORY_SEPARATOR
-                . $this->module
-                . DIRECTORY_SEPARATOR
-                . 'Views'
-                . DIRECTORY_SEPARATOR
-                . strtolower($requestedView)
-                . '.php';
+            . DIRECTORY_SEPARATOR
+            . 'Modules'
+            . DIRECTORY_SEPARATOR
+            . $this->module
+            . DIRECTORY_SEPARATOR
+            . 'Views'
+            . DIRECTORY_SEPARATOR
+            . strtolower($viewName)
+            . '.php';
 
         if (!file_exists($view)) {
             throw new Exception\LookupException('View: "' . $view . '" could not be found.');
         }
-        $this->view = $view;
 
+        return $view;
+    }
+
+    public function setView($viewName, $layout = false)
+    {
+        if ($layout !== false) {
+            $this->setLayout($layout);
+        }
+        $this->view = $this->prepareView($viewName);
     }
 
     public function setProperty($property, $value = false)
@@ -151,7 +182,6 @@ class View
 
         if ($layout === false) {
             $this->layout = null;
-
         } else {
             $layout = APP_PATH . DIRECTORY_SEPARATOR . 'Layouts' . DIRECTORY_SEPARATOR . strtolower($layout) . '.php';
 
@@ -162,11 +192,15 @@ class View
             $this->layout = $layout;
 
             return true;
-
-
         }
     }
 
+    /**
+     * Set the module for view look
+     *
+     * @access public
+     * @param string|bool $module module to override
+     */
     public function setModule($module = false)
     {
         if ($module === false) {
@@ -175,13 +209,12 @@ class View
             $this->module = ucfirst($module);
         }
     }
+
     /**
      * Processes view/layouts and exposes variables to the view/layout
      *
      * @access private
-     *
      * @param string $file file being rendered
-     *
      * @return string processed content
      */
     //@TODO: come back and clean up this and the way the view receives stuff
@@ -194,7 +227,7 @@ class View
         }
         //should i set $this->data in abstract controller, and provide all access vars ? seems bad practice..
 
-        include($file);
+        include $file;
 
         $return = ob_get_contents();
 
@@ -203,17 +236,12 @@ class View
         return $return;
     }
 
-//    private function verifyResource($resource) {
-//
-//        $path = PUBLIC_PATH . DIRECTORY_SEPARATOR . $resource;
-//
-//        if (!file_exists($path)) {
-//            return false;
-//        }
-//
-//        return true;
-//    }
-
+    /**
+     * Helper method for grabbing aggregated css files
+     *
+     * @access protected
+     * @return string css includes
+     */
     protected function fetchCSS()
     {
         $app = App::getInstance();
@@ -230,9 +258,14 @@ class View
         }
 
         return $string;
-
     }
 
+    /**
+     * Helper method for grabbing aggregated JS files
+     *
+     * @access protected
+     * @return string JS includes
+     */
     protected function fetchJS()
     {
 
@@ -249,9 +282,17 @@ class View
         }
 
         return $string;
-
     }
 
+    /**
+     * Helper method for adding css files for aggregation/render
+     *
+     * @access public
+     * @param $sheets array
+     * @param $place string
+     * @return string css includes
+     * @throws Exception\LookupException
+     */
     public function addCSS($sheets = [], $place = 'append')
     {
         $app = App::getInstance();
@@ -270,10 +311,6 @@ class View
 
         foreach ($sheets as $file) {
             $files[] = $file;
-//            if ($this->verifyResource($file)) {
-//            } else {
-//                throw new Exception\LookupException('The CSS Resource you\'ve specified does not exist.');
-//            }
         }
 
         if ($place === 'prepend') {
@@ -303,10 +340,6 @@ class View
 
             foreach ($scripts as $file) {
                 $files[] = $file;
-//                if ($this->verifyResource($file)) {
-//                } else {
-//                    throw new Exception\LookupException('The JS Resource you\'ve specified does not exist: ' . $file);
-//                }
             }
 
             if ($place === 'prepend') {
@@ -317,31 +350,14 @@ class View
 
             $app = App::getInstance();
             $app->setConfiguration('view::js', (object)$existingJS);
-
         }
-    }
-
-
-    /**
-     * Set 401 header, and return noaccess view contents
-     *
-     * @access public
-     * @return string
-     */
-    public function renderNoAccess($data)
-    {
-        header('HTTP/1.1 401 Access Denied');
-        $this->setProperty($data);
-        $this->setLayout('no-access');
-        return $this->render();
     }
 
     /**
      * Set 404 header, and return 404 view contents
      *
      * @access public
-     * @param $module string
-     * @param $data array
+     * @param  $data array
      * @return string
      */
     public function render404($data = [])

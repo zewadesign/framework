@@ -55,7 +55,6 @@ class SessionHandler
 
         $this->generateHash();
         $this->initializeHandler($interface);
-
     }
 
     private function generateHash()
@@ -75,9 +74,9 @@ class SessionHandler
 
     private function initializeHandler($interface)
     {
-
         if ($interface !== 'file') {
             try {
+                //@TODO: database should be pulling an instance or DI.
                 $database = new Database();//App::getService('database')->fetchConnection();
                 $this->dbh = $database->fetchConnection('default');
 
@@ -92,15 +91,15 @@ class SessionHandler
                 );
 
                 session_start();
-
             } catch (\PDOException $e) {
                 echo "<strong>PDOException:</strong> <br/>";
                 echo 'We can\'t find the Session table so we re-created it. Alright! Give it a refresh.';
+                echo "<PRE>";
+                print_r($e->getMessage());
+                echo "</PRE>";
                 $this->createSessionTable();
                 exit;
-
             }
-
         } else {
             if (session_status() == PHP_SESSION_NONE) {
                 session_start();
@@ -118,7 +117,6 @@ class SessionHandler
         $result = $sth->fetch(\PDO::FETCH_OBJ);
 
         return $result->count;
-
     }
 
     public function getSettings()
@@ -128,20 +126,21 @@ class SessionHandler
         $gc_probability = ini_get('session.gc_probability');
         $gc_divisor = ini_get('session.gc_divisor');
 
-        print_r(array(
+        print_r(
+            array(
             'session.gc_maxlifetime' => $gc_maxlifetime . ' seconds (' . round($gc_maxlifetime / 60) . ' minutes)',
             'session.gc_probability' => $gc_probability,
             'session.gc_divisor'     => $gc_divisor,
             'probability'            => $gc_probability / $gc_divisor * 100 . '%'
-        ));
-
+            )
+        );
     }
 
     //@TODO: implement.. can't figure out a way to make the sessionId fresh
     private function regenerateId()
     {
         $oldSessionId = session_id();
-//        session_write_close();
+        //        session_write_close();
         session_regenerate_id();
         $sessionId = session_id();
 
@@ -159,7 +158,6 @@ class SessionHandler
             throw new Exception\StateException('Session: Could not release session lock!');
         }
         return true;
-
     }
 
     public function destroy($sessionId)
@@ -192,7 +190,6 @@ class SessionHandler
     {
         //??
         return true;
-
     }
 
     public function read($sessionId)
@@ -205,13 +202,12 @@ class SessionHandler
         if ($session) {
             if ($session->session_regeneration >= 20) {
                 //@TODO: implement for session hijack prevention, even though e'rythan ssl now
-//                $this->regenerateId($sessionId);
+                //                $this->regenerateId($sessionId);
             }
             return $session->session_data;
         }
 
         return '';
-
     }
 
     public function write($sessionId, $sessionData)
@@ -221,7 +217,6 @@ class SessionHandler
         }
 
         return false;
-
     }
 
     private function insertSession($sessionId, $sessionData)
@@ -254,20 +249,21 @@ class SessionHandler
             echo "<strong>PDOException:</strong> <br/>";
 
             echo $e->getMessage();
-//            exit;
+            //            exit;
         }
 
         return $success;
-
     }
 
     private function fetchSessionLock()
     {
         $lock = $this->dbh->prepare('SELECT GET_LOCK(?, ?)')
-            ->execute([
+            ->execute(
+                [
                 $this->sessionLock,
                 $this->lockTimeout
-            ]);
+                ]
+            );
 
         if (!$lock) {
             throw new Exception\StateException('Session: Could not obtain session lock!');
@@ -302,17 +298,20 @@ class SessionHandler
         echo 'The Session table does not exist, we\'re going to try and do this for you! Please refresh.';
         echo "</PRE>";
 
-        $query = "CREATE TABLE `Session` ("
-            . "`id` varchar(32) NOT NULL DEFAULT '',"
-            . "`hash` varchar(32) NOT NULL DEFAULT '',"
-            . "`session_data` blob NOT NULL,"
-            . "`session_expire` int(11) NOT NULL DEFAULT '0',"
-            . "`session_regeneration` int(2) NOT NULL DEFAULT '0',"
-            . "PRIMARY KEY (`id`)"
-            . ") ENGINE=InnoDB DEFAULT CHARSET=utf8";
+        try {
+            $query = "CREATE TABLE `Session` ("
+                . "`id` varchar(32) NOT NULL DEFAULT '',"
+                . "`hash` varchar(32) NOT NULL DEFAULT '',"
+                . "`session_data` blob NOT NULL,"
+                . "`session_expire` int(11) NOT NULL DEFAULT '0',"
+                . "`session_regeneration` int(2) NOT NULL DEFAULT '0',"
+                . "PRIMARY KEY (`id`)"
+                . ") ENGINE=InnoDB DEFAULT CHARSET=utf8";
 
-        $this->dbh->prepare($query)
-            ->execute();
-
+            $this->dbh->prepare($query)->execute();
+        } catch (\PDOException $e) {
+            print_r($e->getMessage());
+        }
+        die('test');
     }
 }

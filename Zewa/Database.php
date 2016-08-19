@@ -15,23 +15,23 @@ class Database
      * Database object reference
      *
      * @access private
-     * @var object
+     * @var    object
      */
     protected static $dbh = [];
 
     public function __construct($name = 'default')
     {
-
         $app = App::getInstance();
         $this->configuration = $app->getConfiguration('database');
 
+        //@TODO: lazyload connection
         $this->establishConnection($name);
     }
 
     public function establishConnection($name = 'default')
     {
         if ($this->configuration !== false) {
-            if (! empty ( $this->configuration->$name )) {
+            if (! empty($this->configuration->$name)) {
                 $dbConfig = $this->configuration->$name;
                 self::$dbh[$name] = new \PDO($dbConfig->dsn, $dbConfig->user, $dbConfig->pass);
                 self::$dbh[$name]->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
@@ -40,9 +40,7 @@ class Database
                     'Please specify a valid database configuration, or provide a default configuration.'
                 );
             }
-
         }
-
     }
 
     public function fetchConnection($name = 'default')
