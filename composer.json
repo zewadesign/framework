@@ -1,7 +1,7 @@
 {
   "name": "zewa/framework",
   "description": "Light-wight module based MVC, with centralized models.",
-  "keywords": ["framework", "laravel", "mvc", "hmvc"],
+  "keywords": ["framework", "mvc", "hmvc"],
   "minimum-stability": "stable",
   "license": "MIT",
   "authors": [
