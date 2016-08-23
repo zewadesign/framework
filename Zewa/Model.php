@@ -24,6 +24,14 @@ class Model
     protected $configuration;
 
     /**
+     * Request class
+     *
+     * @var Request
+     * @todo perhaps we should have a security class and separate a few core features from request/security.
+     */
+    protected $request;
+
+    /**
      * Load up some basic configuration settings.
      */
     public function __construct($name = 'default')
@@ -35,6 +43,8 @@ class Model
             $database  = $app->getService('database');
             $this->dbh = $database->fetchConnection($name);
         }
+
+        $this->request = $app->getService('request');
     }
 
     //@TODO: add these to Database, and then set a $this->db here,
@@ -60,6 +70,8 @@ class Model
             } else {
                 $result = $this->sth->fetch(\PDO::FETCH_OBJ);
             }
+
+            $result = $this->request->normalize($result);
         }
 
         $this->sth->closeCursor();
