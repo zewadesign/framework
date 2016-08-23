@@ -313,7 +313,7 @@ class View
             $files[] = $file;
         }
 
-        if ($place === 'prepend') {
+        if ($place === 'append') {
             $existingCSS = array_merge($files, $existingCSS);
         } else {
             $existingCSS = array_merge($existingCSS, $files);
@@ -342,7 +342,7 @@ class View
                 $files[] = $file;
             }
 
-            if ($place === 'prepend') {
+            if ($place === 'append') {
                 $existingJS = array_merge($files, $existingJS);
             } else {
                 $existingJS = array_merge($existingJS, $files);
