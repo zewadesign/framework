@@ -309,10 +309,10 @@ class Request
     /**
      * Normalizes data
      *
-     * @access private
+     * @access public
      * @TODO:  expand functionality, set/perform based on configuration
      */
-    private function normalize($data)
+    public function normalize($data)
     {
         if (is_array($data)) {
             foreach ($data as $key => $value) {
@@ -329,14 +329,6 @@ class Request
             $data = $new;
         } else {
             $data = trim($data);
-            //            if (function_exists('iconv') && function_exists('mb_detect_encoding')) {
-            //                $current_encoding = mb_detect_encoding($data);
-            //
-            //                if ($current_encoding != 'UTF-8' && $current_encoding != 'UTF-16') {
-            //                    $data = iconv($current_encoding, 'UTF-8', $data);
-            //                }
-            //            }
-            //Global XXS?
             //we need to review this.
             if (function_exists('iconv') && function_exists('mb_detect_encoding')) {
                 $current_encoding = mb_detect_encoding($data);
@@ -345,16 +337,20 @@ class Request
                     $data = iconv($current_encoding, 'UTF-8', $data);
                 }
             }
-            //            Global XXS?
+            // Global XXS?
             // This is not sanitary.  FILTER_SANITIZE_STRING doesn't do much.
 
-            //            $data = filter_var($data, FILTER_SANITIZE_STRING);
-
+            // $data = filter_var($data, FILTER_SANITIZE_STRING);
             if (is_numeric($data)) {
-                if ((intval($data) === (int)trim($data, '-')) && strlen((string)(int)$data) === strlen($data)) {
+                $int = intval($data);
+                $float = floatval($data);
+                $re = "~^-?[0-9]+(\.[0-9]+)?$~xD";
+                //@TODO this will not accept all float values, this validates /against/ syntax
+
+                if (($int === (int)trim($data, '-')) && strlen((string)(int)$data) === strlen($data)) {
                     $data = (int) $data;
-                } elseif ($data === (string)(float)$data) {
-                    $data = (float) $data;
+                } elseif ($int !== $float && preg_match($re, $data) === 1) {
+                    $data = floatval($data);
                 }
             } else {
                 //                $data = $this->purifier->purify($data);
