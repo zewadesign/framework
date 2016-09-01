@@ -25,6 +25,13 @@ class Router
     private $configuration;
 
     /**
+     * System routes
+     *
+     * @var object
+     */
+    private $routes;
+
+    /**
      * The active module
      *
      * @var    string
@@ -95,17 +102,17 @@ class Router
         self::$instance = $this;
 
         $app = App::getInstance();
-        $moduleConfig = $app->getConfiguration('modules');
+        $this->configuration = $app->getConfiguration('modules');
+        $this->routes = $app->getConfiguration('routes');
 
-        $this->defaultModule = $moduleConfig->defaultModule;
+        $this->defaultModule = $this->configuration->defaultModule;
         $defaultModule = $this->defaultModule;
-        $this->defaultController = $moduleConfig->$defaultModule->defaultController;
-        $this->defaultMethod = $moduleConfig->$defaultModule->defaultMethod;
+        $this->defaultController = $this->configuration->$defaultModule->defaultController;
+        $this->defaultMethod = $this->configuration->$defaultModule->defaultMethod;
 
         $normalizedURI = $this->normalizeURI();
 
         //check routes
-
 
         $this->uri = $this->uri($normalizedURI);
         $this->baseURL = $this->baseURL();
@@ -218,7 +225,7 @@ class Router
 
         $normalizedURI = ltrim(preg_replace('/\?.*/', '', $normalizedURI), '/');
 
-        if (! empty($this->configuration->routes)) {
+        if (! empty($this->routes)) {
             $normalizedURI = $this->discoverRoute($normalizedURI);
         }
 
@@ -227,11 +234,10 @@ class Router
 
     private function discoverRoute($uri)
     {
-        $routes = $this->configuration->routes;
+        $routes = $this->routes;
 
         foreach ($routes as $route => $reroute) {
             $pattern = '/^(?i)' . str_replace('/', '\/', $route) . '$/';
-
             if (preg_match($pattern, $uri, $params)) {
                 array_shift($params);
 
@@ -263,6 +269,7 @@ class Router
      */
     private function uri($uri)
     {
+
         if ($uri !== '') {
             $uriChunks = explode('/', filter_var(trim($uri), FILTER_SANITIZE_URL));
             $chunks = $this->sortURISegments($uriChunks);
@@ -271,7 +278,6 @@ class Router
         }
 
         $uri = ltrim(implode('/', $chunks), '/');
-
         return $uri;
     }
 
@@ -286,8 +292,8 @@ class Router
 
             if (!empty($uriChunks[1])) {
                 $controller = ucfirst(strtolower($uriChunks[1]));
-            } elseif (!empty($this->configuration->modules->$module->defaultController)) {
-                $controller = $this->configuration->modules->$module->defaultController;
+            } elseif (!empty($this->configuration->$module->defaultController)) {
+                $controller = $this->configuration->$module->defaultController;
             }
 
             if (!empty($uriChunks[2])) {
@@ -296,13 +302,13 @@ class Router
                 $methodExist = method_exists($class, $method);
                 
                 if ($methodExist === false) {
-                    if (!empty($this->configuration->modules->$module->defaultMethod)) {
-                        $method = $this->configuration->modules->$module->defaultMethod;
+                    if (!empty($this->configuration->$module->defaultMethod)) {
+                        $method = $this->configuration->$module->defaultMethod;
                         array_unshift($uriChunks, null);
                     }
                 }
-            } elseif (!empty($this->configuration->modules->$module->defaultMethod)) {
-                $method = $this->configuration->modules->$module->defaultMethod;
+            } elseif (!empty($this->configuration->$module->defaultMethod)) {
+                $method = $this->configuration->$module->defaultMethod;
             }
 
             unset($uriChunks[0], $uriChunks[1], $uriChunks[2]);
