@@ -238,7 +238,6 @@ class Router
 
         foreach ($routes as $route => $reroute) {
             $pattern = '/^(?i)' . str_replace('/', '\/', $route) . '$/';
-
             if (preg_match($pattern, $uri, $params)) {
                 array_shift($params);
 

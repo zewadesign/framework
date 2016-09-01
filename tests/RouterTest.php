@@ -66,7 +66,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
 
         $routerConfig    = $app->getConfiguration('router');
 
-        $firstRouteParam = $routerConfig->params[0];
+        $firstRouteParam = $routerConfig->params[1];
 
         $this->assertTrue(is_float($firstRouteParam));
         $this->assertTrue(!is_string($firstRouteParam));
@@ -98,7 +98,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $app = new \Zewa\App();
 
         $routerConfig    = $app->getConfiguration('router');
-        $firstRouteParam = $routerConfig->params[0];
+        $firstRouteParam = $routerConfig->params[1];
 
         $this->assertTrue(is_int($firstRouteParam));
         $this->assertTrue(!is_string($firstRouteParam));
