@@ -38,8 +38,9 @@ class Model
     {
         // This abstract is strictly to establish inheritance from a global registery.
         $app                 = App::getInstance();
-        $this->configuration = $app->getConfiguration();
-        if ($this->configuration->database !== false) {
+        $this->configuration = $app->getConfiguration('database');
+
+        if ($this->configuration->$name !== false) {
             $database  = $app->getService('database');
             $this->dbh = $database->fetchConnection($name);
         }
@@ -64,16 +65,19 @@ class Model
         $this->sth = $this->dbh->prepare($sql);
         $this->sth->execute($params);
 
-        if ($this->sth->rowCount() > 0) {
-            if ($this->sth->rowCount() > 1 || $returnResultSet === 'result') {
-                $result = $this->sth->fetchAll(\PDO::FETCH_OBJ);
-            } else {
-                $result = $this->sth->fetch(\PDO::FETCH_OBJ);
+        try {
+            if ($this->sth->rowCount() > 0) {
+                if ($this->sth->rowCount() > 1 || $returnResultSet === 'result') {
+                    $result = $this->sth->fetchAll(\PDO::FETCH_OBJ);
+                } else {
+                    $result = $this->sth->fetch(\PDO::FETCH_OBJ);
+                }
+
+                $result = $this->request->normalize($result);
             }
-
-            $result = $this->request->normalize($result);
+        } catch (\PDOException $e) {
+            var_dump($e);
         }
-
         $this->sth->closeCursor();
 
         return $result;
