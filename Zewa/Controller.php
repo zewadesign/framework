@@ -1,6 +1,7 @@
 <?php
 
 namespace Zewa;
+use Zewa\Interfaces\ContainerInterface;
 
 use Zewa\Interfaces\ContainerInterface;
 
