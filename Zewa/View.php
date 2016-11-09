@@ -314,9 +314,9 @@ class View
         }
 
         if ($place === 'append') {
-            $existingCSS = array_merge($files, $existingCSS);
-        } else {
             $existingCSS = array_merge($existingCSS, $files);
+        } else {
+            $existingCSS = array_merge($files, $existingCSS);
         }
 
         $app = App::getInstance();
@@ -343,9 +343,9 @@ class View
             }
 
             if ($place === 'append') {
-                $existingJS = array_merge($files, $existingJS);
-            } else {
                 $existingJS = array_merge($existingJS, $files);
+            } else {
+                $existingJS = array_merge($files, $existingJS);
             }
 
             $app = App::getInstance();
