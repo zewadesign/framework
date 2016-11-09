@@ -1,6 +1,7 @@
 <?php
 
 namespace Zewa;
+
 //use Zewa\Interfaces\ContainerInterface;
 
 /**
@@ -139,7 +140,6 @@ class App
             $view = $this->container->resolve('\Zewa\View');
             $this->output = $view->render404(['Invalid method requests']); //Router::show404(
             return false;
-
         }
 
         return true;
