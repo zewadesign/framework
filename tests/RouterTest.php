@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Zewa\Tests;
 
 use \Zewa\App;
