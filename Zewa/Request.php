@@ -9,21 +9,6 @@ namespace Zewa;
 class Request
 {
     /**
-     * Reference to instantiated controller object.
-     *
-     * @var object
-     */
-    protected static $instance;
-
-    /**
-     * System configuration
-     *
-     * @var object
-     */
-    private $configuration;
-
-
-    /**
      * normalized $_GET superglobal
      *
      * @var    array
@@ -119,26 +104,23 @@ class Request
 
     /**
      * Normalizes superglobals, handles flashdata
+     *
+     * @param $config
+     * @todo: pass PSR7 HTTP messages to constructor.
      */
-
-    public function __construct()
+    public function __construct(Config $config)
     {
-        self::$instance = $this;
-        $app = App::getInstance();
-        $this->configuration = $app->getConfiguration();
+        $sessionConfig = $config->get('session');
 
-        if (!empty($this->configuration->session)) {
-            if ($this->configuration->session !== false && $this->configuration->session->flashdataId) {
-                $this->flashdataId = $this->configuration->session->flashdataId;
-            }
+        if (!empty($sessionConfig) && !empty($sessionConfig->flashdataId)) {
+            $this->flashdataId = $sessionConfig->flashdataId;
         }
-
-        //        $config = \HTMLPurifier_Config::createDefault();
-        //        $this->purifier = new \HTMLPurifier($config);
 
         if (!empty($_SESSION)) {
             $this->sessionContainer = $this->normalize($_SESSION);
         }
+//echo "<PRE>";
+//        print_r($_SESSION);die();
         $this->registerFlashdata();
 
         $this->getContainer = $this->normalize($_GET);

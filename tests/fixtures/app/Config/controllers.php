@@ -1,0 +1,4 @@
+<?php
+/**
+ * Controller Configuration File
+ */

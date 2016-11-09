@@ -1,27 +1,15 @@
 <?php
 namespace Zewa;
 
+use Zewa\Interfaces\ContainerInterface;
+
 /**
- * Abstract class for model extension
+ * View management
  *
  * @author Zechariah Walden<zech @ zewadesign.com>
  */
 class View
 {
-    /**
-     * System configuration
-     *
-     * @var object
-     */
-    protected $configuration;
-
-    /**
-     * Instantiated request class pointer
-     *
-     * @var object
-     */
-    protected $request;
-
     /**
      * Active layout for view
      *
@@ -51,21 +39,44 @@ class View
     protected $properties;
 
     /**
-     * Router object for view injection
+     * \Zewa\Config reference
      *
-     * @var object
+     * @var Config
+     */
+    protected $configuration;
+
+    /**
+     * \Zewa\Router reference
+     *
+     * @var Router
      */
     protected $router;
 
     /**
+     * \Zewa\Router reference
+     *
+     * @var Router
+     */
+    protected $request;
+
+    /**
+     * @var array
+     */
+    private $queuedJS = [];
+
+    /**
+     * @var array
+     */
+    private $queuedCSS = [];
+
+    /**
      * Load up some basic configuration settings.
      */
-    public function __construct()
+    public function __construct(Config $config, Router $router, Request $request)
     {
-        $app = App::getInstance();
-        $this->configuration = $app->getConfiguration();
-        $this->request = $app->getService('request');
-        $this->router = $app->getService('router');
+        $this->configuration = $config;
+        $this->router = $router;
+        $this->request = $request;
     }
 
     /**
@@ -109,13 +120,25 @@ class View
      *
      * @access public
      * @param string|bool $view view to load
+     * @param string|bool $layout
      * @return string
      */
-    public function render($view = false)
+    public function render($view = false, $layout = false)
     {
+        if ($layout !== false) {
+            $this->setLayout($layout);
+        }
+
         if ($view !== false) {
             $view = $this->prepareView($view);
-            return $this->process($view);
+
+            $this->view = $return = $this->process($view);
+
+            if (! is_null($this->layout)) {
+                $return = $this->process($this->layout);
+            }
+
+            return $return;
         } else {
             if ($this->view !== false) {
                 $this->view = $this->process($this->view);
@@ -179,7 +202,6 @@ class View
 
     public function setLayout($layout)
     {
-
         if ($layout === false) {
             $this->layout = null;
         } else {
@@ -204,7 +226,8 @@ class View
     public function setModule($module = false)
     {
         if ($module === false) {
-            $this->module = $this->configuration->router->module;
+            $routerConfig = $this->router->getConfig()->get('Routing');
+            $this->module = $routerConfig->module;
         } else {
             $this->module = ucfirst($module);
         }
@@ -244,16 +267,13 @@ class View
      */
     protected function fetchCSS()
     {
-        $app = App::getInstance();
-        $sheets = $app->getConfiguration('view::css');
-
         $string = "";
 
-        if (empty($sheets)) {
+        if (empty($this->queuedCSS)) {
             return $string;
         }
 
-        foreach ($sheets as $sheet) {
+        foreach ($this->queuedCSS as $sheet) {
             $string .= '<link rel="stylesheet" href="' . $sheet .'">' . "\r\n";
         }
 
@@ -268,16 +288,13 @@ class View
      */
     protected function fetchJS()
     {
+        $string = "<script>baseURL = '" . $this->baseURL() . "/'</script>\r\n";
 
-        $app = App::getInstance();
-        $scripts = $app->getConfiguration('view::js');
-        $string = "<script>baseURL = '" . $this->baseURL() . "/'</script>";
-
-        if (empty($scripts)) {
+        if (empty($this->queuedJS)) {
             return $string;
         }
 
-        foreach ($scripts as $script) {
+        foreach ($this->queuedJS as $script) {
             $string .= '<script src="' . $script . '"></script>' . "\r\n";
         }
 
@@ -288,68 +305,26 @@ class View
      * Helper method for adding css files for aggregation/render
      *
      * @access public
-     * @param $sheets array
+     * @param $files array
      * @param $place string
      * @return string css includes
      * @throws Exception\LookupException
      */
-    public function addCSS($sheets = [], $place = 'append')
+    public function addCSS($files = [], $place = 'append')
     {
-        $app = App::getInstance();
-        $existingCSS = $app->getConfiguration('view::css');
-
-        if ($existingCSS === false) {
-            $existingCSS = [];
-        } else {
-            $existingCSS = (array)$existingCSS;
-        }
-        if (empty($sheets)) {
-            throw new Exception\LookupException('You must provide a valid CSS Resource.');
-        }
-
-        $files = [];
-
-        foreach ($sheets as $file) {
-            $files[] = $file;
-        }
-
         if ($place === 'append') {
-            $existingCSS = array_merge($existingCSS, $files);
+            $this->queuedCSS = array_merge($files, $this->queuedCSS);
         } else {
-            $existingCSS = array_merge($files, $existingCSS);
+            $this->queuedCSS = array_merge($this->queuedCSS, $files);
         }
-
-        $app = App::getInstance();
-        $app->setConfiguration('view::css', (object)$existingCSS);
     }
 
-    public function addJS($scripts = [], $place = 'append')
+    public function addJS($files = [], $place = 'append')
     {
-
-        $app = App::getInstance();
-        $existingJS = $app->getConfiguration('view::js');
-
-        if ($existingJS === false) {
-            $existingJS = [];
+        if ($place === 'append') {
+            $this->queuedJS = array_merge($files, $this->queuedJS);
         } else {
-            $existingJS = (array)$existingJS;
-        }
-
-        if (!empty($scripts)) {
-            $files = [];
-
-            foreach ($scripts as $file) {
-                $files[] = $file;
-            }
-
-            if ($place === 'append') {
-                $existingJS = array_merge($existingJS, $files);
-            } else {
-                $existingJS = array_merge($files, $existingJS);
-            }
-
-            $app = App::getInstance();
-            $app->setConfiguration('view::js', (object)$existingJS);
+            $this->queuedJS = array_merge($this->queuedJS, $files);
         }
     }
 
