@@ -2,50 +2,15 @@
 
 namespace Zewa;
 
-use Zewa\Exception\LookupException;
+//use Zewa\Interfaces\ContainerInterface;
 
 /**
  * This class is the starting point for application
- *
- * <code>
- *
- * $out = new core\App();
- * print $out;
- *
- * </code>
  *
  * @author Zechariah Walden<zech @ zewadesign.com>
  */
 class App
 {
-    /**
-     * Reference to instantiated controller object.
-     *
-     * @var object
-     */
-    protected static $instance = false;
-
-    /**
-     * Available configuration files
-     *
-     * @var object
-     */
-    private $files;
-
-    /**
-     * System configuration
-     *
-     * @var object
-     */
-    public $configuration;
-
-    /**
-     * System service management
-     *
-     * @var object
-     */
-    private $services;
-
     /**
      * Events
      */
@@ -68,7 +33,7 @@ class App
     /**
      * Instantiated class object
      *
-     * @var string
+     * @var Controller
      */
     private $instantiatedClass;
 
@@ -101,45 +66,27 @@ class App
     private $params;
 
     /**
-     * Instantiated router class
-     *
-     * @var object
+     * @var DIContainer $container
      */
-    private $router;
-
-    /**
-     * Instantiated request class
-     *
-     * @var object
-     */
-    private $request;
+    private $container;
 
     /**
      * Application bootstrap process
      *
      * The application registers the configuration in the app/config/core.php
      * and then processes, and makes available the configured resources
+     *
+     * App constructor.
+     * @param Config $config
+     * @param DIContainer $container
      */
-    public function __construct()
+    public function __construct(Config $config, DIContainer $container)
     {
-        self::$instance = $this;
-        //@TODO: unset unnececessary vars/profile/unit testing..? how?
-        //@TODO: better try/catch usage
-        //@TODO: setup custom routing based on regex
-        // (can't we get away without using regex tho?)!!!!!!! routesssssss!!!!!!!!
-        $files = (object)glob(APP_PATH . DIRECTORY_SEPARATOR . 'Config' . DIRECTORY_SEPARATOR . '*.php');
-        $oFiles = [];
-
-        foreach ($files as $index => $filename) {
-            $pieces = explode('/', $filename);
-            $file = $pieces[count($pieces) - 1];
-            $fileProperties = explode('.', $file);
-            $currentFile = $fileProperties[0];
-            $oFiles[$currentFile] = $filename;
-        }
-
-        $this->files = $oFiles;
-        $this->configuration = new \stdClass();
+        $this->configuration = $config;
+        $this->container = $container;
+        $this->router = $container->resolve('Zewa\Router', true);
+        $this->request = $container->resolve('Zewa\Request', true);
+        $this->view = $container->resolve('Zewa\View');
 
         $this->prepare();
     }
@@ -160,148 +107,33 @@ class App
      */
     private function prepare()
     {
-        App::callEvent('preApplication');
+        $routerConfig = $this->configuration->get('Routing');
 
-        $this->registerSession();
-
-        $this->router = new Router();
-        $this->request = new Request();
-        $this->database = new Database();
-
-        $this->setService('router', $this->router);
-        $this->setService('request', $this->request);
-        $this->setService('database', $this->database);
-
-        $this->module = ucfirst($this->configuration->router->module);
-        $this->controller = ucfirst($this->configuration->router->controller);
-        $this->method = $this->configuration->router->method;
-        $this->params = $this->configuration->router->params;
-        $this->class = '\\App\\Modules\\' . $this->module . '\\Controllers\\' . ucfirst($this->controller);
+        $this->module = ucfirst($routerConfig->module);
+        $this->controller = ucfirst($routerConfig->controller);
+        $this->method = $routerConfig->method;
+        $this->params = $routerConfig->params;
+        $this->class = 'Zewa\\App\\Modules\\' . $this->module . '\\Controllers\\' . ucfirst($this->controller);
     }
 
-    private function prepareServices()
-    {
-        if (isset($this->files['services'])) {
-            $services = include $this->files['services'];
-            if ($services !== false) {
-                $this->services = (object)$services;
-            }
-        }
-
-        if (is_null($this->services)) {
-            $this->services = (object)[];
-        }
-    }
-
-    public function getService($service, $new = false, $options = [])
-    {
-        if ($this->services === null) {
-            $this->prepareServices();
-        }
-
-        if ($new === false) {
-            return $this->services->$service;
-        } elseif ($new === true || empty($this->services->$service)) {
-            $this->services->$service = call_user_func_array($this->services->$service, $options);
-            return $this->services->$service;
-        }
-    }
-
-    public function setService($service, $class)
-    {
-        if ($this->services === null) {
-            $this->prepareServices();
-        }
-
-        $this->services->$service = $class;
-    }
-
-    /**
-     * @param mixed string with reference to config
-     * @return mixed bool or config values
-     */
-    public function getConfiguration($config = null)
-    {
-        if ($config !== null) {
-            if (! empty($this->configuration->$config)) {
-                return $this->configuration->$config;
-            } elseif (! empty($this->files{$config})) {
-                $vars = include $this->files{$config};
-
-                if ($vars === false) {
-                    $this->configuration->{$config} = false;
-                } else {
-                    //turn array into object the dirty way?
-                    $this->configuration->{$config} = json_decode(json_encode($vars));
-                }
-
-                return $this->configuration->$config;
-            }
-
-            return false;
-        }
-
-        return $this->configuration;
-    }
-
-    /**
-     * @param $config mixed null|string
-     * @param null|object|array optional array of configuration data
-     *
-     * @return bool
-     * @throws Exception\StateException
-     */
-    public function setConfiguration($config = null, $configObject = null)
-    {
-        if ($config !== null && $configObject !== null && !empty($configObject)) {
-            $this->configuration->$config = $configObject;
-            return true;
-        }
-
-        throw new Exception\StateException('You must provide the configuration key, and its value.');
-    }
-
-    /**
-     * Registers the session object
-     *
-     * @access private
-     */
-    private function registerSession()
-    {
-        $session = $this->getConfiguration('session');
-
-        if ($session !== false) {
-            App::callEvent('preSession');
-            new SessionHandler(
-                $session->interface,
-                $session->securityCode,
-                $session->expiration,
-                $session->domain,
-                $session->lockToUserAgent,
-                $session->lockToIP,
-                $session->gcProbability,
-                $session->gcDivisor,
-                $session->tableName
-            );
-            App::callEvent('postSession');
-        }
-
-        return;
-    }
+//    public function setContainer(Container $container)
+//    {
+//        $this->container = $container;
+//    }
 
     /**
      * Verifies the provided application request is a valid request
      *
      * @access private
      */
-    private function processRequest()
+    private function validateRequest()
     {
-        $moduleExist = file_exists(APP_PATH . '/Modules/' . $this->module);
-        $classExist = class_exists($this->class);
-        $methodExist = method_exists($this->class, $this->method);
-
-        if (!$moduleExist || !$classExist || !$methodExist) {
-            $view = new View();
+        //catch exception and handle
+        try {
+            $class = new \ReflectionClass($this->class);
+            $class->getMethod($this->method);
+        } catch (\ReflectionException $e) {
+            $view = $this->container->resolve('Zewa\View');
             $this->output = $view->render404(['Invalid method requests']); //Router::show404(
             return false;
         }
@@ -316,19 +148,26 @@ class App
      */
     private function start()
     {
-        if (!$this->processRequest()) {
+        if ($this->validateRequest() === false) {
             return false;
         }
 
         App::callEvent('preController');
-        $this->instantiatedClass = new $this->class();
+        $this->instantiatedClass = $this->container->resolve($this->class);
         App::callEvent('postController');
 
+        $this->instantiatedClass->setConfig($this->configuration);
+        $this->instantiatedClass->setRouter($this->router);
+        $this->instantiatedClass->setRequest($this->request);
+        $this->instantiatedClass->setContainer($this->container);
+        $this->instantiatedClass->setView($this->view);
+
         $this->output = call_user_func_array(
-            array(&$this->instantiatedClass, $this->method),
+            [&$this->instantiatedClass, $this->method],
             $this->params
         );
     }
+
     /**
      * Attach (or remove) multiple callbacks to an event and trigger those callbacks when that event is called.
      *
@@ -386,21 +225,5 @@ class App
         App::callEvent('postApplication');
 
         return $this->output;
-    }
-
-
-    /**
-     * Returns a reference of object once instantiated
-     *
-     * @access public
-     * @return object
-     */
-    public static function getInstance()
-    {
-        if (self::$instance === null) {
-            return false;
-        }
-
-        return self::$instance;
     }
 }

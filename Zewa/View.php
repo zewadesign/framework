@@ -1,6 +1,5 @@
 <?php
 namespace Zewa;
-use Zewa\Interfaces\ContainerInterface;
 
 /**
  * View management
@@ -129,12 +128,11 @@ class View
         }
 
         if ($view !== false) {
-
             $view = $this->prepareView($view);
 
             $this->view = $return = $this->process($view);
 
-            if(! is_null($this->layout) ) {
+            if (! is_null($this->layout)) {
                 $return = $this->process($this->layout);
             }
 
