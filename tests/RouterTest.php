@@ -25,10 +25,12 @@ class RouterTest extends \PHPUnit_Framework_TestCase
 
         $_SERVER['REQUEST_URI'] = '/example/home/hello' . '/' . $exponent;
 
-        // Create Instance of App
-        $app = new \Zewa\App();
+        $configPath = __DIR__ . "/fixtures/app/Config";
+        $config = new \Zewa\Config($configPath);
+        $container = new \Zewa\DIContainer($config);
+        $app = new \Zewa\App($config, $container);
 
-        $routerConfig    = $app->getConfiguration('router');
+        $routerConfig    = $config->get('Routing');
 
         $firstRouteParam = $routerConfig->params[0];
         $this->assertTrue(is_string($firstRouteParam));
@@ -62,11 +64,14 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $_SERVER['REQUEST_URI'] = '/example/home/hello' . '/' . $decimal;
 
         // Create Instance of App
-        $app = new \Zewa\App();
+        $configPath = __DIR__ . "/fixtures/app/Config";
+        $config = new \Zewa\Config($configPath);
+        $container = new \Zewa\DIContainer($config);
+        $app = new \Zewa\App($config, $container);
 
-        $routerConfig    = $app->getConfiguration('router');
+        $routerConfig    = $config->get('Routing');
 
-        $firstRouteParam = $routerConfig->params[1];
+        $firstRouteParam = $routerConfig->params[0];
 
         $this->assertTrue(is_float($firstRouteParam));
         $this->assertTrue(!is_string($firstRouteParam));
@@ -95,10 +100,14 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $_SERVER['REQUEST_URI'] = '/example/home/hello' . '/' . $integer;
 
         // Create Instance of App
-        $app = new \Zewa\App();
 
-        $routerConfig    = $app->getConfiguration('router');
-        $firstRouteParam = $routerConfig->params[1];
+        $configPath = __DIR__ . "/fixtures/app/Config";
+        $config = new \Zewa\Config($configPath);
+        $container = new \Zewa\DIContainer($config);
+        $app = new \Zewa\App($config, $container);
+
+        $routerConfig    = $config->get('Routing');
+        $firstRouteParam = $routerConfig->params[0];
 
         $this->assertTrue(is_int($firstRouteParam));
         $this->assertTrue(!is_string($firstRouteParam));
@@ -126,7 +135,10 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $_SERVER['REQUEST_URI'] = '/example/home/hello' . '/' . $badRouteParam;
 
         // Create Instance of App
-        $app = new \Zewa\App();
+        $configPath = __DIR__ . "/fixtures/app/Config";
+        $config = new \Zewa\Config($configPath);
+        $container = new \Zewa\DIContainer($config);
+        $app = new \Zewa\App($config, $container);
 
     }
 
@@ -152,8 +164,13 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         // Normalize URI from Path Info superglobal.
         $_SERVER['REQUEST_URI'] = "";
 
-        $app = new \Zewa\App();
-        $router = $app->getService('router');
+
+        $configPath = __DIR__ . "/fixtures/app/Config";
+        $config = new \Zewa\Config($configPath);
+        $container = new \Zewa\DIContainer($config);
+        $app = new \Zewa\App($config, $container);
+
+        $router = $container->resolve('Zewa\Router');
 
         $this->assertSame('Example/Home/Index',$router->uri);
     }
@@ -169,7 +186,6 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         global $_SERVER;
 
         // Create Instance of App
-        $app = new \Zewa\App();
 
         if(!empty($_SERVER['PATH_INFO'])) {
             unset($_SERVER['PATH_INFO']);
@@ -177,9 +193,14 @@ class RouterTest extends \PHPUnit_Framework_TestCase
 
         $_SERVER['REQUEST_URI'] = $emptyURI;
 
-        $router = new Router();
-        $app = App::getInstance();
-        $routerConfig    = $app->getConfiguration('router');
+        $configPath = __DIR__ . "/fixtures/app/Config";
+        $config = new \Zewa\Config($configPath);
+        $container = new \Zewa\DIContainer($config);
+        $app = new \Zewa\App($config, $container);
+
+        $router = $container->resolve('Zewa\Router');
+
+        $routerConfig    = $config->get('Routing');
 
         $uriShouldBe = $routerConfig->module . "/" . $routerConfig->controller . "/" . $routerConfig->method;
 
@@ -198,8 +219,13 @@ class RouterTest extends \PHPUnit_Framework_TestCase
     {
         global $_SERVER;
         // Create Instance of App
-        $app = new \Zewa\App();
-        $routerConfig  = $app->getConfiguration('router');
+
+        $configPath = __DIR__ . "/fixtures/app/Config";
+        $config = new \Zewa\Config($configPath);
+        $container = new \Zewa\DIContainer($config);
+        $app = new \Zewa\App($config, $container);
+
+        $routerConfig  = $config->get('Routing');
         $this->assertSame($routerConfig->method,'Index');
     }
 
@@ -211,8 +237,12 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $_SERVER['REQUEST_URI'] = '/batman';
 
         // Create Instance of App
-        $app = new \Zewa\App();
-        $router = $app->getService('router');
+        $configPath = __DIR__ . "/fixtures/app/Config";
+        $config = new \Zewa\Config($configPath);
+        $container = new \Zewa\DIContainer($config);
+        $app = new \Zewa\App($config, $container);
+
+        $router = $container->resolve('Zewa\Router');
         $currentURL = $router->currentURL();
 
         $this->assertSame('http://test.zewa.com/Batman/Home/Index',$currentURL);
@@ -233,9 +263,12 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $_SERVER['HTTPS'] = "on";
 
         // Create Instance of App
-        $app = new \Zewa\App();
+        $configPath = __DIR__ . "/fixtures/app/Config";
+        $config = new \Zewa\Config($configPath);
+        $container = new \Zewa\DIContainer($config);
+        $app = new \Zewa\App($config, $container);
 
-        $router = $app->getService('router');
+        $router = $container->resolve('Zewa\Router');
         $currentURL = $router->currentURL();
 
         $this->assertSame('https://test.zewa.com/Batman/Home/Index',$currentURL);
