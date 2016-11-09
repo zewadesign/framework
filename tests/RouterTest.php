@@ -169,7 +169,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $container = new \Zewa\DIContainer($config);
         $app = new \Zewa\App($config, $container);
 
-        $router = $container->resolve('Zewa\Router');
+        $router = $container->resolve('\Zewa\Router');
 
         $this->assertSame('Example/Home/Index',$router->uri);
     }
@@ -197,7 +197,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $container = new \Zewa\DIContainer($config);
         $app = new \Zewa\App($config, $container);
 
-        $router = $container->resolve('Zewa\Router');
+        $router = $container->resolve('\Zewa\Router');
 
         $routerConfig    = $config->get('Routing');
 
@@ -241,7 +241,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $container = new \Zewa\DIContainer($config);
         $app = new \Zewa\App($config, $container);
 
-        $router = $container->resolve('Zewa\Router');
+        $router = $container->resolve('\Zewa\Router');
         $currentURL = $router->currentURL();
 
         $this->assertSame('http://test.zewa.com/Batman/Home/Index',$currentURL);
@@ -267,7 +267,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $container = new \Zewa\DIContainer($config);
         $app = new \Zewa\App($config, $container);
 
-        $router = $container->resolve('Zewa\Router');
+        $router = $container->resolve('\Zewa\Router');
         $currentURL = $router->currentURL();
 
         $this->assertSame('https://test.zewa.com/Batman/Home/Index',$currentURL);

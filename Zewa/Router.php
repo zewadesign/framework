@@ -11,20 +11,6 @@ use Zewa\Exception\RouteException;
 class Router
 {
     /**
-     * Reference to instantiated controller object.
-     *
-     * @var object
-     */
-    protected static $instance = false;
-
-    /**
-     * System configuration
-     *
-     * @var object
-     */
-    private $configuration;
-
-    /**
      * System routes
      *
      * @var object
@@ -94,49 +80,73 @@ class Router
      * @access public
      */
     public $uri;
+
+    /**
+     * @var Config
+     */
+    public $config;
     /**
      * Load up some basic configuration settings.
      */
-    public function __construct()
+    public function __construct(Config $config)
     {
-        self::$instance = $this;
+        $this->modules = $config->get('Modules');
+        $this->routes = $config->get('Routes');
 
-        $app = App::getInstance();
-        $this->configuration = $app->getConfiguration('modules');
-        $this->routes = $app->getConfiguration('routes');
-
-        $this->defaultModule = $this->configuration->defaultModule;
-        $defaultModule = $this->defaultModule;
-        $this->defaultController = $this->configuration->$defaultModule->defaultController;
-        $this->defaultMethod = $this->configuration->$defaultModule->defaultMethod;
-
-        $normalizedURI = $this->normalizeURI();
-
-        //check routes
-
-        $this->uri = $this->uri($normalizedURI);
-        $this->baseURL = $this->baseURL();
-        $this->currentURL = $this->currentURL();
-
+        $this->prepare();
         //@TODO: routing
         $uriChunks = $this->parseURI($this->uri);
 
-        $app = App::getInstance();
+        $params = array_slice($uriChunks, 3);
 
-        $app->setConfiguration(
-            'router',
-            (object)[
+        // clear ending / with no value..
+        if (!empty($params) && $params[0] === '') {
+            $params = [];
+        }
+
+        $config->set('Routing', (object)[
             'module' => $uriChunks[0],
             'controller' => $uriChunks[1],
             'method' => $uriChunks[2],
-            'params' => array_slice($uriChunks, 3),
+            'params' => $params,
             'baseURL' => $this->baseURL,
             'currentURL' => $this->currentURL
-            ]
-        );
+        ]);
+
+        $this->config = $config;
     }
 
+    public function getConfig()
+    {
+        return $this->config;
+    }
 
+    /**
+     * Set class defaults and normalized url/uri segments
+     */
+    private function prepare()
+    {
+        $this->defaultModule = $this->modules['defaultModule'];
+        $defaultModule = $this->defaultModule;
+        $this->defaultController = $this->modules[$defaultModule]['defaultController'];
+        $this->defaultMethod = $this->modules[$defaultModule]['defaultMethod'];
+
+        $normalizedURI = $this->normalizeURI();
+        //check routes
+        $this->uri = $this->uri($normalizedURI);
+        $this->baseURL = $this->baseURL();
+        $this->currentURL = $this->currentURL();
+    }
+
+    /**
+     * Checks if URL contains special characters not permissable/considered dangerous
+     *
+     * Safe: a-z, 0-9, :, _, [, ], +
+     *
+     * @param $uri
+     * @param $uriChunks
+     * @return bool
+     */
     private function isURIClean($uri, $uriChunks)
     {
         if (!preg_match("/^[a-z0-9:_\/\.\[\]-]+$/i", $uri)
@@ -264,6 +274,7 @@ class Router
     /**
      * Normalize the $_SERVER vars for formatting the URI.
      *
+     * @param $uri
      * @access public
      * @return string formatted/u/r/l
      */
@@ -292,8 +303,8 @@ class Router
 
             if (!empty($uriChunks[1])) {
                 $controller = ucfirst(strtolower($uriChunks[1]));
-            } elseif (!empty($this->configuration->$module->defaultController)) {
-                $controller = $this->configuration->$module->defaultController;
+            } elseif (!empty($this->modules->$module->defaultController)) {
+                $controller = $this->modules->$module->defaultController;
             }
 
             if (!empty($uriChunks[2])) {
@@ -302,13 +313,13 @@ class Router
                 $methodExist = method_exists($class, $method);
                 
                 if ($methodExist === false) {
-                    if (!empty($this->configuration->$module->defaultMethod)) {
-                        $method = $this->configuration->$module->defaultMethod;
+                    if (!empty($this->modules->$module->defaultMethod)) {
+                        $method = $this->modules->$module->defaultMethod;
                         array_unshift($uriChunks, null);
                     }
                 }
-            } elseif (!empty($this->configuration->$module->defaultMethod)) {
-                $method = $this->configuration->$module->defaultMethod;
+            } elseif (!empty($this->modules->$module->defaultMethod)) {
+                $method = $this->modules->$module->defaultMethod;
             }
 
             unset($uriChunks[0], $uriChunks[1], $uriChunks[2]);

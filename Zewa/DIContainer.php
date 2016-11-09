@@ -16,8 +16,8 @@ class DIContainer
 
     public function __construct(Config $config)
     {
-        $this->dependencies['Zewa\DIContainer'] = $this;
-        $this->dependencies['Zewa\Config'] = $config;
+        $this->dependencies['\Zewa\DIContainer'] = $this;
+        $this->dependencies['\Zewa\Config'] = $config;
         $controllers = $config->get('controllers');
         $services = $config->get('services');
         if (is_array($controllers)) {

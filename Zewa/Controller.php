@@ -2,6 +2,8 @@
 
 namespace Zewa;
 
+use Zewa\Interfaces\ContainerInterface;
+
 /**
  * Abstract class for controller extension
  *
@@ -13,23 +15,30 @@ abstract class Controller
     /**
      * System configuration
      *
-     * @var object
+     * @var Config
      */
     protected $configuration;
 
     /**
      * Instantiated router class pointer
      *
-     * @var object
+     * @var Router
      */
     protected $router;
 
     /**
      * Instantiated request class pointer
      *
-     * @var object
+     * @var Request
      */
     protected $request;
+
+    /**
+     * League\Container
+     *
+     * @var DIContainer
+     */
+    protected $container;
 
     /**
      * Instantiated output class pointer
@@ -39,38 +48,64 @@ abstract class Controller
     protected $output;
 
     /**
-     * Reference to instantiated controller object.
-     *
-     * @var object
+     * @var View
      */
-    public static $instance;
+    protected $view;
 
     /**
      * Load up some basic configuration settings.
      */
     public function __construct()
     {
-        static::$instance = $this;
-
-        $app = App::getInstance();
-        $this->configuration = $app->getConfiguration();
-        $this->request = $app->getService('request');
-        $this->router = $app->getService('router');
     }
 
-    /**
-     * Returns a reference of object once instantiated
-     *
-     * @access public
-     * @return object
-     * @throws Exception\TypeException
-     */
-    public static function getInstance()
+    public function setView(View $view)
     {
-        if (static::$instance === null) {
-            throw new Exception\TypeException('There is no instance of ACL available.');
-        }
+        $this->view = $view;
+        //@TODO instead of "getview" this needs to be "setResponse" -- set response should receive a view,
+        //views probably don't need config, router, or request -- but they need access
+        //to methods inside of there.
+        // I'm not sure how I want to handle this yet.
+//        return new View($this->configuration, $this->router, $this->request);
+    }
 
-        return static::$instance;
+    public function setConfig(Config $config)
+    {
+        $this->configuration = $config;
+    }
+
+    public function getConfig() : Config
+    {
+        return $this->configuration;
+    }
+
+    public function setRouter(Router $router)
+    {
+        $this->router = $router;
+    }
+
+    public function getRouter() : Router
+    {
+        return $this->router;
+    }
+
+    public function setRequest(Request $request)
+    {
+        $this->request = $request;
+    }
+
+    public function getRequest() : Request
+    {
+        return $this->request;
+    }
+
+    public function setContainer(DIContainer $container)
+    {
+        $this->container = $container;
+    }
+
+    public function getContainer() : DIContainer
+    {
+        return $this->container;
     }
 }

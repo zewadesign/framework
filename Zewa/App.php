@@ -84,9 +84,12 @@ class App
     {
         $this->configuration = $config;
         $this->container = $container;
-        $this->router = $container->resolve('Zewa\Router', true);
-        $this->request = $container->resolve('Zewa\Request', true);
-        $this->view = $container->resolve('Zewa\View');
+        $this->router = $container->resolve('\Zewa\Router', true);
+        $this->request = $container->resolve('\Zewa\Request', true);
+        $this->view = $container->resolve('\Zewa\View');
+
+        $routerConfig = $this->router->getConfig();
+        $config->set('Routing', $routerConfig->get('Routing'));
 
         $this->prepare();
     }
@@ -133,7 +136,7 @@ class App
             $class = new \ReflectionClass($this->class);
             $class->getMethod($this->method);
         } catch (\ReflectionException $e) {
-            $view = $this->container->resolve('Zewa\View');
+            $view = $this->container->resolve('\Zewa\View');
             $this->output = $view->render404(['Invalid method requests']); //Router::show404(
             return false;
         }

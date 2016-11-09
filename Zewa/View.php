@@ -224,7 +224,7 @@ class View
     public function setModule($module = false)
     {
         if ($module === false) {
-            $routerConfig = $this->configuration->get('Routing');
+            $routerConfig = $this->router->getConfig()->get('Routing');
             $this->module = $routerConfig->module;
         } else {
             $this->module = ucfirst($module);

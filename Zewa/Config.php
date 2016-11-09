@@ -29,8 +29,12 @@ class Config
      *
      * @param $configFolderPath
      */
-    public function __construct($configFolderPath)
+    public function __construct($configFolderPath = null)
     {
+        if (is_null($configFolderPath)) {
+            $configFolderPath = APP_PATH . DIRECTORY_SEPARATOR . 'Config';
+        }
+
         $this->setPath($configFolderPath);
     }
 
