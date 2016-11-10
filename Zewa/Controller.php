@@ -105,4 +105,18 @@ abstract class Controller
     {
         return $this->container;
     }
+
+    public function loadModule($name)
+    {
+        $name = ucfirst(strtolower($name));
+        $module = $this->container->resolve('\Zewa\App\Modules\\' . $name);
+
+        $module->setRequest($this->request);
+        $module->setRouter($this->router);
+        $module->setConfig($this->configuration);
+        $module->setContainer($this->container);
+        $module->setView($this->view);
+
+        return $module;
+    }
 }
