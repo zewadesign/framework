@@ -24,7 +24,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
 
         $_SERVER['REQUEST_URI'] = '/example/home/hello' . '/' . $exponent;
 
-        $configPath = __DIR__ . "/../fixtures/app/Config";
+        $configPath = __DIR__ . "/fixtures/app/Config";
         $config = new \Zewa\Config($configPath);
         $container = new \Zewa\DIContainer($config);
         $app = new \Zewa\App($config, $container);
@@ -63,7 +63,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $_SERVER['REQUEST_URI'] = '/example/home/hello' . '/' . $decimal;
 
         // Create Instance of App
-        $configPath = __DIR__ . "/../fixtures/app/Config";
+        $configPath = __DIR__ . "/fixtures/app/Config";
         $config = new \Zewa\Config($configPath);
         $container = new \Zewa\DIContainer($config);
         $app = new \Zewa\App($config, $container);
@@ -100,7 +100,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
 
         // Create Instance of App
 
-        $configPath = __DIR__ . "/../fixtures/app/Config";
+        $configPath = __DIR__ . "/fixtures/app/Config";
         $config = new \Zewa\Config($configPath);
         $container = new \Zewa\DIContainer($config);
         $app = new \Zewa\App($config, $container);
@@ -134,7 +134,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $_SERVER['REQUEST_URI'] = '/example/home/hello' . '/' . $badRouteParam;
 
         // Create Instance of App
-        $configPath = __DIR__ . "/../fixtures/app/Config";
+        $configPath = __DIR__ . "/fixtures/app/Config";
         $config = new \Zewa\Config($configPath);
         $container = new \Zewa\DIContainer($config);
         $app = new \Zewa\App($config, $container);
@@ -164,7 +164,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $_SERVER['REQUEST_URI'] = "";
 
 
-        $configPath = __DIR__ . "/../fixtures/app/Config";
+        $configPath = __DIR__ . "/fixtures/app/Config";
         $config = new \Zewa\Config($configPath);
         $container = new \Zewa\DIContainer($config);
         $app = new \Zewa\App($config, $container);
@@ -192,7 +192,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
 
         $_SERVER['REQUEST_URI'] = $emptyURI;
 
-        $configPath = __DIR__ . "/../fixtures/app/Config";
+        $configPath = __DIR__ . "/fixtures/app/Config";
         $config = new \Zewa\Config($configPath);
         $container = new \Zewa\DIContainer($config);
         $app = new \Zewa\App($config, $container);
@@ -219,7 +219,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         global $_SERVER;
         // Create Instance of App
 
-        $configPath = __DIR__ . "/../fixtures/app/Config";
+        $configPath = __DIR__ . "/fixtures/app/Config";
         $config = new \Zewa\Config($configPath);
         $container = new \Zewa\DIContainer($config);
         $app = new \Zewa\App($config, $container);
@@ -236,7 +236,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $_SERVER['REQUEST_URI'] = '/batman';
 
         // Create Instance of App
-        $configPath = __DIR__ . "/../fixtures/app/Config";
+        $configPath = __DIR__ . "/fixtures/app/Config";
         $config = new \Zewa\Config($configPath);
         $container = new \Zewa\DIContainer($config);
         $app = new \Zewa\App($config, $container);
@@ -262,7 +262,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $_SERVER['HTTPS'] = "on";
 
         // Create Instance of App
-        $configPath = __DIR__ . "/../fixtures/app/Config";
+        $configPath = __DIR__ . "/fixtures/app/Config";
         $config = new \Zewa\Config($configPath);
         $container = new \Zewa\DIContainer($config);
         $app = new \Zewa\App($config, $container);
