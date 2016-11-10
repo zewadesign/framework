@@ -77,20 +77,17 @@ class App
      * and then processes, and makes available the configured resources
      *
      * App constructor.
-     * @param Config $config
+//     * @param Config $config
      * @param DIContainer $container
      */
-    public function __construct(Config $config, DIContainer $container)
+    public function __construct(DIContainer $container)
     {
-        $this->configuration = $config;
+        $this->configuration = $container->resolve('\Zewa\Config');
         $this->container = $container;
 
         $this->router = $container->resolve('\Zewa\Router', true);
         $this->request = $container->resolve('\Zewa\Request', true);
         $this->view = $container->resolve('\Zewa\View');
-
-        $routerConfig = $this->router->getConfig();
-        $config->set('Routing', $routerConfig->get('Routing'));
 
         $this->prepare();
     }

@@ -64,7 +64,7 @@ class Config
             return;
         }
 
-        throw new ConfigException($key . ' configuration file is missing.');
+        throw new ConfigException('Unable to load resource: ' . $filename);
     }
 
     /**

@@ -18,8 +18,9 @@ class DIContainer
     {
         $this->dependencies['\Zewa\DIContainer'] = $this;
         $this->dependencies['\Zewa\Config'] = $config;
-        $controllers = $config->get('controllers');
-        $services = $config->get('services');
+//        var_dump($this->dependencies);
+        $controllers = $config->get('Controllers');
+        $services = $config->get('Services');
         if (is_array($controllers)) {
             $this->callbacks = array_merge($controllers);
         }
@@ -101,7 +102,6 @@ class DIContainer
                 continue;
             }
 
-
             // This is where 'the magic happens'. We resolve each
             // of the dependencies, by recursively calling the
             // resolve() method.
@@ -109,7 +109,7 @@ class DIContainer
             // nested dependencies we need in order to instantiate
             // the class.
             $newInstanceParams[] = $this->resolve(
-                $param->getClass()->getName()
+                "\\" . $param->getClass()->getName()
             );
         }
 

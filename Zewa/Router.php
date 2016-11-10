@@ -112,7 +112,6 @@ class Router
             'baseURL' => $this->baseURL,
             'currentURL' => $this->currentURL
         ]);
-
         $this->config = $config;
     }
 
