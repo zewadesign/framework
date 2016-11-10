@@ -9,6 +9,7 @@ class ConfigTest extends \PHPUnit_Framework_TestCase
     public function testGetConfigItem()
     {
         $configPath = __DIR__ . "/fixtures/app/Config";
+        echo $configPath;
         $config = new Config($configPath);
 
         $expectedModuleConfig = require $configPath . "/modules.php";
