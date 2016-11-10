@@ -18,9 +18,10 @@ class DIContainer
     {
         $this->dependencies['\Zewa\DIContainer'] = $this;
         $this->dependencies['\Zewa\Config'] = $config;
-//        var_dump($this->dependencies);
+
         $controllers = $config->get('Controllers');
         $services = $config->get('Services');
+
         if (is_array($controllers)) {
             $this->callbacks = array_merge($controllers);
         }
@@ -39,6 +40,7 @@ class DIContainer
         return false;
     }
 
+    //@TODO change class & service resolution ?
     public function resolve($class, $share = false)
     {
         if ($this->isDependencyLoaded($class)) {

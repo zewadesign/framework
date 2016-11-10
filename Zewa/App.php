@@ -77,7 +77,6 @@ class App
      * and then processes, and makes available the configured resources
      *
      * App constructor.
-//     * @param Config $config
      * @param DIContainer $container
      */
     public function __construct(DIContainer $container)
