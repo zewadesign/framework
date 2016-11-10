@@ -52,19 +52,19 @@ class Config
      * Loads a configuration file in to memory
      *
      * @param $key
-     * @return bool
+     * @throws ConfigException when file is missing
      */
-    protected function loadConfigFile(string $key) : bool
+    protected function loadConfigFile(string $key)
     {
         $key = strtolower($key);
         $filename = $this->path . DIRECTORY_SEPARATOR . ucfirst($key) . Config::CONFIG_FILE_EXTENSION;
 
         if (file_exists($filename)) {
             $this->configuration[$key] = require $filename;
-            return true;
+            return;
         }
 
-        return false;
+        throw new ConfigException('Unable to load resource: ' . $filename);
     }
 
     /**
@@ -78,15 +78,12 @@ class Config
     public function get(string $key)
     {
         $key = strtolower($key);
-        $value = [];
 
-        if (isset($this->configuration[$key]) || $this->loadConfigFile($key)) {
-            $value = $this->configuration[$key];
-        } else {
-            throw new ConfigException($key . ' configuration file is missing.');
+        if (empty($this->configuration[$key])) {
+            $this->loadConfigFile($key);
         }
 
-        return $value;
+        return $this->configuration[$key];
     }
 
     /**

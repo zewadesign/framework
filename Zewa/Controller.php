@@ -2,16 +2,11 @@
 
 namespace Zewa;
 
-use Zewa\Interfaces\ContainerInterface;
-
-use Zewa\Interfaces\ContainerInterface;
-
 /**
  * Abstract class for controller extension
  *
  * @author Zechariah Walden<zech @ zewadesign.com>
  */
-//can name spaces be removed in the classes extending..?
 abstract class Controller
 {
     /**

@@ -25,9 +25,10 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $_SERVER['REQUEST_URI'] = '/example/home/hello' . '/' . $exponent;
 
         $configPath = __DIR__ . "/fixtures/app/Config";
+
         $config = new \Zewa\Config($configPath);
         $container = new \Zewa\DIContainer($config);
-        $app = new \Zewa\App($config, $container);
+        $app = new \Zewa\App($container);
 
         $routerConfig    = $config->get('Routing');
 
@@ -66,7 +67,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $configPath = __DIR__ . "/fixtures/app/Config";
         $config = new \Zewa\Config($configPath);
         $container = new \Zewa\DIContainer($config);
-        $app = new \Zewa\App($config, $container);
+        $app = new \Zewa\App($container);
 
         $routerConfig    = $config->get('Routing');
 
@@ -103,7 +104,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $configPath = __DIR__ . "/fixtures/app/Config";
         $config = new \Zewa\Config($configPath);
         $container = new \Zewa\DIContainer($config);
-        $app = new \Zewa\App($config, $container);
+        $app = new \Zewa\App($container);
 
         $routerConfig    = $config->get('Routing');
         $firstRouteParam = $routerConfig->params[0];
@@ -137,7 +138,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $configPath = __DIR__ . "/fixtures/app/Config";
         $config = new \Zewa\Config($configPath);
         $container = new \Zewa\DIContainer($config);
-        $app = new \Zewa\App($config, $container);
+        $app = new \Zewa\App($container);
 
     }
 
@@ -167,7 +168,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $configPath = __DIR__ . "/fixtures/app/Config";
         $config = new \Zewa\Config($configPath);
         $container = new \Zewa\DIContainer($config);
-        $app = new \Zewa\App($config, $container);
+        $app = new \Zewa\App($container);
 
         $router = $container->resolve('\Zewa\Router');
 
@@ -195,7 +196,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $configPath = __DIR__ . "/fixtures/app/Config";
         $config = new \Zewa\Config($configPath);
         $container = new \Zewa\DIContainer($config);
-        $app = new \Zewa\App($config, $container);
+        $app = new \Zewa\App($container);
 
         $router = $container->resolve('\Zewa\Router');
 
@@ -222,7 +223,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $configPath = __DIR__ . "/fixtures/app/Config";
         $config = new \Zewa\Config($configPath);
         $container = new \Zewa\DIContainer($config);
-        $app = new \Zewa\App($config, $container);
+        $app = new \Zewa\App($container);
 
         $routerConfig  = $config->get('Routing');
         $this->assertSame($routerConfig->method,'Index');
@@ -239,7 +240,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $configPath = __DIR__ . "/fixtures/app/Config";
         $config = new \Zewa\Config($configPath);
         $container = new \Zewa\DIContainer($config);
-        $app = new \Zewa\App($config, $container);
+        $app = new \Zewa\App($container);
 
         $router = $container->resolve('\Zewa\Router');
         $currentURL = $router->currentURL();
@@ -265,7 +266,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $configPath = __DIR__ . "/fixtures/app/Config";
         $config = new \Zewa\Config($configPath);
         $container = new \Zewa\DIContainer($config);
-        $app = new \Zewa\App($config, $container);
+        $app = new \Zewa\App($container);
 
         $router = $container->resolve('\Zewa\Router');
         $currentURL = $router->currentURL();

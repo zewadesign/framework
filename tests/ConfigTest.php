@@ -11,7 +11,7 @@ class ConfigTest extends \PHPUnit_Framework_TestCase
         $configPath = __DIR__ . "/fixtures/app/Config";
         $config = new Config($configPath);
 
-        $expectedModuleConfig = require $configPath . "/modules.php";
+        $expectedModuleConfig = require $configPath . "/Modules.php";
         $this->assertSame($expectedModuleConfig,$config->get('modules'));
     }
 
