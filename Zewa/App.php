@@ -1,8 +1,7 @@
 <?php
-
+declare(strict_types=1);
 namespace Zewa;
-
-//use Zewa\Interfaces\ContainerInterface;
+use Sabre\Event\Emitter;
 
 /**
  * This class is the starting point for application
@@ -11,11 +10,6 @@ namespace Zewa;
  */
 class App
 {
-    /**
-     * Events
-     */
-    private static $events;
-
     /**
      * Return value from application
      *
@@ -71,6 +65,11 @@ class App
     private $container;
 
     /**
+     * @var Emitter
+     */
+    private $event;
+
+    /**
      * Application bootstrap process
      *
      * The application registers the configuration in the app/config/core.php
@@ -82,6 +81,7 @@ class App
     public function __construct(DIContainer $container)
     {
         $this->configuration = $container->resolve('\Zewa\Config');
+        $this->event = $container->resolve('\Sabre\Event\Emitter', true);
         $this->container = $container;
 
         $this->router = $container->resolve('\Zewa\Router', true);
@@ -152,11 +152,10 @@ class App
             return false;
         }
 
-        App::callEvent('preController');
         $this->instantiatedClass = $this->container->resolve($this->class);
-        App::callEvent('postController');
 
         $this->instantiatedClass->setConfig($this->configuration);
+        $this->instantiatedClass->setEvent($this->event);
         $this->instantiatedClass->setRouter($this->router);
         $this->instantiatedClass->setRequest($this->request);
         $this->instantiatedClass->setContainer($this->container);
@@ -169,48 +168,6 @@ class App
     }
 
     /**
-     * Attach (or remove) multiple callbacks to an event and trigger those callbacks when that event is called.
-     *
-     * @param string $event    name
-     * @param mixed  $value    the optional value to pass to each callback
-     * @param mixed  $callback the method or function to call - FALSE to remove all callbacks for event
-     */
-
-    public static function addEvent($event, $callback = false)
-    {
-        // Adding or removing a callback?
-        if ($callback !== false) {
-            self::$events[$event][] = $callback;
-        } else {
-            unset(self::$events[$event]);
-        }
-    }
-
-    public function callEvent($event, $method = false, $arguments = [])
-    {
-        if (isset(self::$events[$event])) {
-            foreach (self::$events[$event] as $e) {
-                if ($method !== false) { // class w/ method specified
-                    $object = new $e();
-                    $value = call_user_func_array(
-                        [&$object, $method],
-                        $arguments
-                    );
-                } else {
-                    if (class_exists($e)) {
-                        $value = new $e($arguments); // class w/o method specified
-                    } else {
-                        $value = call_user_func($e, $arguments); // function yuk
-                    }
-                }
-            }
-
-            return $value;
-        }
-    }
-
-
-    /**
      * Prepare application return value into a string
      *
      * @access public
@@ -221,8 +178,6 @@ class App
         if (!$this->output) {
             $this->output = '';
         }
-
-        App::callEvent('postApplication');
 
         return $this->output;
     }

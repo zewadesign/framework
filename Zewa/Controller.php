@@ -1,6 +1,8 @@
 <?php
 
 namespace Zewa;
+use Sabre\Event\Emitter;
+use Sabre\Event\EventEmitter;
 
 /**
  * Abstract class for controller extension
@@ -15,6 +17,11 @@ abstract class Controller
      * @var Config
      */
     protected $configuration;
+
+    /**
+     * @var Emitter
+     */
+    protected $event;
 
     /**
      * Instantiated router class pointer
@@ -54,6 +61,16 @@ abstract class Controller
      */
     public function __construct()
     {
+    }
+
+    public function getEvent() : Emitter
+    {
+        return $this->event;
+    }
+
+    public function setEvent(Emitter $eventManager)
+    {
+        $this->event = $eventManager;
     }
 
     public function setView(View $view)
