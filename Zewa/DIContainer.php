@@ -18,17 +18,6 @@ class DIContainer
     {
         $this->dependencies['\Zewa\DIContainer'] = $this;
         $this->dependencies['\Zewa\Config'] = $config;
-
-        $controllers = $config->get('Controllers');
-        $services = $config->get('Services');
-
-        if (is_array($controllers)) {
-            $this->callbacks = array_merge($controllers);
-        }
-
-        if (is_array($services)) {
-            $this->callbacks = array_merge($services);
-        }
     }
 
     private function isDependencyLoaded(string $class) : bool

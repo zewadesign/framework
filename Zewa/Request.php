@@ -110,10 +110,10 @@ class Request
      */
     public function __construct(Config $config)
     {
-        $sessionConfig = $config->get('session');
+//        $sessionConfig = $config->get('session');
 
-        if (!empty($sessionConfig) && !empty($sessionConfig->flashdataId)) {
-            $this->flashdataId = $sessionConfig->flashdataId;
+        if (!empty($_SESSION['flashdataId'])) {
+            $this->flashdataId = $_SESSION['flashdataId'];
         }
 
         if (!empty($_SESSION)) {
