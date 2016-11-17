@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 namespace Zewa;
+
 use Sabre\Event\Emitter;
 
 /**
