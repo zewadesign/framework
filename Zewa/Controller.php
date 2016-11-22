@@ -129,6 +129,7 @@ abstract class Controller
         $name = ucfirst(strtolower($name));
         $module = $this->container->resolve('\Zewa\App\Modules\\' . $name);
 
+        $module->setEvent($this->event);
         $module->setRequest($this->request);
         $module->setRouter($this->router);
         $module->setConfig($this->configuration);
