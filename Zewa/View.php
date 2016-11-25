@@ -1,7 +1,6 @@
 <?php
 namespace Zewa;
-
-use Zewa\Interfaces\ContainerInterface;
+use Zewa\HTTP\Request;
 
 /**
  * View management
@@ -17,12 +16,10 @@ class View
      */
     protected $layout;
 
-    /**
-     * Active module for view
-     *
-     * @var string|bool
-     */
-    protected $module = false;
+    private $pathToView;
+
+    private $pathToLayout;
+
 
     /**
      * Rendered view content
@@ -74,9 +71,12 @@ class View
      */
     public function __construct(Config $config, Router $router, Request $request)
     {
-        $this->configuration = $config;
+        $this->configuration = $config->get('view');
         $this->router = $router;
         $this->request = $request;
+
+        $this->pathToView = $this->configuration['viewPath'];
+        $this->pathToLayout = $this->configuration['layoutPath'];
     }
 
     /**
@@ -86,24 +86,6 @@ class View
     private function baseURL($path = '')
     {
         return $this->router->baseURL($path);
-    }
-
-    /**
-     * Returns the current request URL
-     * @return string
-     */
-    private function currentURL($params = false)
-    {
-        return $this->router->currentURL($params);
-    }
-
-    /**
-     * Returns uri string
-     * @return string
-     */
-    private function currentURI()
-    {
-        return $this->router->uri;
     }
 
     /*
@@ -160,20 +142,7 @@ class View
      */
     private function prepareView($viewName)
     {
-        if ($this->module === false) {
-            $this->setModule();
-        }
-
-        $view = APP_PATH
-            . DIRECTORY_SEPARATOR
-            . 'Modules'
-            . DIRECTORY_SEPARATOR
-            . $this->module
-            . DIRECTORY_SEPARATOR
-            . 'Views'
-            . DIRECTORY_SEPARATOR
-            . strtolower($viewName)
-            . '.php';
+        $view = $this->pathToView . DIRECTORY_SEPARATOR . strtolower($viewName) . '.php';
 
         if (!file_exists($view)) {
             throw new Exception\LookupException('View: "' . $view . '" could not be found.');
@@ -205,7 +174,7 @@ class View
         if ($layout === false) {
             $this->layout = null;
         } else {
-            $layout = APP_PATH . DIRECTORY_SEPARATOR . 'Layouts' . DIRECTORY_SEPARATOR . strtolower($layout) . '.php';
+            $layout = $this->pathToLayout . DIRECTORY_SEPARATOR . strtolower($layout) . '.php';
 
             if (!file_exists($layout)) {
                 throw new Exception\LookupException('Layout: "' . $layout . '" could not be found.');
@@ -214,22 +183,6 @@ class View
             $this->layout = $layout;
 
             return true;
-        }
-    }
-
-    /**
-     * Set the module for view look
-     *
-     * @access public
-     * @param string|bool $module module to override
-     */
-    public function setModule($module = false)
-    {
-        if ($module === false) {
-            $routerConfig = $this->router->getConfig()->get('Routing');
-            $this->module = $routerConfig->module;
-        } else {
-            $this->module = ucfirst($module);
         }
     }
 

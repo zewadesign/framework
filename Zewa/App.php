@@ -3,6 +3,8 @@ declare(strict_types=1);
 namespace Zewa;
 
 use Sabre\Event\Emitter;
+use Zewa\Exception\Exception;
+use Zewa\HTTP\Request;
 
 /**
  * This class is the starting point for application
@@ -16,59 +18,27 @@ class App
      *
      * @var string
      */
-    private $output = false;
+    private $output = '';
 
     /**
-     * Namespaced controller path
-     *
-     * @var string
+     * @var Dependency $dependency
      */
-    private $class;
-
-    /**
-     * Instantiated class object
-     *
-     * @var Controller
-     */
-    private $instantiatedClass;
-
-    /**
-     * Module being accessed
-     *
-     * @var string
-     */
-    private $module;
-
-    /**
-     * Controller being accessed
-     *
-     * @var string
-     */
-    private $controller;
-
-    /**
-     * Method being accessed
-     *
-     * @var string
-     */
-    private $method;
-
-    /**
-     * Params being passed
-     *
-     * @var array
-     */
-    private $params;
-
-    /**
-     * @var DIContainer $container
-     */
-    private $container;
+    private $dependency;
 
     /**
      * @var Emitter
      */
     private $event;
+
+    /**
+     * @var Router
+     */
+    private $router;
+
+    /**
+     * @var Request
+     */
+    private $request;
 
     /**
      * Application bootstrap process
@@ -77,19 +47,20 @@ class App
      * and then processes, and makes available the configured resources
      *
      * App constructor.
-     * @param DIContainer $container
+     * @param Dependency $dependency
      */
-    public function __construct(DIContainer $container)
+    public function __construct(Dependency $dependency)
     {
-        $this->configuration = $container->resolve('\Zewa\Config');
-        $this->event = $container->resolve('\Sabre\Event\Emitter', true);
-        $this->container = $container;
+        $this->configuration = $dependency->resolve('\Zewa\Config');
+        $this->event = $dependency->resolve('\Sabre\Event\Emitter', true);
+        $this->dependency = $dependency;
 
-        $this->router = $container->resolve('\Zewa\Router', true);
-        $this->request = $container->resolve('\Zewa\Request', true);
-        $this->view = $container->resolve('\Zewa\View');
-
-        $this->prepare();
+        /** @var Security security */
+        $this->security = $dependency->resolve('\Zewa\Security', true);
+        /** @var Router router */
+        $this->router = $dependency->resolve('\Zewa\Router', true);
+        /** @var Request request */
+        $this->request = $dependency->resolve('\Zewa\HTTP\Request', true);
     }
 
     /**
@@ -99,73 +70,60 @@ class App
      */
     public function initialize()
     {
-        $this->start();
+        $request = $this->router->getAction();
+
+        $isRouteCallback = $this->processRequestParameters($request);
+        $this->start($isRouteCallback);
+
         return $this;
     }
 
     /**
-     * App preparation cycle
-     */
-    private function prepare()
-    {
-        $routerConfig = $this->configuration->get('Routing');
-
-        $this->module = ucfirst($routerConfig->module);
-        $this->controller = ucfirst($routerConfig->controller);
-        $this->method = $routerConfig->method;
-        $this->params = $routerConfig->params;
-        $this->class = 'Zewa\\App\\Modules\\' . $this->module . '\\Controllers\\' . ucfirst($this->controller);
-    }
-
-//    public function setContainer(Container $container)
-//    {
-//        $this->container = $container;
-//    }
-
-    /**
-     * Verifies the provided application request is a valid request
-     *
+     * @param $request array
+     * @param $request[0] string namespace to load
+     * @param $request[1] string method to call
      * @access private
+     * @return bool
+     * @throws Exception
      */
-    private function validateRequest()
+    private function processRequestParameters($request) : bool
     {
-        //catch exception and handle
-        try {
-            $class = new \ReflectionClass($this->class);
-            $class->getMethod($this->method);
-        } catch (\ReflectionException $e) {
-            $view = $this->container->resolve('\Zewa\View');
-            $this->output = $view->render404(['Invalid method requests']); //Router::show404(
-            return false;
+        $params = $this->router->getParameters();
+
+        if($request !== null) {
+            if(is_array($request)) {
+                $callback = false;
+                $this->request->setRequest($this->dependency->resolve($request[0]));
+                $this->request->setMethod(($request[1]??[]));
+            }  else {
+                $callback = true;
+                $this->request->setRequest($request);
+                array_unshift($params, $this->dependency);
+            }
+            $this->request->setParams($params);
+            return $callback;
         }
 
-        return true;
+        throw new Exception('Invalid request');
     }
 
     /**
-     * Processes the application request
-     *
-     * @access private
+     * @param bool $isRouteCallback
      */
-    private function start()
+    private function start(bool $isRouteCallback)
     {
-        if ($this->validateRequest() === false) {
-            return false;
+        $request = $this->request->getRequest();
+        $method = $this->request->getMethod();
+        $params = $this->request->getParams();
+
+        if($isRouteCallback === false) { // Routed Callback
+            $this->output = call_user_func_array(
+                [&$request, $method],
+                $params
+            );
+        } else {
+            $this->output = call_user_func_array($request, $params);
         }
-
-        $this->instantiatedClass = $this->container->resolve($this->class);
-
-        $this->instantiatedClass->setConfig($this->configuration);
-        $this->instantiatedClass->setEvent($this->event);
-        $this->instantiatedClass->setRouter($this->router);
-        $this->instantiatedClass->setRequest($this->request);
-        $this->instantiatedClass->setContainer($this->container);
-        $this->instantiatedClass->setView($this->view);
-
-        $this->output = call_user_func_array(
-            [&$this->instantiatedClass, $this->method],
-            $this->params
-        );
     }
 
     /**
@@ -176,10 +134,6 @@ class App
      */
     public function __toString()
     {
-        if (!$this->output) {
-            $this->output = '';
-        }
-
         return $this->output;
     }
 }
