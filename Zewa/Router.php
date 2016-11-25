@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 namespace Zewa;
 
 use Zewa\Exception\RouteException;
@@ -18,30 +19,6 @@ class Router
     private $routes;
 
     /**
-     * The active module
-     *
-     * @var    string
-     * @access public
-     */
-    public $module;
-
-    /**
-     * The active controller
-     *
-     * @var    string
-     * @access public
-     */
-    public $controller;
-
-    /**
-     * The active method
-     *
-     * @var    string
-     * @access public
-     */
-    public $method;
-
-    /**
      * The base URL
      *
      * @var    string
@@ -49,29 +26,7 @@ class Router
      */
     public $baseURL;
 
-    /**
-     * Default module
-     *
-     * @var    string
-     * @access public
-     */
-    public $defaultModule;
-
-    /**
-     * Default controller
-     *
-     * @var    string
-     * @access public
-     */
-    public $defaultController;
-
-    /**
-     * Default method
-     *
-     * @var    string
-     * @access public
-     */
-    public $defaultMethod;
+    public $currentURL;
 
     /**
      * Default uri
@@ -82,42 +37,19 @@ class Router
     public $uri;
 
     /**
-     * @var Config
+     * @var array
      */
-    public $config;
+    public $params = [];
+
+    public $action;
+
     /**
      * Load up some basic configuration settings.
      */
     public function __construct(Config $config)
     {
-        $this->modules = $config->get('Modules');
         $this->routes = $config->get('Routes');
-
         $this->prepare();
-        //@TODO: routing
-        $uriChunks = $this->parseURI($this->uri);
-
-        $params = array_slice($uriChunks, 3);
-
-        // clear ending / with no value..
-        if (!empty($params) && $params[0] === '') {
-            $params = [];
-        }
-
-        $config->set('Routing', (object)[
-            'module' => $uriChunks[0],
-            'controller' => $uriChunks[1],
-            'method' => $uriChunks[2],
-            'params' => $params,
-            'baseURL' => $this->baseURL,
-            'currentURL' => $this->currentURL
-        ]);
-        $this->config = $config;
-    }
-
-    public function getConfig()
-    {
-        return $this->config;
     }
 
     /**
@@ -125,91 +57,24 @@ class Router
      */
     private function prepare()
     {
-        $this->defaultModule = $this->modules['defaultModule'];
-        $defaultModule = $this->defaultModule;
-        $this->defaultController = $this->modules[$defaultModule]['defaultController'];
-        $this->defaultMethod = $this->modules[$defaultModule]['defaultMethod'];
-
-        $normalizedURI = $this->normalizeURI();
-        //check routes
-        $this->uri = $this->uri($normalizedURI);
+        $this->uri = $this->getURI();
+        $this->discoverRoute();
+        $this->isURIClean();
+        $this->currentURL = $this->baseURL($this->uri);
         $this->baseURL = $this->baseURL();
-        $this->currentURL = $this->currentURL();
     }
 
     /**
      * Checks if URL contains special characters not permissable/considered dangerous
      *
      * Safe: a-z, 0-9, :, _, [, ], +
-     *
-     * @param $uri
-     * @param $uriChunks
-     * @return bool
+     * @throws RouteException
      */
-    private function isURIClean($uri, $uriChunks)
+    private function isURIClean()
     {
-        if (!preg_match("/^[a-z0-9:_\/\.\[\]-]+$/i", $uri)
-            || array_filter(
-                $uriChunks,
-                function ($uriChunk) {
-                    if (strpos($uriChunk, '__') !== false) {
-                        return true;
-                    }
-                }
-            )
-        ) {
-            return false;
-        } else {
-            return true;
+        if ($this->uri !== '' && !preg_match("/^[a-z0-9:_\/\.\[\]-]+$/i", $this->uri)) {
+            throw new RouteException('Disallowed characters');
         }
-    }
-
-    //@TODO add Security class.
-    private function normalize($data)
-    {
-        if (is_numeric($data)) {
-            if (is_int($data) || ctype_digit(trim($data, '-'))) {
-                $data = (int)$data;
-            } elseif ($data === (string)(float)$data) {
-                //@TODO: this needs work.. 9E26 converts to float
-                $data = (float)$data;
-            }
-        }
-        return $data;
-    }
-
-    /**
-     * Parse and explode URI segments into chunks
-     *
-     * @access private
-     *
-     * @param string $uri
-     *
-     * @return array chunks of uri
-     * @throws RouteException on disallowed characters
-     */
-    private function parseURI($uri)
-    {
-        $uriFragments = explode('/', $uri);
-        $uriChunks = [];
-        $params = [];
-        $iteration = 0;
-        foreach ($uriFragments as $location => $fragment) {
-            if ($iteration > 2) {
-                $params[] = $this->normalize(trim($fragment));
-            } else {
-                $uriChunks[] = trim($fragment);
-            }
-            $iteration++;
-        }
-
-        $result = array_merge($uriChunks, $params);
-
-        if ($this->isURIClean($uri, $result) === false) {
-            throw new RouteException('Invalid key characters.');
-        }
-
-        return $result;
     }
 
     /**
@@ -218,114 +83,49 @@ class Router
      * @access private
      * @return string formatted/u/r/l
      */
-    private function normalizeURI()
+    private function getURI()
     {
         if (!empty($_SERVER['PATH_INFO'])) {
-            $normalizedURI = $_SERVER['PATH_INFO'];
+            $uri = $_SERVER['PATH_INFO'];
         } elseif (!empty($_SERVER['REQUEST_URI'])) {
-            $normalizedURI = $_SERVER['REQUEST_URI'];
+            $uri = $_SERVER['REQUEST_URI'];
         } else {
-            $normalizedURI = false;
+            $uri = false;
         }
 
-        if ($normalizedURI === '/') {
-            $normalizedURI = false;
+        if ($uri === '/') {
+            $uri = false;
         }
 
-        $normalizedURI = ltrim(preg_replace('/\?.*/', '', $normalizedURI), '/');
-
-        if (! empty($this->routes)) {
-            $normalizedURI = $this->discoverRoute($normalizedURI);
-        }
-
-        return $normalizedURI;
+        return trim(preg_replace('/\?.*/', '', $uri), '/');
     }
 
-    private function discoverRoute($uri)
+    public function getAction()
+    {
+        return $this->action;
+    }
+
+    public function getParameters()
+    {
+        return $this->params;
+    }
+
+    //@TODO Normalize parameters.
+    private function discoverRoute()
     {
         $routes = $this->routes;
+        $params = [];
 
-        foreach ($routes as $route => $reroute) {
+
+        foreach ($routes as $route => $action) {
             $pattern = '/^(?i)' . str_replace('/', '\/', $route) . '$/';
-            if (preg_match($pattern, $uri, $params)) {
+            // normalize these parameters
+            if (preg_match($pattern, $this->uri, $params)) {
                 array_shift($params);
-
-                $uri = $reroute;
-
-                if (! empty($params)) {
-                    $pat = '/(\$\d+)/';
-                    $uri = preg_replace_callback(
-                        $pat,
-                        function () use (&$params) {
-                            $first = $params[0];
-                            array_shift($params);
-                            return $first;
-                        },
-                        $reroute
-                    );
-                }
+                $this->action = $action;
+                $this->params = $params;
             }
         }
-
-        return $uri;
-    }
-
-    /**
-     * Normalize the $_SERVER vars for formatting the URI.
-     *
-     * @param $uri
-     * @access public
-     * @return string formatted/u/r/l
-     */
-    private function uri($uri)
-    {
-
-        if ($uri !== '') {
-            $uriChunks = explode('/', filter_var(trim($uri), FILTER_SANITIZE_URL));
-            $chunks = $this->sortURISegments($uriChunks);
-        } else {
-            $chunks = $this->sortURISegments();
-        }
-
-        $uri = ltrim(implode('/', $chunks), '/');
-        return $uri;
-    }
-
-    private function sortURISegments($uriChunks = [])
-    {
-        $module = ucfirst(strtolower($this->defaultModule));
-        $controller = ucfirst(strtolower($this->defaultController));
-        $method = ucfirst(strtolower($this->defaultMethod));
-
-        if (!empty($uriChunks)) {
-            $module = ucfirst(strtolower($uriChunks[0]));
-
-            if (!empty($uriChunks[1])) {
-                $controller = ucfirst(strtolower($uriChunks[1]));
-            } elseif (!empty($this->modules->$module->defaultController)) {
-                $controller = $this->modules->$module->defaultController;
-            }
-
-            if (!empty($uriChunks[2])) {
-                $method = ucfirst(strtolower($uriChunks[2]));
-                $class = '\\App\\Modules\\' . $module . '\\Controllers\\' . $controller;
-                $methodExist = method_exists($class, $method);
-                
-                if ($methodExist === false) {
-                    if (!empty($this->modules->$module->defaultMethod)) {
-                        $method = $this->modules->$module->defaultMethod;
-                        array_unshift($uriChunks, null);
-                    }
-                }
-            } elseif (!empty($this->modules->$module->defaultMethod)) {
-                $method = $this->modules->$module->defaultMethod;
-            }
-
-            unset($uriChunks[0], $uriChunks[1], $uriChunks[2]);
-        }
-
-        $return = [$module, $controller, $method];
-        return array_merge($return, array_values($uriChunks));
     }
 
     private function addQueryString($url, $key, $value)
@@ -354,22 +154,7 @@ class Router
      */
     public function currentURL($params = false)
     {
-        if (trim($_SERVER['REQUEST_URI']) === '/') {
-            $url = $this->baseURL()
-                   . (!empty($_SERVER['QUERY_STRING']) ? '?' . $_SERVER['QUERY_STRING'] : '');
-        } else {
-            $url = $this->baseURL($this->uri)
-                   . (!empty($_SERVER['QUERY_STRING']) ? '?' . $_SERVER['QUERY_STRING'] : '');
-        }
-
-        if (!empty($params)) {
-            foreach ($params as $key => $param) {
-                $url = $this->removeQueryString($url, $key);
-                $url = $this->addQueryString($url, $key, $param);
-            }
-        }
-
-        return $url;
+        return $this->currentURL . (empty($_SERVER['QUERY_STRING'])?:'?' . $_SERVER['QUERY_STRING']);
     }
 
     /**
