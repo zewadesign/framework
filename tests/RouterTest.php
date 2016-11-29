@@ -25,7 +25,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $router = new Router($config);
 
         $detectedRouteParams = $router->getParameters();
-        $this->assertSame($routeParam,$detectedRouteParams[0]);
+        $this->assertSame($routeParam, $detectedRouteParams[0]);
     }
 
     /**
