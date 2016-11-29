@@ -14,5 +14,4 @@ final class Get extends SuperGlobal
         $get = $_GET ?? [];
         $this->registerGlobal($get);
     }
-
 }

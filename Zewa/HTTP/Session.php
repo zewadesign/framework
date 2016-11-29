@@ -34,7 +34,6 @@ final class Session extends SuperGlobal
     {
         $flashdata = $_SESSION[$this->flashdataId] ?? null;
         if ($flashdata !== null) {
-
             $flashdata = unserialize(base64_decode($flashdata));
             unset($_SESSION[$this->flashdataId]);
 

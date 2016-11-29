@@ -14,7 +14,7 @@ class Security
 
     public function normalize($data)
     {
-        if(!isset($data)) {
+        if (!isset($data)) {
             return null;
         }
 

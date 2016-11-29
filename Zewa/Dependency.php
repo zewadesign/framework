@@ -25,7 +25,7 @@ class Dependency
     {
         $dependencies = $this->dependencies->get('__dependencies');
 
-        if(isset($dependencies[$class]) === false) {
+        if (isset($dependencies[$class]) === false) {
             return false;
         }
 
@@ -97,7 +97,7 @@ class Dependency
 
     private function injectAppInstance($dependency)
     {
-        if($dependency instanceof Controller) {
+        if ($dependency instanceof Controller) {
             $dependency->setEvent($this->resolve('\Sabre\Event\Emitter'));
             $dependency->setRequest($this->resolve('\Zewa\HTTP\Request'));
             $dependency->setRouter($this->resolve('\Zewa\Router'));
