@@ -11,7 +11,7 @@ final class Put extends SuperGlobal
     {
         parent::__construct($container, $security);
 
-        if($_SERVER['REQUEST_METHOD'] === "PUT") {
+        if ($_SERVER['REQUEST_METHOD'] === "PUT") {
             parse_str(file_get_contents('php://input', "r"), $put);
             $_POST = [];
         }
@@ -19,5 +19,4 @@ final class Put extends SuperGlobal
         $put = $put ?? [];
         $this->registerGlobal($put);
     }
-
 }

@@ -1,5 +1,6 @@
 <?php
 namespace Zewa;
+
 use Zewa\HTTP\Request;
 
 /**

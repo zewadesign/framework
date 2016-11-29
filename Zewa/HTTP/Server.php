@@ -14,5 +14,4 @@ final class Server extends SuperGlobal
         $server = $_SERVER ?? [];
         $this->registerGlobal($server);
     }
-
 }

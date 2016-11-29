@@ -90,12 +90,12 @@ class App
     {
         $params = $this->router->getParameters();
 
-        if($request !== null) {
-            if(is_array($request)) {
+        if ($request !== null) {
+            if (is_array($request)) {
                 $callback = false;
                 $this->request->setRequest($this->dependency->resolve($request[0]));
                 $this->request->setMethod(($request[1]??[]));
-            }  else {
+            } else {
                 $callback = true;
                 $this->request->setRequest($request);
                 array_unshift($params, $this->dependency);
@@ -116,7 +116,7 @@ class App
         $method = $this->request->getMethod();
         $params = $this->request->getParams();
 
-        if($isRouteCallback === false) { // Routed Callback
+        if ($isRouteCallback === false) { // Routed Callback
             $this->output = call_user_func_array(
                 [&$request, $method],
                 $params

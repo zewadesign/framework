@@ -11,7 +11,7 @@ final class Delete extends SuperGlobal
     {
         parent::__construct($container, $security);
 
-        if($_SERVER['REQUEST_METHOD'] === "DELETE") {
+        if ($_SERVER['REQUEST_METHOD'] === "DELETE") {
             parse_str(file_get_contents('php://input', "r"), $delete);
             $_POST = [];
         }
@@ -19,5 +19,4 @@ final class Delete extends SuperGlobal
         $delete = $delete ?? [];
         $this->registerGlobal($delete);
     }
-
 }
