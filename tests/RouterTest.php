@@ -12,6 +12,20 @@ use \Zewa\Router;
 class RouterTest extends \PHPUnit_Framework_TestCase
 {
     /**
+     * The honest truth is I don't really know why this is useful (~jhoughtelin)
+     * but it returns the value part of the configured route so this ties
+     * directly the configured routes
+     */
+    public function testGetAction()
+    {
+        $_SERVER['REQUEST_URI'] = '/hello/batman';
+
+        $router = $this->getNewRouterObject();
+
+        $this->assertSame('example/home/hello/$1',$router->getAction());
+    }
+
+    /**
      * This tests to ensure that router params are parsed from the configured routes.
      * The only configured route is: '/hello/([A-Za-z0-9]+)'
      * so any alphanumeric param should be parsed properly.
