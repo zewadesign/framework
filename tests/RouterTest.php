@@ -22,7 +22,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
 
         $router = $this->getNewRouterObject();
 
-        $this->assertSame('example/home/hello/$1',$router->getAction());
+        $this->assertSame('example/home/hello/$1', $router->getAction());
     }
 
     /**
