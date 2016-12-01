@@ -14,5 +14,4 @@ final class File extends SuperGlobal
         $files = $_FILES ?? [];
         $this->registerGlobal($files);
     }
-
 }

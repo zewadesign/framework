@@ -14,5 +14,4 @@ final class Cookie extends SuperGlobal
         $cookie = $_COOKIE ?? [];
         $this->registerGlobal($cookie);
     }
-
 }

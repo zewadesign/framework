@@ -35,7 +35,7 @@ abstract class SuperGlobal implements GlobalInterface
     public function fetch(string $key = null, $default = null)
     {
         $global = $this->getGlobalName();
-        if($key === null) {
+        if ($key === null) {
             return $this->container->get($global);
         }
 
@@ -45,7 +45,7 @@ abstract class SuperGlobal implements GlobalInterface
     public function remove(string $key)
     {
         $global = $this->getGlobalName();
-        if($this->container->has($global)) {
+        if ($this->container->has($global)) {
             $this->processRemoval($key);
         }
     }
@@ -59,7 +59,7 @@ abstract class SuperGlobal implements GlobalInterface
     {
         $global = $this->getGlobalName();
         $container = $this->container->get($global);
-        if(isset($container[$key])) {
+        if (isset($container[$key])) {
             unset($container[$key]);
             $this->container->set($global, $container);
         }

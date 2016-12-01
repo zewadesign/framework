@@ -14,5 +14,4 @@ final class Post extends SuperGlobal
         $post = $_POST ?? [];
         $this->registerGlobal($post);
     }
-
 }

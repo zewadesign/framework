@@ -27,7 +27,7 @@ class Dependency
     {
         $dependencies = $this->dependencies->get('__dependencies');
 
-        if(isset($dependencies[$class]) === false) {
+        if (isset($dependencies[$class]) === false) {
             return false;
         }
 
@@ -72,7 +72,7 @@ class Dependency
             $dependency = $reflectionClass->newInstanceArgs($params);
 
             return $this->load($class, $dependency, $persist);
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
             echo "<PRE>";
             print_r($e->getMessage()); //->getMessage();
             var_dump($e->getTrace()[0]);
@@ -108,7 +108,7 @@ class Dependency
 
     private function injectAppInstance($dependency)
     {
-        if($dependency instanceof Controller) {
+        if ($dependency instanceof Controller) {
             $dependency->setEvent($this->resolve('\Sabre\Event\Emitter'));
             $dependency->setRequest($this->resolve('\Zewa\HTTP\Request'));
             $dependency->setRouter($this->resolve('\Zewa\Router'));
