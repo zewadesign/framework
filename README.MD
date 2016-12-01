@@ -9,8 +9,8 @@
 
 ## Installing ##
 ```
-git clone git@bitbucket.org:zwalden/mmvc.git
-cd mmvc
+git clone https://github.com/zewadesign/framework.git
+cd framework
 composer install
 ```
 
