@@ -2,6 +2,8 @@
 
 namespace Zewa;
 
+use Zewa\Exception\Exception;
+
 class Dependency
 {
     /**
@@ -56,18 +58,27 @@ class Dependency
             return $this->getDependency($class);
         }
 
-        $reflectionClass = new \ReflectionClass($class);
-        $constructor = $reflectionClass->getConstructor();
+        try {
+            $reflectionClass = new \ReflectionClass($class);
 
-        if (! $constructor || $constructor->getParameters() === 0) {
-            $dependency = new $class;
+            $constructor = $reflectionClass->getConstructor();
+
+            if (!$constructor || $constructor->getParameters() === 0) {
+                $dependency = new $class;
+                return $this->load($class, $dependency, $persist);
+            }
+
+            $params = $this->constructConstructorParameters($reflectionClass);
+            $dependency = $reflectionClass->newInstanceArgs($params);
+
             return $this->load($class, $dependency, $persist);
+        } catch (\Exception $e) {
+            echo "<PRE>";
+            print_r($e->getMessage()); //->getMessage();
+            var_dump($e->getTrace()[0]);
+            echo "</PRE>";
+            return false;
         }
-
-        $params = $this->constructConstructorParameters($reflectionClass);
-        $dependency = $reflectionClass->newInstanceArgs($params);
-
-        return $this->load($class, $dependency, $persist);
     }
 
     /**
