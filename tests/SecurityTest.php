@@ -1,5 +1,11 @@
 <?php
-
+/**
+ * Tests for the Security class.
+ *
+ * As of writing this, the Security class only has one method 'normalize'
+ * which does more than one thing so it should be refactored.  The class
+ * can definitely be refactored without breaking these tests.
+ */
 
 namespace Zewa\Tests;
 
