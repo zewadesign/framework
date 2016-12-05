@@ -1,5 +1,5 @@
 <?php
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace Zewa;
 
@@ -20,9 +20,10 @@ class Collection implements CollectionInterface
      * If $data is passed, populate collection
      *
      * @param $data array
+     *
      * @access public
      */
-    public function __construct(array $data)
+    public function __construct(array $data = [])
     {
         $this->collection = $data;
     }
@@ -34,7 +35,7 @@ class Collection implements CollectionInterface
 
     public function isEmpty() : bool
     {
-        if (!empty($this->collection)) {
+        if (! empty($this->collection)) {
             return false;
         }
 
@@ -46,12 +47,12 @@ class Collection implements CollectionInterface
         return $this->collection;
     }
 
-    public function jsonSerialize() : array //@TODO: this should return text i think
+    public function jsonSerialize() : array //@TODO: this should return text i think (wrong)
     {
         return $this->collection;
     }
 
-    public function getIterator()
+    public function getIterator() : \ArrayIterator
     {
         return new \ArrayIterator($this->collection);
     }
