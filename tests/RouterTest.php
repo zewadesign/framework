@@ -168,7 +168,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $this->assertSame('https://example.com/hello/batman?Gotham=City', $urlWithQueryStringAdded);
 
         $urlWithQueryStringAddedTwice = $router->addQueryString($urlWithQueryStringAdded, 'Joker', 'Wins');
-        $this->assertSame('https://example.com/hello/batman?Gotham=City&Joker=Wins',$urlWithQueryStringAddedTwice);
+        $this->assertSame('https://example.com/hello/batman?Gotham=City&Joker=Wins', $urlWithQueryStringAddedTwice);
     }
 
     public function testQueryStringRemoval()
