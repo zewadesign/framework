@@ -35,7 +35,7 @@ class Collection implements CollectionInterface
 
     public function isEmpty() : bool
     {
-        if (! empty($this->collection)) {
+        if ( ! empty($this->collection)) {
             return false;
         }
 
@@ -134,7 +134,7 @@ class Collection implements CollectionInterface
         $result = [];
 
         foreach ($this->collection as $key => $item) {
-            if (! $func($key, $item)) {
+            if ( ! $func($key, $item)) {
                 $result[$key] = $item;
             }
         }
