@@ -162,4 +162,15 @@ class CollectionTest extends \PHPUnit_Framework_TestCase
 
         $this->assertSame($expectedResult, $collection->getArray());
     }
+
+    public function testReduce()
+    {
+        $collection = new Collection(['this', 'will', 'be', 'reduced']);
+
+        $reduceResult = $collection->reduce('', function ($accumulator, $value) {
+            return $accumulator . ' ' . $value;
+        });
+
+        $this->assertSame(' this will be reduced',$reduceResult);
+    }
 }
