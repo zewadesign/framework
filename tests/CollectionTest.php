@@ -171,6 +171,6 @@ class CollectionTest extends \PHPUnit_Framework_TestCase
             return $accumulator . ' ' . $value;
         });
 
-        $this->assertSame(' this will be reduced',$reduceResult);
+        $this->assertSame(' this will be reduced', $reduceResult);
     }
 }
