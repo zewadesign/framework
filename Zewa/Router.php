@@ -128,7 +128,7 @@ class Router
         }
     }
 
-    private function addQueryString($url, $key, $value)
+    public function addQueryString($url, $key, $value)
     {
         $url = preg_replace('/(.*)(\?|&)' . $key . '=[^&]+?(&)(.*)/i', '$1$2$4', $url . '&');
         $url = substr($url, 0, -1);
@@ -139,7 +139,7 @@ class Router
         }
     }
 
-    private function removeQueryString($url, $key)
+    public function removeQueryString($url, $key)
     {
         $url = preg_replace('/(.*)(\?|&)' . $key . '=[^&]+?(&)(.*)/i', '$1$2$4', $url . '&');
         $url = substr($url, 0, -1);
@@ -152,9 +152,10 @@ class Router
      * @access public
      * @return string http://tld.com/formatted/u/r/l?q=bingo
      */
-    public function currentURL($params = false)
+    public function currentURL()
     {
-        return $this->currentURL . (empty($_SERVER['QUERY_STRING'])?:'?' . $_SERVER['QUERY_STRING']);
+        $queryString = empty($_SERVER['QUERY_STRING']) === true ? "" : '?' . $_SERVER['QUERY_STRING'];
+        return $this->currentURL . $queryString;
     }
 
     /**

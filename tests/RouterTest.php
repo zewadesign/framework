@@ -155,6 +155,33 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $this->assertSame('https://example.com/hello/batman?Gotham=City', $router->currentURL());
     }
 
+    public function testQueryStringAddition()
+    {
+        $_SERVER['PHP_SELF'] = "index.php";
+        $_SERVER['HTTP_HOST'] = "example.com";
+        $_SERVER['HTTPS'] = "on";
+        $_SERVER['QUERY_STRING'] = "Gotham=City";
+        $_SERVER['REQUEST_URI'] = "/hello/batman";
+
+        $router = $this->getNewRouterObject();
+        $urlWithQueryStringAdded = $router->addQueryString($router->baseURL('hello/batman'), 'Gotham', 'City');
+        $this->assertSame('https://example.com/hello/batman?Gotham=City', $urlWithQueryStringAdded);
+    }
+
+    public function testQueryStringRemoval()
+    {
+        $_SERVER['PHP_SELF'] = "index.php";
+        $_SERVER['HTTP_HOST'] = "example.com";
+        $_SERVER['HTTPS'] = "on";
+        $_SERVER['REQUEST_URI'] = "/hello/batman";
+
+        $router = $this->getNewRouterObject();
+        $urlWithQueryStringAdded = $router->addQueryString($router->baseURL('hello/batman'), 'Gotham', 'City');
+        $urlWithQueryStringRemoved = $router->removeQueryString($urlWithQueryStringAdded, 'Gotham');
+        
+        $this->assertSame('https://example.com/hello/batman', $urlWithQueryStringRemoved);
+    }
+
     /**
      * When REQUEST_URI AND PATH_INFO don't exist.
      * The URI is empty.
