@@ -163,7 +163,7 @@ class CollectionTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($expectedResult, $collection->getArray());
     }
 
-    public function testReduce()
+    public function testStringReduce()
     {
         $collection = new Collection(['this', 'will', 'be', 'reduced']);
 
@@ -172,5 +172,16 @@ class CollectionTest extends \PHPUnit_Framework_TestCase
         });
 
         $this->assertSame(' this will be reduced',$reduceResult);
+    }
+
+    public function testNumericReduce()
+    {
+        $collection = new Collection(['1', '1', '1', '1']);
+
+        $reduceResult = $collection->reduce(0, function ($accumulator, $value) {
+            return $accumulator + $value;
+        });
+
+        $this->assertSame(4,$reduceResult);
     }
 }
