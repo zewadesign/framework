@@ -176,7 +176,7 @@ class CollectionTest extends \PHPUnit_Framework_TestCase
 
     public function testNumericReduce()
     {
-        $collection = new Collection(['1', '1', '1', '1']);
+        $collection = new Collection([1, 1, 1, 1]);
 
         $reduceResult = $collection->reduce(0, function ($accumulator, $value) {
             return $accumulator + $value;
