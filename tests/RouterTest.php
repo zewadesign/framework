@@ -166,6 +166,9 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $router = $this->getNewRouterObject();
         $urlWithQueryStringAdded = $router->addQueryString($router->baseURL('hello/batman'), 'Gotham', 'City');
         $this->assertSame('https://example.com/hello/batman?Gotham=City', $urlWithQueryStringAdded);
+
+        $urlWithQueryStringAddedTwice = $router->addQueryString($urlWithQueryStringAdded, 'Joker', 'Wins');
+        $this->assertSame('https://example.com/hello/batman?Gotham=City&Joker=Wins',$urlWithQueryStringAddedTwice);
     }
 
     public function testQueryStringRemoval()
@@ -178,7 +181,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $router = $this->getNewRouterObject();
         $urlWithQueryStringAdded = $router->addQueryString($router->baseURL('hello/batman'), 'Gotham', 'City');
         $urlWithQueryStringRemoved = $router->removeQueryString($urlWithQueryStringAdded, 'Gotham');
-        
+
         $this->assertSame('https://example.com/hello/batman', $urlWithQueryStringRemoved);
     }
 
