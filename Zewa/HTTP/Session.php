@@ -15,13 +15,13 @@ final class Session extends SuperGlobal
     /**
      * @var string index for flash data
      */
-    private $flashdataId = '__flash_data';
+    public $flashdataId = '__flash_data';
 
     public function __construct(Container $container, Security $security)
     {
         parent::__construct($container, $security);
 
-        $this->flashGarbageCollection();
+        $this->flashManagement();
         $session = $_SESSION ?? [];
         $this->registerGlobal($session);
     }
@@ -30,31 +30,33 @@ final class Session extends SuperGlobal
      * Processes current requests flashdata, recycles old.
      * @access private
      */
-    private function flashGarbageCollection()
+    private function flashManagement()
     {
         $flashdata = $_SESSION[$this->flashdataId] ?? null;
+
         if ($flashdata !== null) {
             $flashdata = unserialize(base64_decode($flashdata));
             unset($_SESSION[$this->flashdataId]);
-
             if (!empty($flashdata)) {
-                $this->incrementFlashStorage($flashdata);
-                if (!empty($flashdata)) {
-                    $_SESSION[$this->flashdataId] = base64_encode(serialize($this->flashdata));
-                }
+                $this->flashdata = $flashdata;
+                $this->incrementFlashStorage();
             }
         }
     }
 
-    private function incrementFlashStorage(array $storage)
+    private function incrementFlashStorage()
     {
-        foreach ($storage as $variable => $data) {
-            $storage[$variable]['increment'] ++;
-            if ($storage[$variable]['increment'] > 1) {
-                unset($_SESSION[$variable], $storage[$variable]);
+        foreach ($this->flashdata as $variable => $data) {
+            if ($this->flashdata[$variable]['increment'] > 1) {
+                unset($_SESSION[$variable], $this->flashdata[$variable]);
             } else {
-                $this->flashdata[$variable] = $data['value'];
+                $this->flashdata[$variable]['value'] = $data['value'];
+                $this->flashdata[$variable]['increment'] ++;
             }
+        }
+
+        if (!empty($this->flashdata)) {
+            $_SESSION[$this->flashdataId] = base64_encode(serialize($this->flashdata));
         }
     }
 
@@ -74,11 +76,13 @@ final class Session extends SuperGlobal
      */
     public function setFlash($name, $value)
     {
-        $current = $this->get($this->flashdataId);
-        $append = base64_encode(serialize(['value' => $value, 'inc'   => 0]));
+        $current = $this->fetch($this->flashdataId);
+        $append = base64_encode(serialize(['value' => $value, 'increment'   => 0]));
         array_push($current, [$name => $append]);
 
-        $_SESSION[$this->flashdataId] = $this->security->normalize($current);
+        $flash = $this->security->normalize($current);
+        $_SESSION[$this->flashdataId] = $flash;
+        $this->flashdata = $flash;
     }
 
     /**
@@ -88,6 +92,8 @@ final class Session extends SuperGlobal
      */
     public function getFlash(string $key, $default = null)
     {
+//        print_r($this->flashdata);
+
         return $this->flashdata[$key]['value'] ?? $default;
     }
 
