@@ -170,5 +170,5 @@ class RequestTest extends \PHPUnit_Framework_TestCase
         $security = $dependency->resolve('\Zewa\Security');
         return new Request($dependency, $security);
     }
-
 }
+

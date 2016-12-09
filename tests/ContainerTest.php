@@ -25,6 +25,4 @@ class ContainerTest extends \PHPUnit_Framework_TestCase
         $container = new Container();
         $container->get('aContainer');
     }
-
-
 }
