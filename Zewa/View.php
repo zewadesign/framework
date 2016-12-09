@@ -135,7 +135,7 @@ class View
 
     public function getView($view = null)
     {
-        if($view !== null) {
+        if ($view !== null) {
             return $this->viewQueue[$view];
         } else {
             return $this->viewQueue;
@@ -196,7 +196,7 @@ class View
     {
         $views = "";
 
-        foreach($this->viewQueue as $view) {
+        foreach ($this->viewQueue as $view) {
             //if not end.. otherwise include \r\n
             $views .= $this->buffer($view);
         }
@@ -208,7 +208,7 @@ class View
     {
         $this->view = $response = $this->renderViews();
 
-        if($this->layout !== null) {
+        if ($this->layout !== null) {
             $response = $this->buffer($this->layout);
         }
 
