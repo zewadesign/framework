@@ -84,16 +84,6 @@ class Collection implements CollectionInterface
         $this->collection = [];
     }
 
-    public function mutate($mutation)
-    {
-        $result = [];
-        foreach ($this->collection as $item) {
-            $result[] = new $mutation($item);
-        }
-        $this->clear();
-        $this->collection = $result;
-    }
-
     public function map(callable $func)
     {
         $result = [];
