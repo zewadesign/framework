@@ -68,7 +68,7 @@ class ViewTest extends \PHPUnit_Framework_TestCase
         $view->setView('a-page');
         $view->setLayout('layout');
         $rendered = $view->render();
-        
+
         $this->assertSame($this->getCombinedViewAndLayout(), $rendered);
     }
 
@@ -123,13 +123,6 @@ class ViewTest extends \PHPUnit_Framework_TestCase
         $js = '<script>baseURL = \'https://example.com/\'</script>' . "\r\n";
         $this->assertSame($view->fetchCSS(), '');
         $this->assertSame($view->fetchJS(), $js);
-
-        $view->addCSS(['a-path-to.css', 'a-path-to-2.css']);
-        $view->addCSS(['a-path-to-3.css'], 'prepend');
-
-        $view->addJS(['a-path-to.js', 'a-path-to-2.js']);
-        $view->addJS(['a-path-to-3.js'], 'prepend');
-
     }
 
     public function testResourceQueue()
@@ -138,19 +131,15 @@ class ViewTest extends \PHPUnit_Framework_TestCase
         $view = $this->loadViewObject();
 
         $view->addCSS(['a-path-to.css', 'a-path-to-2.css']);
-        $view->addCSS(['a-path-to-3.css'], 'prepend');
 
         $view->addJS(['a-path-to.js', 'a-path-to-2.js']);
-        $view->addJS(['a-path-to-3.js'], 'prepend');
 
-        $css = '<link rel="stylesheet" href="a-path-to-3.css">' . "\r\n"
-            . '<link rel="stylesheet" href="a-path-to.css">' . "\r\n"
+        $css = '<link rel="stylesheet" href="a-path-to.css">' . "\r\n"
             . '<link rel="stylesheet" href="a-path-to-2.css">' . "\r\n";
 
         $js = '<script>baseURL = \'https://example.com/\'</script>' . "\r\n"
-            . '<script type="javascript/text" src="a-path-to-3.js"></script>' . "\r\n"
-            . '<script type="javascript/text" src="a-path-to.js"></script>' . "\r\n"
-            . '<script type="javascript/text" src="a-path-to-2.js"></script>' . "\r\n";
+            . '<script src="a-path-to.js"></script>' . "\r\n"
+            . '<script src="a-path-to-2.js"></script>' . "\r\n";
 //
         $this->assertSame($view->fetchCSS(), $css);
         $this->assertSame($view->fetchJS(), $js);
