@@ -101,6 +101,10 @@ class ViewTest extends \PHPUnit_Framework_TestCase
         $this->assertSame(['hello' => 'world', 'world' => 'hello', 'remove' => 'me'], $view->getProperty());
         $view->unsetProperty('remove');
         $this->assertSame(['hello' => 'world', 'world' => 'hello'], $view->getProperty());
+
+        $view->setProperty(['world' => 'hello']);
+
+        $this->assertSame('hello', $view->getProperty('world'));
     }
 
     public function testViewQueuing()
