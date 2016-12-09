@@ -142,10 +142,16 @@ class View
         }
     }
 
-    public function setProperty(string $key, $value)
+    public function setProperty($value, $primitive = null)
     {
         $container = $this->container->has('view_properties') ? $this->container->get('view_properties') : [];
-        $container[$key] = $value;
+
+        if ($primitive === null) {
+            $container = $value;
+        } else {
+            $container[$value] = $primitive;
+        }
+
         $this->container->set('view_properties', $container);
     }
 
@@ -206,31 +212,32 @@ class View
 
     private function bufferResponse() : string
     {
-        $this->view = $response = $this->renderViews();
+        $this->view = $this->renderViews();
 
         if ($this->layout !== null) {
-            $response = $this->buffer($this->layout);
+            return $this->buffer($this->layout);
         }
 
-        return $response;
+        return $this->view;
     }
 
-    private function buffer(string $path) : string
+    private function buffer(string $path)
     {
-        $container = $this->container->has('view_properties') ? $this->container->get('view_properties') : [];
 
         ob_start();
+
+        $container = $this->container->has('view_properties') ? $this->container->get('view_properties') : [];
+
         if (!empty($container)) {
             extract($container); // yuck. could produce undeclared errors. hmm..
         }
         //should i set $this->data in abstract controller, and provide all access vars ? seems bad practice..
 
         include $path;
-
-        $result = ob_get_contents();
+        $response = ob_get_contents();
         ob_end_clean();
 
-        return $result;
+        return $response;
     }
 
     /**
@@ -269,7 +276,7 @@ class View
         }
 
         foreach ($this->queuedJS as $script) {
-            $string .= '<script type="javascript/text" src="' . $script . '"></script>' . "\r\n";
+            $string .= '<script src="' . $script . '"></script>' . "\r\n";
         }
 
         return $string;
@@ -280,24 +287,16 @@ class View
      *
      * @access public
      * @param $files array
-     * @param $place string
+     * @param $append bool
      */
-    public function addCSS($files = [], $place = 'append')
+    public function addCSS($files = [])
     {
-        if ($place === 'prepend') {
-            $this->queuedCSS = array_merge($files, $this->queuedCSS);
-        } else {
-            $this->queuedCSS = array_merge($this->queuedCSS, $files);
-        }
+        $this->queuedCSS = array_merge($files, $this->queuedCSS);
     }
 
-    public function addJS($files = [], $place = 'append')
+    public function addJS($files = [])
     {
-        if ($place === 'prepend') {
-            $this->queuedJS = array_merge($files, $this->queuedJS);
-        } else {
-            $this->queuedJS = array_merge($this->queuedJS, $files);
-        }
+        $this->queuedJS = array_merge($files, $this->queuedJS);
     }
 
     /**
