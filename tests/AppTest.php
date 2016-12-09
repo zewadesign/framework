@@ -1,7 +1,5 @@
 <?php
-
 namespace Zewa\Config\Tests;
-
 use Zewa\App;
 
 class AppTest extends \PHPUnit_Framework_TestCase

@@ -1,9 +1,7 @@
 <?php
-
 namespace Zewa\Config\Tests;
 
 use Zewa\Container;
-
 class ContainerTest extends \PHPUnit_Framework_TestCase
 {
     public function testContainerStorage()

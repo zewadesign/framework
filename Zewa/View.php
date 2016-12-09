@@ -21,6 +21,8 @@ class View
 
     private $pathToLayout;
 
+    /** @var  array */
+    protected $viewQueue;
 
     /**
      * Rendered view content
@@ -57,6 +59,9 @@ class View
      */
     protected $request;
 
+    /** @var Container  */
+    protected $container;
+
     /**
      * @var array
      */
@@ -70,23 +75,15 @@ class View
     /**
      * Load up some basic configuration settings.
      */
-    public function __construct(Config $config, Router $router, Request $request)
+    public function __construct(Config $config, Router $router, Request $request, Container $container)
     {
         $this->configuration = $config->get('view');
         $this->router = $router;
         $this->request = $request;
+        $this->container = $container;
 
         $this->pathToView = $this->configuration['viewPath'];
         $this->pathToLayout = $this->configuration['layoutPath'];
-    }
-
-    /**
-     * Returns base URL for app
-     * @return string
-     */
-    private function baseURL($path = '')
-    {
-        return $this->router->baseURL($path);
     }
 
     /*
@@ -113,26 +110,10 @@ class View
         }
 
         if ($view !== false) {
-            $view = $this->prepareView($view);
-
-            $this->view = $return = $this->process($view);
-
-            if (! is_null($this->layout)) {
-                $return = $this->process($this->layout);
-            }
-
-            return $return;
-        } else {
-            if ($this->view !== false) {
-                $this->view = $this->process($this->view);
-            }
-
-            if (! is_null($this->layout)) {
-                return $this->process($this->layout);
-            } else {
-                return $this->view;
-            }
+            $this->setView($view);
         }
+
+        return $this->bufferResponse();
     }
 
     /**
@@ -141,7 +122,7 @@ class View
      * @return string
      * @throws Exception\LookupException
      */
-    private function prepareView($viewName)
+    public function setView($viewName)
     {
         $view = $this->pathToView . DIRECTORY_SEPARATOR . strtolower($viewName) . '.php';
 
@@ -149,68 +130,107 @@ class View
             throw new Exception\LookupException('View: "' . $view . '" could not be found.');
         }
 
-        return $view;
+        $this->viewQueue[$viewName] = $view;
     }
 
-    public function setView($viewName, $layout = false)
+    public function getView($view = null)
     {
-        if ($layout !== false) {
-            $this->setLayout($layout);
-        }
-        $this->view = $this->prepareView($viewName);
-    }
-
-    public function setProperty($property, $value = false)
-    {
-        if ($value !== false) {
-            $this->properties[$property] = $value;
-        } elseif (!empty($property)) {
-            $this->properties = $property;
-        }
-        return false;
-    }
-
-    public function setLayout($layout)
-    {
-        if ($layout === false) {
-            $this->layout = null;
+        if ($view !== null) {
+            return $this->viewQueue[$view];
         } else {
-            $layout = $this->pathToLayout . DIRECTORY_SEPARATOR . strtolower($layout) . '.php';
-
-            if (!file_exists($layout)) {
-                throw new Exception\LookupException('Layout: "' . $layout . '" could not be found.');
-            }
-
-            $this->layout = $layout;
-
-            return true;
+            return $this->viewQueue;
         }
     }
 
-    /**
-     * Processes view/layouts and exposes variables to the view/layout
-     *
-     * @access private
-     * @param string $file file being rendered
-     * @return string processed content
-     */
-    //@TODO: come back and clean up this and the way the view receives stuff
-    private function process($file)
+    public function setProperty(string $key, $value)
     {
-        ob_start();
+        $container = $this->container->has('view_properties') ? $this->container->get('view_properties') : [];
+        $container[$key] = $value;
+        $this->container->set('view_properties', $container);
+    }
 
-        if (is_array($this->properties)) {
-            extract($this->properties); // yuck. could produce undeclared errors. hmm..
+    public function getProperty(string $key = null, $default = null)
+    {
+        $container = $this->container->has('view_properties') ? $this->container->get('view_properties') : [];
+
+        if ($key === null) {
+            return $container;
+        }
+
+        return $this->container->get('view_properties')[$key] ?? $default;
+    }
+
+    public function unsetProperty(string $key)
+    {
+        $container = $this->container->has('view_properties') ? $this->container->get('view_properties') : [];
+        if (!empty($container[$key])) {
+            unset($container[$key]);
+            $this->container->set('view_properties', $container);
+        }
+    }
+
+    public function setLayout($layout = null)
+    {
+        if ($layout === null) {
+            $this->layout = null;
+            return;
+        }
+
+        $layout = $this->pathToLayout . DIRECTORY_SEPARATOR . strtolower($layout) . '.php';
+
+        if (!file_exists($layout)) {
+            throw new Exception\LookupException('Layout: "' . $layout . '" could not be found.');
+        }
+
+        $this->layout = $layout;
+
+        return;
+    }
+
+    public function getLayout()
+    {
+        return $this->layout;
+    }
+
+    private function renderViews() : string
+    {
+        $views = "";
+
+        foreach ($this->viewQueue as $view) {
+            //if not end.. otherwise include \r\n
+            $views .= $this->buffer($view);
+        }
+
+        return $views;
+    }
+
+    private function bufferResponse() : string
+    {
+        $this->view = $response = $this->renderViews();
+
+        if ($this->layout !== null) {
+            $response = $this->buffer($this->layout);
+        }
+
+        return $response;
+    }
+
+    private function buffer(string $path) : string
+    {
+        $container = $this->container->has('view_properties') ? $this->container->get('view_properties') : [];
+
+        ob_start();
+        if (!empty($container)) {
+            extract($container); // yuck. could produce undeclared errors. hmm..
         }
         //should i set $this->data in abstract controller, and provide all access vars ? seems bad practice..
 
-        include $file;
+        include $path;
 
-        $return = ob_get_contents();
-
+        $result = ob_get_contents();
         ob_end_clean();
 
-        return $return;
+        return $result;
     }
 
     /**
@@ -219,7 +239,7 @@ class View
      * @access protected
      * @return string css includes
      */
-    protected function fetchCSS()
+    public function fetchCSS()
     {
         $string = "";
 
@@ -240,16 +260,16 @@ class View
      * @access protected
      * @return string JS includes
      */
-    protected function fetchJS()
+    public function fetchJS()
     {
-        $string = "<script>baseURL = '" . $this->baseURL() . "/'</script>\r\n";
+        $string = "<script>baseURL = '" . $this->router->baseURL() . "/'</script>\r\n";
 
         if (empty($this->queuedJS)) {
             return $string;
         }
 
         foreach ($this->queuedJS as $script) {
-            $string .= '<script src="' . $script . '"></script>' . "\r\n";
+            $string .= '<script type="javascript/text" src="' . $script . '"></script>' . "\r\n";
         }
 
         return $string;
@@ -261,12 +281,10 @@ class View
      * @access public
      * @param $files array
      * @param $place string
-     * @return string css includes
-     * @throws Exception\LookupException
      */
     public function addCSS($files = [], $place = 'append')
     {
-        if ($place === 'append') {
+        if ($place === 'prepend') {
             $this->queuedCSS = array_merge($files, $this->queuedCSS);
         } else {
             $this->queuedCSS = array_merge($this->queuedCSS, $files);
@@ -275,7 +293,7 @@ class View
 
     public function addJS($files = [], $place = 'append')
     {
-        if ($place === 'append') {
+        if ($place === 'prepend') {
             $this->queuedJS = array_merge($files, $this->queuedJS);
         } else {
             $this->queuedJS = array_merge($this->queuedJS, $files);
@@ -286,13 +304,11 @@ class View
      * Set 404 header, and return 404 view contents
      *
      * @access public
-     * @param  $data array
      * @return string
      */
-    public function render404($data = [])
+    public function render404()
     {
         header('HTTP/1.1 404 Not Found');
-        $this->setProperty($data);
         $this->setLayout('404');
         return $this->render();
     }

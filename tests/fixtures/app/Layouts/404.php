@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Layout</title>
+    <title>Page Not Found</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
     <meta name="author" content="">
@@ -13,12 +13,16 @@
 <div class="container">
 
     <div class="jumbotron">
-        <h1>Sample layout</h1>
+        <h1>404 - Page Not Found</h1>
+
+        <p>
+            <?php if (isset($errorMessage)) {
+                echo $errorMessage;
+            } ?>
+        </p>
     </div>
 
 </div>
-
-<?php echo $this->view; ?>
 
 </body>
 </html>
