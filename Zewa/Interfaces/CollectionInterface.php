@@ -53,12 +53,6 @@ interface CollectionInterface extends \Countable, \ArrayAccess, \Traversable, \J
     public function reduce($initial, callable $func);
 
     /**
-     * Mutate the current collection with the supplied mutation class
-     * @param $mutation
-     */
-    public function mutate($mutation);
-
-    /**
      * Returns array of collection
      * @return array
      */
