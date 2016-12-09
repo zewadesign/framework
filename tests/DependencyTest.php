@@ -82,5 +82,4 @@ class DependencyTest extends \PHPUnit_Framework_TestCase
         $dependency->flushDependency('\Zewa\Config');
         $dependency->resolve('\Zewa\Config');
     }
-
 }
