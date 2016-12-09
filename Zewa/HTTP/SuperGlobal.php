@@ -11,7 +11,7 @@ abstract class SuperGlobal implements GlobalInterface
     /**
      * @var Container
      */
-    private $container;
+    protected $container;
 
     /**
      * @var Security
