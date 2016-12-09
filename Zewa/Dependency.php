@@ -3,6 +3,7 @@
 namespace Zewa;
 
 use Zewa\Exception\Exception;
+use Zewa\Exception\LookupException;
 
 class Dependency
 {
@@ -23,7 +24,17 @@ class Dependency
         $this->dependencies->set('__dependencies', $local);
     }
 
-    private function isDependencyLoaded(string $class) : bool
+    public function flushDependency(string $class)
+    {
+        $dependencies = $this->dependencies->get('__dependencies');
+
+        if (isset($dependencies[$class]) === true) {
+            unset($dependencies[$class]);
+            $this->dependencies->set('__dependencies', $dependencies);
+        }
+    }
+
+    public function isDependencyLoaded(string $class) : bool
     {
         $dependencies = $this->dependencies->get('__dependencies');
 
@@ -34,7 +45,7 @@ class Dependency
         return true;
     }
 
-    private function getDependency(string $class)
+    public function getDependency(string $class)
     {
         $dependencies = $this->dependencies->get('__dependencies');
         return $dependencies[$class] ?? null;
@@ -72,11 +83,7 @@ class Dependency
             $dependency = $reflectionClass->newInstanceArgs($params);
 
             return $this->load($class, $dependency, $persist);
-        } catch (\Exception $e) {
-            echo "<PRE>";
-            print_r($e->getMessage()); //->getMessage();
-            var_dump($e->getTrace()[0]);
-            echo "</PRE>";
+        } catch (\ReflectionException $e) {
             return false;
         }
     }
@@ -103,18 +110,5 @@ class Dependency
         }
 
         return $injection;
-    }
-
-
-    private function injectAppInstance($dependency)
-    {
-        if ($dependency instanceof Controller) {
-            $dependency->setEvent($this->resolve('\Sabre\Event\Emitter'));
-            $dependency->setRequest($this->resolve('\Zewa\HTTP\Request'));
-            $dependency->setRouter($this->resolve('\Zewa\Router'));
-            $dependency->setConfig($this->resolve('\Zewa\Config'));
-            $dependency->setDependency($this->resolve('\Zewa\Dependency'));
-            $dependency->setView($this->resolve('\Zewa\View'));
-        }
     }
 }
