@@ -46,6 +46,7 @@ final class Session extends SuperGlobal
 
     private function incrementFlashStorage()
     {
+//        var_dump($this->flashdata);
         foreach ($this->flashdata as $variable => $data) {
             if ($this->flashdata[$variable]['increment'] > 1) {
                 unset($_SESSION[$variable], $this->flashdata[$variable]);
@@ -76,12 +77,10 @@ final class Session extends SuperGlobal
      */
     public function setFlash($name, $value)
     {
-        $current = $this->fetch($this->flashdataId);
-        $append = base64_encode(serialize(['value' => $value, 'increment'   => 0]));
-        array_push($current, [$name => $append]);
-
+        $current = $this->flashdata ?? [];
+        $current[$name] = ['value' => $value, 'increment'   => 0];
         $flash = $this->security->normalize($current);
-        $_SESSION[$this->flashdataId] = $flash;
+        $_SESSION[$this->flashdataId] = base64_encode(serialize($flash));
         $this->flashdata = $flash;
     }
 
@@ -113,6 +112,9 @@ final class Session extends SuperGlobal
             $http = $params['httponly'];
             setcookie(session_name(), '', $time, $path, $domain, $secure, $http);
         }
+
+
+        $this->container->remove('Session');
 
         session_destroy();
     }

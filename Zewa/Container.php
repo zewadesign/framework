@@ -23,6 +23,13 @@ class Container
         $this->container[$key] = $value;
     }
 
+    public function remove($key)
+    {
+        if ($this->has($key)) {
+            unset($this->container[$key]);
+        }
+    }
+
     /**
      * @param $key
      * @return mixed
