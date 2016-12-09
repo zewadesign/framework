@@ -61,13 +61,17 @@ class Request
      */
     private $security;
 
-    /**
-     * @var string
-     */
+    /** @var string */
     private $method;
 
     /** @var array */
     private $params;
+
+    /** @var  int */
+    private $statusCode;
+
+    /** @var  string */
+    private $responseMessage;
 
     public function __construct(Dependency $dependency, Security $security)
     {
@@ -118,5 +122,37 @@ class Request
     public function setParams($params)
     {
         $this->params = $this->security->normalize($params);
+    }
+
+    public function redirect(string $url, int $status = 302)
+    {
+        $url = str_replace(array('\r', '\n', '%0d', '%0a'), '', $url);
+        if (headers_sent()) {
+            return false;
+        }
+        session_write_close();
+
+        $this->setStatusCode($status);
+
+        header('HTTP/1.1 ' . $this->responseMessage);
+        $url = preg_replace('!^/*!', '', $url);
+        header("Location: " . $url);
+        return true;
+    }
+
+    public function setStatusCode(int $status = 302)
+    {
+        switch ($status) {
+            case '301':
+                $this->responseMessage = '301 Moved Permanently';
+                break;
+            case '307':
+                $this->responseMessage = '307 Temporary Redirect';
+                break;
+            case '302':
+            default:
+                $this->responseMessage = '302 Found';
+                break; // temp redirect
+        }
     }
 }

@@ -1,30 +1,81 @@
 <?php
-
 namespace Zewa\Config\Tests;
+use Zewa\App;
 
-use Zewa\Container;
-
-class ContainerTest extends \PHPUnit_Framework_TestCase
+class AppTest extends \PHPUnit_Framework_TestCase
 {
-    public function testContainerStorage()
+    public function getAppObject()
     {
-        $container = new Container();
+        $config = new \Zewa\Config();
+        $container = new \Zewa\Container();
+        $dependency = new \Zewa\Dependency($config, $container);
+        return new App($dependency);
+    }
 
-        $container->set('aContainer', ['hello' => 'world']);
+    public function testAppWithoutHTTPS()
+    {
+        $_SERVER['PHP_SELF'] = "index.php";
+        $_SERVER['HTTP_HOST'] = "example.com";
+        $_SERVER['HTTPS'] = "off";
+        $_SERVER['REQUEST_URI'] = "/say/hello/callback";
 
-        $array = $container->get('aContainer');
+        $app = $this->getAppObject();
 
-        $this->assertSame($array, ['hello' => 'world']);
+        $app->initialize();
+        $this->assertSame($app->output, 'hello');
+    }
+
+    public function testAppCallbackRoute()
+    {
+        $_SERVER['PHP_SELF'] = "index.php";
+        $_SERVER['HTTP_HOST'] = "example.com";
+        $_SERVER['HTTPS'] = "on";
+        $_SERVER['REQUEST_URI'] = "/say/hello/callback";
+
+        $app = $this->getAppObject();
+
+        $app->initialize();
+        $this->assertSame($app->output, 'hello');
+    }
+
+    public function testAppArrayRoute()
+    {
+        $_SERVER['PHP_SELF'] = "index.php";
+        $_SERVER['HTTP_HOST'] = "example.com";
+        $_SERVER['HTTPS'] = "on";
+        $_SERVER['REQUEST_URI'] = "/say/hello";
+
+        $app = $this->getAppObject();
+
+        $app->initialize();
+        $this->assertSame($app->output, 'world');
     }
 
     /**
-     * @expectedException \Zewa\Exception\LookupException
+     * @expectedException \Exception
      */
-    public function testContainerLookupException()
+    public function testAppInvalidRequest()
     {
-        $container = new Container();
-        $container->get('aContainer');
+        $_SERVER['PHP_SELF'] = "index.php";
+        $_SERVER['HTTP_HOST'] = "example.com";
+        $_SERVER['HTTPS'] = "on";
+        $_SERVER['REQUEST_URI'] = "/not/existing";
+
+        $app = $this->getAppObject();
+
+        $app->initialize();
     }
 
+    public function testAppMagicStringify()
+    {
+        $_SERVER['PHP_SELF'] = "index.php";
+        $_SERVER['HTTP_HOST'] = "example.com";
+        $_SERVER['HTTPS'] = "on";
+        $_SERVER['REQUEST_URI'] = "/say/hello";
 
+        $app = $this->getAppObject();
+
+        $app->initialize();
+        $this->assertSame($app->output, (string)$app);
+    }
 }

@@ -18,7 +18,7 @@ class App
      *
      * @var string
      */
-    private $output = '';
+    public $output = '';
 
     /**
      * @var Dependency $dependency
@@ -73,6 +73,7 @@ class App
         $request = $this->router->getAction();
 
         $isRouteCallback = $this->processRequestParameters($request);
+
         $this->start($isRouteCallback);
 
         return $this;

@@ -57,6 +57,7 @@ class ViewTest extends \PHPUnit_Framework_TestCase
     {
         $view = $this->loadViewObject();
         $rendered = $view->render('a-page', 'layout');
+
         $this->assertSame($this->getCombinedViewAndLayout(), $rendered);
     }
 
@@ -67,7 +68,7 @@ class ViewTest extends \PHPUnit_Framework_TestCase
         $view->setView('a-page');
         $view->setLayout('layout');
         $rendered = $view->render();
-
+        
         $this->assertSame($this->getCombinedViewAndLayout(), $rendered);
     }
 
