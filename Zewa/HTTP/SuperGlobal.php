@@ -36,7 +36,7 @@ abstract class SuperGlobal implements GlobalInterface
     {
         $global = $this->getGlobalName();
         if ($key === null) {
-            return $this->container->get($global);
+            return empty($this->container->get($global)) === true ? null : $this->container->get($global);
         }
 
         return $this->container->has($global) ? $this->container->get($global)[$key] ?? $default : null;

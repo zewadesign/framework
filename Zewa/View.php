@@ -22,7 +22,7 @@ class View
     private $pathToLayout;
 
     /** @var  array */
-    protected $viewQueue;
+    protected $viewQueue = [];
 
     /**
      * Rendered view content
@@ -287,7 +287,6 @@ class View
      *
      * @access public
      * @param $files array
-     * @param $append bool
      */
     public function addCSS($files = [])
     {
