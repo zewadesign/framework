@@ -36,17 +36,6 @@ PHP Code Sniffer: `./vendor/bin/phpcs`
 
 Ant: `ant phpcs`
 
-## Session database schema ##
-```
-CREATE TABLE `Session` (
-  `id` varchar(32) NOT NULL DEFAULT '',
-  `hash` varchar(32) NOT NULL DEFAULT '',
-  `session_data` blob NOT NULL,
-  `session_expire` int(11) NOT NULL DEFAULT '0',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8
-```
-
 [ico-version]: https://img.shields.io/packagist/v/zewa/framework.svg?style=flat-square
 [ico-license]: https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square
 [ico-travis]: https://img.shields.io/travis/zewadesign/framework/master.svg?style=flat-square
