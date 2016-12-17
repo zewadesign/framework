@@ -1,10 +1,11 @@
 <?php
-declare(strict_types=1);
+declare(strict_types = 1);
 namespace Zewa;
 
+use Interop\Container\ContainerInterface;
 use Zewa\Exception\LookupException;
 
-class Container
+class Container implements ContainerInterface
 {
     /**
      * @var array
@@ -16,6 +17,7 @@ class Container
      *
      * @param string $key The name of a service to set in the container
      * @param mixed $value A closure of object representing a serive
+     *
      * @return $this
      */
     public function set($key, $value = null)
@@ -31,13 +33,11 @@ class Container
     }
 
     /**
-     * @param $key
-     * @return mixed
-     * @throws LookupException
+     * {@inheritdoc}
      */
     public function get($key)
     {
-        if (!$this->has($key)) {
+        if (! $this->has($key)) {
             throw new LookupException('Container doesn\'t exist.');
         }
 
@@ -45,8 +45,7 @@ class Container
     }
 
     /**
-     * @param $key
-     * @return bool
+     * {@inheritdoc}
      */
     public function has($key)
     {
