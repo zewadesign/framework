@@ -2,7 +2,9 @@
 
 namespace Zewa\Exception;
 
-class LookupException extends Exception
+use Interop\Container\Exception\NotFoundException;
+
+class LookupException extends Exception implements NotFoundException
 {
  
 }
