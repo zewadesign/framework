@@ -322,7 +322,6 @@ class Request
         } elseif (is_object($data)) {
             $new = new \stdClass();
             foreach ($data as $k => $v) {
-                //                unset($data->{$k});
                 $key = $this->normalize($k);
                 $new->{$key} = $this->normalize($v);
             }
@@ -337,10 +336,7 @@ class Request
                     $data = iconv($current_encoding, 'UTF-8', $data);
                 }
             }
-            // Global XXS?
-            // This is not sanitary.  FILTER_SANITIZE_STRING doesn't do much.
 
-            // $data = filter_var($data, FILTER_SANITIZE_STRING);
             if (is_numeric($data)) {
                 $int = intval($data);
                 $float = floatval($data);
@@ -349,16 +345,16 @@ class Request
 
                 if (($int === (int)trim($data, '-')) && strlen((string)(int)$data) === strlen($data)) {
                     $data = (int) $data;
-                } elseif ($int !== $float && preg_match($re, $data) === 1) {
-                    $data = floatval($data);
+                } elseif ($data === '0.00' || ($int !== $float && preg_match($re, $data) === 1 && strlen($data) === strlen((string)$float))) {
+
+                    $data = $float;
                 }
-            } else {
-                //                $data = $this->purifier->purify($data);
             }
         }
 
         return $data;
     }
+
 
     public function __call($name, $arguments)
     {

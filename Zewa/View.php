@@ -313,10 +313,10 @@ class View
             $files[] = $file;
         }
 
-        if ($place === 'append') {
-            $existingCSS = array_merge($files, $existingCSS);
-        } else {
+        if ($place !== 'append') {
             $existingCSS = array_merge($existingCSS, $files);
+        } else {
+            $existingCSS = array_merge($files, $existingCSS);
         }
 
         $app = App::getInstance();
@@ -342,10 +342,10 @@ class View
                 $files[] = $file;
             }
 
-            if ($place === 'append') {
-                $existingJS = array_merge($files, $existingJS);
-            } else {
+            if ($place !== 'append') {
                 $existingJS = array_merge($existingJS, $files);
+            } else {
+                $existingJS = array_merge($files, $existingJS);
             }
 
             $app = App::getInstance();
